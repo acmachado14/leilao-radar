@@ -4,11 +4,13 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from shared.dates import parse_datetime
+from shared.monta import MontaClass, monta_component
 
 DISCOUNT_CAP = 0.50
 DATE_HORIZON_DAYS = 14
-DISCOUNT_WEIGHT = 0.55
-DATE_WEIGHT = 0.45
+DISCOUNT_WEIGHT = 0.40
+DATE_WEIGHT = 0.35
+MONTA_WEIGHT = 0.25
 
 
 def discount_component(desconto_pct: float | None) -> float:
@@ -41,11 +43,20 @@ def compute_relevance(
     desconto_pct: float | None,
     leilao_fim: str | None,
     leilao_em: str | None,
+    sinistro: str | None = None,
     now: datetime | None = None,
-) -> tuple[float, float | None]:
-    """Higher score = closer auction date + bigger gap below FIPE."""
+) -> tuple[float, float | None, MontaClass, bool]:
+    """Higher score = pequena/sem sinistro + close auction + discount vs FIPE."""
     days = days_until_auction(leilao_fim, leilao_em, now)
     urgency = date_urgency(days) if days is not None else 0.25
     discount = discount_component(desconto_pct)
-    score = round(DISCOUNT_WEIGHT * discount + DATE_WEIGHT * urgency, 4)
-    return score, days
+    monta_score, monta_class, excluded = monta_component(sinistro)
+
+    if excluded:
+        return 0.0, days, monta_class, True
+
+    score = round(
+        DISCOUNT_WEIGHT * discount + DATE_WEIGHT * urgency + MONTA_WEIGHT * monta_score,
+        4,
+    )
+    return score, days, monta_class, False

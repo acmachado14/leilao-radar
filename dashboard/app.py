@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 
 from collector.dynamo import LotRepository, get_dynamodb_target
 from shared.logging_config import setup_logging
+from shared.monta import monta_label, parse_monta_class
 from shared.scoring import compute_relevance
 
 load_dotenv()
@@ -109,8 +110,12 @@ def normalize_rows(items: list[dict[str, Any]]) -> pd.DataFrame:
         days_until = to_float(item.get("days_until_auction"))
         leilao_fim = item.get("leilao_fim")
         leilao_em = item.get("leilao_em")
+        sinistro = item.get("sinistro")
         if relevance is None:
-            relevance, days_until = compute_relevance(desconto, leilao_fim, leilao_em)
+            relevance, days_until, _, _ = compute_relevance(
+                desconto, leilao_fim, leilao_em, sinistro=sinistro
+            )
+        classificacao = item.get("classificacao_monta") or parse_monta_class(sinistro)
         custo_estimado = lance * 1.05 if lance else None
         rows.append(
             {
@@ -129,7 +134,9 @@ def normalize_rows(items: list[dict[str, Any]]) -> pd.DataFrame:
                 "leilao_fim": leilao_fim,
                 "custo_estimado_5pct": custo_estimado,
                 "fipe_match": item.get("fipe_match"),
-                "sinistro": item.get("sinistro"),
+                "sinistro": sinistro,
+                "classificacao_monta": classificacao,
+                "sinistro_label": monta_label(sinistro),
                 "patio": item.get("patio"),
                 "leilao_em": leilao_em,
                 "url": item.get("url"),
@@ -146,6 +153,8 @@ def apply_filters(
     match_filter: list[str],
     min_desconto: float,
     marca_filter: list[str],
+    monta_filter: list[str],
+    exclude_grande: bool,
     limit: int,
 ) -> pd.DataFrame:
     if df.empty:
@@ -153,6 +162,10 @@ def apply_filters(
 
     mask = df["fipe_match"].isin(match_filter)
     mask &= df["desconto_pct"].fillna(-999) >= min_desconto
+    if exclude_grande:
+        mask &= df["classificacao_monta"] != "grande"
+    if monta_filter:
+        mask &= df["classificacao_monta"].isin(monta_filter)
     if marca_filter:
         selected_keys = {normalize_marca_key(marca) for marca in marca_filter}
         mask &= df["marca_key"].isin(selected_keys)
@@ -207,8 +220,8 @@ logger.info(
 with st.sidebar:
     st.header("Ranking")
     st.caption(
-        "Relevância = 55% desconto vs FIPE + 45% proximidade do leilão "
-        "(leilões nos próximos 14 dias pontuam mais)."
+        "Relevância = 40% desconto vs FIPE + 35% proximidade do leilão + 25% classificação "
+        "(pequena/sem sinistro > média monta; grande monta excluída)."
     )
 
     st.header("Filtros")
@@ -229,9 +242,27 @@ with st.sidebar:
         key="filtro_marca",
         placeholder="Todas as marcas",
     )
-    limit = st.number_input("Máximo de linhas", min_value=10, max_value=500, value=100, step=10)
+    monta_options = ["sem_sinistro", "pequena", "media", "grande", "outro"]
+    monta_labels = {
+        "sem_sinistro": "sem sinistro",
+        "pequena": "pequena monta",
+        "media": "média monta",
+        "grande": "grande monta",
+        "outro": "outro",
+    }
+    monta_filter = st.multiselect(
+        "Classificação",
+        options=monta_options,
+        format_func=lambda key: monta_labels[key],
+        default=["sem_sinistro", "pequena", "media"],
+        key="filtro_monta",
+    )
+    exclude_grande = st.checkbox("Excluir grande monta", value=True, key="filtro_excluir_grande")
+    limit = st.number_input("Máximo de linhas", min_value=10, max_value=500, value=500, step=10)
 
-filtered = apply_filters(df, match_filter, min_desconto, marca_filter, int(limit))
+filtered = apply_filters(
+    df, match_filter, min_desconto, marca_filter, monta_filter, exclude_grande, int(limit)
+)
 logger.info(
     "Filtros aplicados | marcas=%s | exibindo %d de %d lotes",
     marca_filter or "todas",
@@ -267,11 +298,12 @@ else:
                 "fipe_preco",
                 "desconto_label",
                 "relevance_score",
+                "sinistro_label",
                 "days_until_auction",
                 "leilao_fim",
                 "custo_estimado_5pct",
                 "fipe_match",
-                "sinistro",
+                "sinistro_label",
                 "patio",
                 "url",
             ]

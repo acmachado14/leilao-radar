@@ -5,7 +5,7 @@ Daily collector for **Sodré Santoro** vehicle auction lots. Enriches each lot w
 ## Architecture
 
 ```
-EventBridge (08:00 BRT) → Lambda collector
+EventBridge (04:00 BRT) → Lambda collector
                               ↓
                     Sodré Elasticsearch (via public Nuxt bootstrap)
                               ↓
@@ -129,7 +129,7 @@ make aws-build
 # 2) Deploy stack leilao-radar in sa-east-1
 make aws-deploy
 
-# 3) Optional: run collector now (instead of waiting for 08:00 BRT)
+# 3) Optional: run collector now (instead of waiting for 04:00 BRT)
 make aws-invoke
 
 # 4) Follow logs
@@ -140,7 +140,7 @@ Stack creates:
 
 - DynamoDB table `leilao-radar-lotes` (on-demand, TTL, GSI `gsi_relevancia` + `gsi_desconto`)
 - Lambda `leilao-radar-collector` (15 min timeout, arm64, 512 MB)
-- EventBridge schedule: `cron(0 11 * * ? *)` → 08:00 America/Sao_Paulo
+- EventBridge schedule: `cron(0 7 * * ? *)` → 04:00 America/Sao_Paulo
 - CloudWatch Logs with 14-day retention
 
 Point the local dashboard at real AWS by removing `DYNAMODB_ENDPOINT_URL` from `.env` (and using real AWS credentials).
@@ -156,7 +156,7 @@ Public dashboard at GitHub Pages — no Streamlit server. Data is exported from 
 3. In **Settings → Secrets and variables → Actions**, add:
    - `AWS_ACCESS_KEY_ID`
    - `AWS_SECRET_ACCESS_KEY`
-4. Run the workflow **Export and GitHub Pages** manually (Actions tab) or wait for the daily schedule (09:30 BRT).
+4. Run the workflow **Export and GitHub Pages** manually (Actions tab) or wait for the daily schedule (05:00 BRT).
 
 Local export (uses `aws configure` credentials):
 

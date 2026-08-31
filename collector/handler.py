@@ -10,6 +10,7 @@ from shared.brands import normalize_marca
 from shared.fipe import FipeClient
 from shared.logging_config import setup_logging
 from shared.models import LotRecord, SodreLotRaw
+from shared.photos import normalize_lot_pictures
 from shared.scoring import compute_relevance
 
 setup_logging()
@@ -32,13 +33,15 @@ def build_lot_record(raw: SodreLotRaw, fipe_client: FipeClient) -> LotRecord:
     if fipe.preco and fipe.preco > 0 and lance_atual > 0:
         desconto_pct = round(1 - (lance_atual / fipe.preco), 4)
 
-    relevance_score, days_until = compute_relevance(
+    relevance_score, days_until, monta_class, excluded = compute_relevance(
         desconto_pct,
         raw.lot_date_end,
         raw.auction_date_init,
+        sinistro=raw.lot_sinister,
     )
 
     titulo = raw.lot_title or f"{raw.lot_brand or ''} {raw.lot_model or ''}".strip()
+    foto_capa, fotos = normalize_lot_pictures(raw.lot_pictures)
     return LotRecord(
         lote_id=str(raw.lot_id),
         titulo=titulo.title(),
@@ -55,6 +58,7 @@ def build_lot_record(raw: SodreLotRaw, fipe_client: FipeClient) -> LotRecord:
         leilao_status=raw.auction_status,
         lot_status=raw.lot_status,
         sinistro=raw.lot_sinister,
+        classificacao_monta=monta_class,
         origem=raw.lot_origin,
         patio=raw.lot_location,
         fipe_codigo=fipe.codigo,
@@ -64,6 +68,9 @@ def build_lot_record(raw: SodreLotRaw, fipe_client: FipeClient) -> LotRecord:
         desconto_pct=desconto_pct,
         relevance_score=relevance_score,
         days_until_auction=round(days_until, 2) if days_until is not None else None,
+        foto_capa=foto_capa,
+        fotos=fotos,
+        gsi_pk="EXCLUDED" if excluded else "LIVE",
         ttl=compute_ttl(raw.lot_date_end, raw.auction_date_init),
     )
 

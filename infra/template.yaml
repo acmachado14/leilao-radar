@@ -77,8 +77,8 @@ Resources:
         DailySchedule:
           Type: Schedule
           Properties:
-            Schedule: cron(0 11 * * ? *)
-            Description: Run collector daily at 08:00 BRT (11:00 UTC)
+            Schedule: cron(0 7 * * ? *)
+            Description: Run collector daily at 04:00 BRT (07:00 UTC)
             Enabled: true
 
   CollectorLogGroup:

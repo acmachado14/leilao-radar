@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -40,6 +40,7 @@ class SodreLotRaw(BaseModel):
     auction_name: str | None = None
     segment_slug: str | None = None
     segment_label: str | None = None
+    lot_pictures: list[Any] | None = None
 
 
 class LotRecord(BaseModel):
@@ -58,6 +59,7 @@ class LotRecord(BaseModel):
     leilao_status: str | None = None
     lot_status: str | None = None
     sinistro: str | None = None
+    classificacao_monta: str | None = None
     origem: str | None = None
     patio: str | None = None
     fipe_codigo: str | None = None
@@ -67,6 +69,8 @@ class LotRecord(BaseModel):
     desconto_pct: float | None = None
     relevance_score: float = 0.0
     days_until_auction: float | None = None
+    foto_capa: str | None = None
+    fotos: list[str] = Field(default_factory=list)
     gsi_pk: str = "LIVE"
     updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
     ttl: int
@@ -94,6 +98,7 @@ class LotRecord(BaseModel):
             "leilao_status": self.leilao_status,
             "lot_status": self.lot_status,
             "sinistro": self.sinistro,
+            "classificacao_monta": self.classificacao_monta,
             "origem": self.origem,
             "patio": self.patio,
             "fipe_codigo": self.fipe_codigo,
@@ -102,9 +107,13 @@ class LotRecord(BaseModel):
             "desconto_pct": self.desconto_pct,
             "relevance_score": self.relevance_score,
             "days_until_auction": self.days_until_auction,
+            "foto_capa": self.foto_capa,
+            "fotos": self.fotos,
         }
         for key, value in optional_fields.items():
             if value is None:
+                continue
+            if key == "fotos" and not value:
                 continue
             if isinstance(value, float):
                 item[key] = Decimal(str(round(value, 4)))

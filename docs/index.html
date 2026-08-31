@@ -40,42 +40,56 @@
           </select>
         </label>
         <label>
-          Máximo de linhas
+          Classificação
+          <select id="monta-filter" multiple size="4">
+            <option value="sem_sinistro" selected>sem sinistro</option>
+            <option value="pequena" selected>pequena monta</option>
+            <option value="media" selected>média monta</option>
+            <option value="outro">outro</option>
+          </select>
+        </label>
+        <label class="checkbox-row">
+          <input id="exclude-grande" type="checkbox" checked />
+          Excluir grande monta
+        </label>
+        <label>
+          Máximo de cards
           <input id="row-limit" type="number" min="10" max="500" value="100" step="10" />
         </label>
       </div>
       <p class="hint">
-        Relevância = 55% desconto vs FIPE + 45% proximidade do leilão (próximos 14 dias pontuam mais).
+        Relevância = 40% desconto vs FIPE + 35% proximidade do leilão + 25% classificação
+        (pequena/sem sinistro &gt; média monta; grande monta oculta).
       </p>
     </section>
 
     <section class="panel">
-      <h2>Ofertas mais relevantes</h2>
+      <h2>Ofertas mais relevantes <span id="table-count" class="table-count"></span></h2>
       <div id="empty-state" class="empty hidden">Nenhum lote com os filtros atuais.</div>
-      <div class="table-wrap">
-        <table id="lots-table">
-          <thead>
-            <tr>
-              <th>Título</th>
-              <th>Marca</th>
-              <th>Modelo</th>
-              <th>Ano</th>
-              <th>Lance</th>
-              <th>FIPE</th>
-              <th>Desconto</th>
-              <th>Relevância</th>
-              <th>Dias</th>
-              <th>Leilão</th>
-              <th>Custo +5%</th>
-              <th>Match</th>
-              <th>Pátio</th>
-              <th>Link</th>
-            </tr>
-          </thead>
-          <tbody id="lots-body"></tbody>
-        </table>
+      <div id="cards-grid" class="cards-grid"></div>
+      <div id="load-sentinel" class="load-sentinel hidden" aria-hidden="true">
+        <span class="load-spinner" aria-hidden="true"></span>
+        <span>Carregando mais ofertas…</span>
       </div>
     </section>
+
+    <div id="lightbox" class="lightbox hidden" aria-hidden="true">
+      <div class="lightbox-backdrop" data-close-lightbox></div>
+      <div class="lightbox-dialog" role="dialog" aria-modal="true" aria-labelledby="lightbox-title">
+        <button type="button" class="lightbox-close" data-close-lightbox aria-label="Fechar">×</button>
+        <div class="lightbox-main">
+          <img id="lightbox-main-img" alt="" referrerpolicy="no-referrer" />
+          <button type="button" class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Foto anterior">‹</button>
+          <button type="button" class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Próxima foto">›</button>
+        </div>
+        <div class="lightbox-thumbs" id="lightbox-thumbs"></div>
+        <div class="lightbox-info">
+          <h3 id="lightbox-title"></h3>
+          <p id="lightbox-meta"></p>
+          <a id="lightbox-link" href="#" target="_blank" rel="noopener" class="lightbox-cta">Ver na Sodré</a>
+        </div>
+      </div>
+    </div>
 
     <footer class="footer">
       <span>Leilão Radar · dados da Sodré Santoro vs Tabela FIPE</span>

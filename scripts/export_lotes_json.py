@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from collector.dynamo import LotRepository
+from shared.monta import monta_label, parse_monta_class
 from shared.scoring import compute_relevance
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -38,15 +39,22 @@ def normalize_item(item: dict[str, Any]) -> dict[str, Any]:
     days_until = item.get("days_until_auction")
     leilao_fim = item.get("leilao_fim")
     leilao_em = item.get("leilao_em")
+    sinistro = item.get("sinistro")
 
+    rel, days, monta_class, excluded = compute_relevance(
+        desconto_f, leilao_fim, leilao_em, sinistro=sinistro
+    )
     if relevance is None:
-        rel, days = compute_relevance(desconto_f, leilao_fim, leilao_em)
         relevance = rel
         days_until = days
     else:
         relevance = float(relevance)
         if days_until is not None:
             days_until = float(days_until)
+
+    classificacao = item.get("classificacao_monta") or parse_monta_class(sinistro)
+    if excluded or classificacao == "grande":
+        return None
 
     desconto_label = (
         f"{desconto_f * 100:.1f}%"
@@ -70,9 +78,13 @@ def normalize_item(item: dict[str, Any]) -> dict[str, Any]:
         "leilao_em": leilao_em,
         "custo_estimado_5pct": round(lance * 1.05, 2) if lance else None,
         "fipe_match": item.get("fipe_match"),
-        "sinistro": item.get("sinistro"),
+        "sinistro": sinistro,
+        "classificacao_monta": classificacao,
+        "sinistro_label": monta_label(sinistro),
         "patio": item.get("patio"),
         "url": item.get("url"),
+        "foto_capa": item.get("foto_capa"),
+        "fotos": item.get("fotos") or [],
     }
 
 
@@ -84,7 +96,11 @@ def export_lotes(limit: int = 2000) -> dict[str, Any]:
         items = repo.query_top_deals(limit=min(limit, 500))
 
     normalized = sorted(
-        [normalize_item(to_json_value(item)) for item in items],
+        [
+            row
+            for item in items
+            if (row := normalize_item(to_json_value(item))) is not None
+        ],
         key=lambda row: row.get("relevance_score") or 0,
         reverse=True,
     )
