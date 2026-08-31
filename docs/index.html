@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leilão Radar</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="header">
+      <div>
+        <h1>Leilão Radar</h1>
+        <p class="subtitle">Ranking por relevância: proximidade do leilão + desconto vs FIPE</p>
+      </div>
+      <div class="meta" id="meta"></div>
+    </header>
+
+    <section class="metrics" id="metrics"></section>
+
+    <section class="panel filters">
+      <h2>Filtros</h2>
+      <div class="filter-grid">
+        <label>
+          Match FIPE
+          <select id="match-filter" multiple size="3">
+            <option value="exact" selected>exact</option>
+            <option value="closest" selected>closest</option>
+            <option value="failed">failed</option>
+          </select>
+        </label>
+        <label>
+          Desconto mínimo (%)
+          <input id="min-desconto" type="range" min="-50" max="80" value="0" />
+          <span id="min-desconto-label">0%</span>
+        </label>
+        <label>
+          Marca
+          <select id="marca-filter" multiple size="6">
+            <option value="">Todas</option>
+          </select>
+        </label>
+        <label>
+          Máximo de linhas
+          <input id="row-limit" type="number" min="10" max="500" value="100" step="10" />
+        </label>
+      </div>
+      <p class="hint">
+        Relevância = 55% desconto vs FIPE + 45% proximidade do leilão (próximos 14 dias pontuam mais).
+      </p>
+    </section>
+
+    <section class="panel">
+      <h2>Ofertas mais relevantes</h2>
+      <div id="empty-state" class="empty hidden">Nenhum lote com os filtros atuais.</div>
+      <div class="table-wrap">
+        <table id="lots-table">
+          <thead>
+            <tr>
+              <th>Título</th>
+              <th>Marca</th>
+              <th>Modelo</th>
+              <th>Ano</th>
+              <th>Lance</th>
+              <th>FIPE</th>
+              <th>Desconto</th>
+              <th>Relevância</th>
+              <th>Dias</th>
+              <th>Leilão</th>
+              <th>Custo +5%</th>
+              <th>Match</th>
+              <th>Pátio</th>
+              <th>Link</th>
+            </tr>
+          </thead>
+          <tbody id="lots-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span>Leilão Radar · dados da Sodré Santoro vs Tabela FIPE</span>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>

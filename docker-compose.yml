@@ -1,0 +1,20 @@
+services:
+  localstack:
+    image: localstack/localstack:4.4.0
+    container_name: leilao-radar-localstack
+    ports:
+      - "4566:4566"
+    environment:
+      SERVICES: dynamodb
+      DEBUG: "0"
+      DEFAULT_REGION: sa-east-1
+      AWS_DEFAULT_REGION: sa-east-1
+      DOCKER_HOST: unix:///var/run/docker.sock
+    volumes:
+      - ./localstack-data:/var/lib/localstack
+      - ./scripts/localstack/init-dynamodb.sh:/etc/localstack/init/ready.d/init-dynamodb.sh
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10

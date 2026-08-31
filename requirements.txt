@@ -1,0 +1,2 @@
+# Lambda / collector (also used by SAM build)
+-r collector/requirements.txt

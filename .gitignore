@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.aws-sam/
+samconfig.toml
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.zip
+.DS_Store
+localstack-data/

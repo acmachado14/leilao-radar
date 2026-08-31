@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Leilao Radar - daily Sodre collector and DynamoDB store
+
+Parameters:
+  LogLevel:
+    Type: String
+    Default: INFO
+    AllowedValues: [DEBUG, INFO, WARNING, ERROR]
+
+Globals:
+  Function:
+    Timeout: 900
+    MemorySize: 512
+    Runtime: python3.12
+    Architectures:
+      - arm64
+
+Resources:
+  LotesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: leilao-radar-lotes
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: lote_id
+          AttributeType: S
+        - AttributeName: gsi_pk
+          AttributeType: S
+        - AttributeName: desconto_pct
+          AttributeType: N
+        - AttributeName: relevance_score
+          AttributeType: N
+      KeySchema:
+        - AttributeName: lote_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: gsi_relevancia
+          KeySchema:
+            - AttributeName: gsi_pk
+              KeyType: HASH
+            - AttributeName: relevance_score
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: gsi_desconto
+          KeySchema:
+            - AttributeName: gsi_pk
+              KeyType: HASH
+            - AttributeName: desconto_pct
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  CollectorFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: python3.12
+      BuildProperties:
+        RequirementsFile: collector/requirements.txt
+    Properties:
+      FunctionName: leilao-radar-collector
+      Description: Collects open Sodre vehicle lots and enriches with FIPE prices
+      CodeUri: ../
+      Handler: collector.handler.handler
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref LotesTable
+          LOG_LEVEL: !Ref LogLevel
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LotesTable
+      Events:
+        DailySchedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 11 * * ? *)
+            Description: Run collector daily at 08:00 BRT (11:00 UTC)
+            Enabled: true
+
+  CollectorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${CollectorFunction}
+      RetentionInDays: 14
+
+Outputs:
+  LotesTableName:
+    Description: DynamoDB table for auction lots
+    Value: !Ref LotesTable
+  CollectorFunctionArn:
+    Description: Lambda function ARN
+    Value: !GetAtt CollectorFunction.Arn
+  CollectorFunctionName:
+    Description: Lambda function name
+    Value: !Ref CollectorFunction
+  Region:
+    Description: Deployed region
+    Value: !Ref AWS::Region

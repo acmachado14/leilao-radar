@@ -1,0 +1,168 @@
+:root {
+  color-scheme: light dark;
+  --bg: #0f1419;
+  --panel: #1a222d;
+  --text: #e8edf2;
+  --muted: #9aa7b5;
+  --accent: #3d8bfd;
+  --accent-2: #20c997;
+  --border: #2a3544;
+  --danger: #ff6b6b;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #1b2735 0%, var(--bg) 45%);
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.header,
+.metrics,
+.panel,
+.footer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 1.25rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  padding-top: 1.5rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.subtitle,
+.meta,
+.hint,
+.footer {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  padding-top: 0;
+}
+
+.metric-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+}
+
+.metric-card strong {
+  display: block;
+  font-size: 1.35rem;
+  margin-top: 0.25rem;
+}
+
+.panel {
+  background: rgba(26, 34, 45, 0.92);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin-bottom: 1rem;
+}
+
+.filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+input,
+select {
+  width: 100%;
+  background: #111821;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.45rem 0.6rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.55rem 0.45rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  color: var(--muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+tbody tr:hover {
+  background: rgba(61, 139, 253, 0.08);
+}
+
+a {
+  color: var(--accent);
+}
+
+.desconto-positivo {
+  color: var(--accent-2);
+  font-weight: 600;
+}
+
+.desconto-negativo {
+  color: var(--danger);
+}
+
+.empty {
+  padding: 1rem 0;
+  color: var(--muted);
+}
+
+.hidden {
+  display: none;
+}
+
+.footer {
+  padding-bottom: 2rem;
+}
+
+@media (max-width: 720px) {
+  .header {
+    flex-direction: column;
+  }
+}

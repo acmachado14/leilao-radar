@@ -1,0 +1,5 @@
+# Local development (dashboard + collector)
+-r requirements.txt
+streamlit>=1.35.0
+pandas>=2.2.0
+python-dotenv>=1.0.0
