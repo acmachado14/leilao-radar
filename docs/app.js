@@ -30,6 +30,53 @@ function pct(value) {
   return `${(value * 100).toFixed(1)}%`;
 }
 
+function formatDateTime(value) {
+  if (!value) return "—";
+  const raw = String(value).trim();
+  const normalized = raw.includes("T") ? raw : raw.replace(" ", "T");
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) return raw;
+  return date.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function matchTypeLabel(value) {
+  const labels = {
+    exact: "Exato",
+    closest: "Mais próximo",
+    failed: "Sem match",
+  };
+  return labels[value] || value || "—";
+}
+
+function montaClassLabel(value) {
+  const labels = {
+    sem_sinistro: "Sem sinistro",
+    pequena: "Pequena monta",
+    media: "Média monta",
+    grande: "Grande monta",
+    outro: "Outro",
+  };
+  return labels[value] || value || "—";
+}
+
+function daysUntilLabel(value) {
+  if (value == null || Number.isNaN(value)) return "Sem data";
+  if (value < 0) return `${Math.abs(value).toFixed(1)} dias atrás`;
+  if (value < 1) return `${(value * 24).toFixed(0)} h restantes`;
+  return `${value.toFixed(1)} dias`;
+}
+
+function detailItem(label, value, valueClass = "") {
+  const cls = valueClass ? ` class="${valueClass}"` : "";
+  return `<div><dt>${label}</dt><dd${cls}>${value}</dd></div>`;
+}
+
 function normalizeMarca(value) {
   return String(value || "").trim().toLowerCase();
 }
@@ -131,6 +178,10 @@ function resetCardsGrid() {
 function createCardElement(row) {
   const card = document.createElement("article");
   card.className = "lot-card";
+  card.setAttribute("data-open-lote", row.lote_id);
+  card.setAttribute("role", "button");
+  card.setAttribute("tabindex", "0");
+  card.setAttribute("aria-label", `Ver detalhes de ${row.titulo || "lote"}`);
   const descontoClass =
     row.desconto_pct != null && row.desconto_pct > 0 ? "desconto-positivo" : "desconto-negativo";
   const photoCount = cardPhotos(row).length;
@@ -138,7 +189,7 @@ function createCardElement(row) {
   const isLazy = imgSrc !== PLACEHOLDER_IMG;
 
   card.innerHTML = `
-    <button type="button" class="lot-card-media" data-open-lightbox="${row.lote_id}" aria-label="Ver fotos de ${row.titulo || "lote"}">
+    <div class="lot-card-media">
       <img
         ${isLazy ? `data-src="${imgSrc}"` : `src="${imgSrc}"`}
         alt="${row.titulo || "Veículo"}"
@@ -148,7 +199,7 @@ function createCardElement(row) {
         onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'"
       />
       ${photoCount > 1 ? `<span class="photo-badge">${photoCount} fotos</span>` : ""}
-    </button>
+    </div>
     <div class="lot-card-body">
       <h3 class="lot-card-title">${row.titulo || "—"}</h3>
       <p class="lot-card-subtitle">${row.marca || "—"} · ${row.modelo || "—"} · ${row.ano_mod ?? "—"}</p>
@@ -159,12 +210,13 @@ function createCardElement(row) {
       </div>
       <div class="lot-card-tags">
         <span class="tag">${row.sinistro_label || row.sinistro || "—"}</span>
-        <span class="tag tag-urgent">${row.days_until_auction != null ? `${row.days_until_auction.toFixed(1)} dias` : "sem data"}</span>
+        <span class="tag">${matchTypeLabel(row.fipe_match)}</span>
+        <span class="tag tag-urgent">${daysUntilLabel(row.days_until_auction)}</span>
         <span class="tag tag-accent">relevância ${(row.relevance_score ?? 0).toFixed(3)}</span>
       </div>
       <div class="lot-card-footer">
         <span class="lot-card-patio">${row.patio || "—"}</span>
-        ${row.url ? `<a href="${row.url}" target="_blank" rel="noopener" class="lot-card-link">Sodré</a>` : ""}
+        ${row.url ? `<a href="${row.url}" target="_blank" rel="noopener" class="lot-card-link" data-external-link>Sodré</a>` : ""}
       </div>
     </div>
   `;
@@ -282,17 +334,38 @@ function updateLightbox() {
 
   const mainImg = document.getElementById("lightbox-main-img");
   const title = document.getElementById("lightbox-title");
-  const meta = document.getElementById("lightbox-meta");
+  const subtitle = document.getElementById("lightbox-subtitle");
+  const details = document.getElementById("lightbox-details");
   const link = document.getElementById("lightbox-link");
   const thumbs = document.getElementById("lightbox-thumbs");
   const prevBtn = document.getElementById("lightbox-prev");
   const nextBtn = document.getElementById("lightbox-next");
 
   const currentPhoto = photos[index] || PLACEHOLDER_IMG;
+  const descontoClass =
+    row.desconto_pct != null && row.desconto_pct > 0 ? "desconto-positivo" : "desconto-negativo";
+
   mainImg.src = currentPhoto;
   mainImg.alt = row.titulo || "Veículo";
   title.textContent = row.titulo || "—";
-  meta.textContent = `${row.marca || "—"} · Lance ${money(row.lance_atual)} · FIPE ${money(row.fipe_preco)} · ${row.desconto_label || pct(row.desconto_pct)} · ${row.sinistro_label || row.sinistro || "—"}`;
+  subtitle.textContent = `${row.marca || "—"} · ${row.modelo || "—"} · ${row.ano_mod ?? "—"}`;
+
+  details.innerHTML = [
+    detailItem("Data do leilão", formatDateTime(row.leilao_em || row.leilao_fim)),
+    detailItem("Fim do lote", formatDateTime(row.leilao_fim)),
+    detailItem("Prazo", daysUntilLabel(row.days_until_auction)),
+    detailItem("Match FIPE", matchTypeLabel(row.fipe_match)),
+    detailItem("Lance atual", money(row.lance_atual)),
+    detailItem("FIPE", money(row.fipe_preco)),
+    detailItem("Desconto", row.desconto_label || pct(row.desconto_pct), descontoClass),
+    detailItem("Custo est. (+5%)", money(row.custo_estimado_5pct)),
+    detailItem("Classificação", montaClassLabel(row.classificacao_monta)),
+    detailItem("Sinistro", row.sinistro_label || row.sinistro || "—"),
+    detailItem("Pátio", row.patio || "—"),
+    detailItem("Relevância", (row.relevance_score ?? 0).toFixed(3)),
+    detailItem("ID do lote", row.lote_id || "—"),
+  ].join("");
+
   link.href = row.url || "#";
   link.style.display = row.url ? "inline-flex" : "none";
 
@@ -364,9 +437,20 @@ function bindEvents() {
   });
 
   document.getElementById("cards-grid").addEventListener("click", (event) => {
-    const btn = event.target.closest("[data-open-lightbox]");
-    if (!btn) return;
-    const loteId = btn.getAttribute("data-open-lightbox");
+    if (event.target.closest("[data-external-link]")) return;
+    const card = event.target.closest("[data-open-lote]");
+    if (!card) return;
+    const loteId = card.getAttribute("data-open-lote");
+    const row = state.display.filteredRows.find((r) => r.lote_id === loteId);
+    if (row) openLightbox(row);
+  });
+
+  document.getElementById("cards-grid").addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const card = event.target.closest("[data-open-lote]");
+    if (!card || event.target.closest("[data-external-link]")) return;
+    event.preventDefault();
+    const loteId = card.getAttribute("data-open-lote");
     const row = state.display.filteredRows.find((r) => r.lote_id === loteId);
     if (row) openLightbox(row);
   });
