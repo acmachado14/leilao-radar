@@ -106,15 +106,15 @@ def normalize_rows(items: list[dict[str, Any]]) -> pd.DataFrame:
         lance = to_float(item.get("lance_atual")) or 0.0
         fipe = to_float(item.get("fipe_preco"))
         desconto = to_float(item.get("desconto_pct"))
-        relevance = to_float(item.get("relevance_score"))
-        days_until = to_float(item.get("days_until_auction"))
         leilao_fim = item.get("leilao_fim")
         leilao_em = item.get("leilao_em")
         sinistro = item.get("sinistro")
-        if relevance is None:
-            relevance, days_until, _, _ = compute_relevance(
-                desconto, leilao_fim, leilao_em, sinistro=sinistro
-            )
+        # Fresh days_until from auction dates — ignore stale DynamoDB values.
+        relevance, days_until, _, excluded = compute_relevance(
+            desconto, leilao_fim, leilao_em, sinistro=sinistro
+        )
+        if excluded:
+            continue
         classificacao = item.get("classificacao_monta") or parse_monta_class(sinistro)
         custo_estimado = lance * 1.05 if lance else None
         rows.append(
@@ -130,7 +130,7 @@ def normalize_rows(items: list[dict[str, Any]]) -> pd.DataFrame:
                 "desconto_pct": desconto,
                 "desconto_label": f"{desconto * 100:.1f}%" if desconto is not None and desconto > -900 else "N/A",
                 "relevance_score": relevance,
-                "days_until_auction": days_until,
+                "days_until_auction": round(days_until, 2) if days_until is not None else None,
                 "leilao_fim": leilao_fim,
                 "custo_estimado_5pct": custo_estimado,
                 "fipe_match": item.get("fipe_match"),

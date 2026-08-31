@@ -20,8 +20,9 @@ def discount_component(desconto_pct: float | None) -> float:
 
 
 def date_urgency(days_until: float) -> float:
-    if days_until <= 0:
-        return 1.0
+    # Past auctions are no longer actionable — zero urgency.
+    if days_until < 0:
+        return 0.0
     if days_until >= DATE_HORIZON_DAYS:
         return 0.0
     return 1.0 - (days_until / DATE_HORIZON_DAYS)
@@ -39,6 +40,11 @@ def days_until_auction(
     return (auction_dt - reference).total_seconds() / 86400
 
 
+def is_auction_upcoming(days_until: float | None) -> bool:
+    """True when the auction end is still in the future (or date unknown)."""
+    return days_until is None or days_until >= 0
+
+
 def compute_relevance(
     desconto_pct: float | None,
     leilao_fim: str | None,
@@ -46,13 +52,16 @@ def compute_relevance(
     sinistro: str | None = None,
     now: datetime | None = None,
 ) -> tuple[float, float | None, MontaClass, bool]:
-    """Higher score = pequena/sem sinistro + close auction + discount vs FIPE."""
+    """Higher score = pequena/sem sinistro + close auction + discount vs FIPE.
+
+    Past auctions are marked excluded so they drop out of LIVE rankings.
+    """
     days = days_until_auction(leilao_fim, leilao_em, now)
     urgency = date_urgency(days) if days is not None else 0.25
     discount = discount_component(desconto_pct)
     monta_score, monta_class, excluded = monta_component(sinistro)
 
-    if excluded:
+    if excluded or not is_auction_upcoming(days):
         return 0.0, days, monta_class, True
 
     score = round(
