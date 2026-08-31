@@ -81,6 +81,21 @@ function normalizeMarca(value) {
   return String(value || "").trim().toLowerCase();
 }
 
+function normalizeSearchText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function matchesTextSearch(row, query) {
+  const tokens = normalizeSearchText(query).split(/\s+/).filter(Boolean);
+  if (!tokens.length) return true;
+  const haystack = normalizeSearchText(`${row.marca || ""} ${row.modelo || ""}`);
+  return tokens.every((token) => haystack.includes(token));
+}
+
 function getSelectedValues(select) {
   return Array.from(select.selectedOptions).map((opt) => opt.value).filter(Boolean);
 }
@@ -96,6 +111,7 @@ function cardPhotos(row) {
 }
 
 function applyFilters() {
+  const searchQuery = document.getElementById("search-filter").value;
   const matchFilter = getSelectedValues(document.getElementById("match-filter"));
   const minDesconto = Number(document.getElementById("min-desconto").value) / 100;
   const marcaFilter = getSelectedValues(document.getElementById("marca-filter"));
@@ -116,6 +132,10 @@ function applyFilters() {
   if (marcaFilter.length > 0) {
     const keys = new Set(marcaFilter.map(normalizeMarca));
     filtered = filtered.filter((row) => keys.has(normalizeMarca(row.marca)));
+  }
+
+  if (searchQuery.trim()) {
+    filtered = filtered.filter((row) => matchesTextSearch(row, searchQuery));
   }
 
   filtered = filtered
@@ -427,6 +447,8 @@ function bindEvents() {
     minLabel.textContent = `${minDesconto.value}%`;
     applyFilters();
   });
+
+  document.getElementById("search-filter").addEventListener("input", applyFilters);
 
   ["match-filter", "marca-filter", "monta-filter", "row-limit", "exclude-grande"].forEach((id) => {
     const el = document.getElementById(id);
