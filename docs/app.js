@@ -88,10 +88,8 @@ function renderMeta() {
   const meta = document.getElementById("meta");
   const exported = state.payload.exported_at || "aguardando primeira exportação";
   meta.innerHTML = `
-    <div>Última exportação: <strong>${exported}</strong></div>
-    <div>Tabela: <strong>${state.payload.table_name || "leilao-radar-lotes"}</strong></div>
-    <div>Região: <strong>${state.payload.region || "sa-east-1"}</strong></div>
-    <div>Total no snapshot: <strong>${state.payload.count || 0}</strong></div>
+    <div class="meta-row">Atualizado <strong>${exported}</strong></div>
+    <div class="meta-row">${state.payload.region || "sa-east-1"} · <strong>${state.payload.count || 0}</strong> lotes</div>
   `;
 }
 
@@ -106,7 +104,7 @@ function renderMetrics(rows) {
     rows.length ? rows.reduce((sum, r) => sum + (r.lance_atual || 0), 0) / rows.length : null;
 
   document.getElementById("metrics").innerHTML = `
-    <div class="metric-card"><span>Lotes (filtrados)</span><strong>${rows.length}</strong></div>
+    <div class="metric-card"><span>Lotes filtrados</span><strong>${rows.length}</strong></div>
     <div class="metric-card"><span>Match FIPE exato</span><strong>${exact}</strong></div>
     <div class="metric-card"><span>Desconto médio</span><strong>${avgDesconto == null ? "N/A" : pct(avgDesconto)}</strong></div>
     <div class="metric-card"><span>Lance médio</span><strong>${avgLance == null ? "N/A" : money(avgLance)}</strong></div>
@@ -161,7 +159,7 @@ function createCardElement(row) {
       </div>
       <div class="lot-card-tags">
         <span class="tag">${row.sinistro_label || row.sinistro || "—"}</span>
-        <span class="tag">${row.days_until_auction != null ? `${row.days_until_auction.toFixed(1)} dias` : "sem data"}</span>
+        <span class="tag tag-urgent">${row.days_until_auction != null ? `${row.days_until_auction.toFixed(1)} dias` : "sem data"}</span>
         <span class="tag tag-accent">relevância ${(row.relevance_score ?? 0).toFixed(3)}</span>
       </div>
       <div class="lot-card-footer">

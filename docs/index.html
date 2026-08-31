@@ -4,21 +4,31 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Leilão Radar</title>
+    <link rel="icon" href="assets/favicon.png" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <header class="header">
-      <div>
-        <h1>Leilão Radar</h1>
-        <p class="subtitle">Ranking por relevância: proximidade do leilão + desconto vs FIPE</p>
-      </div>
+      <a class="brand" href="./">
+        <img class="brand-mark" src="assets/logo.png" alt="" width="52" height="52" />
+        <span class="brand-text">
+          <span class="brand-name">Leilão Radar</span>
+          <span class="brand-tagline">Ofertas próximas · desconto vs FIPE</span>
+        </span>
+      </a>
       <div class="meta" id="meta"></div>
     </header>
 
     <section class="metrics" id="metrics"></section>
 
     <section class="panel filters">
-      <h2>Filtros</h2>
+      <h2 class="panel-title">Filtros</h2>
       <div class="filter-grid">
         <label>
           Match FIPE
@@ -31,7 +41,7 @@
         <label>
           Desconto mínimo (%)
           <input id="min-desconto" type="range" min="-50" max="80" value="0" />
-          <span id="min-desconto-label">0%</span>
+          <span id="min-desconto-label" class="range-value">0%</span>
         </label>
         <label>
           Marca
@@ -63,8 +73,11 @@
       </p>
     </section>
 
-    <section class="panel">
-      <h2>Ofertas mais relevantes <span id="table-count" class="table-count"></span></h2>
+    <section class="panel offers">
+      <h2 class="panel-title">
+        Ofertas mais relevantes
+        <span id="table-count" class="table-count"></span>
+      </h2>
       <div id="empty-state" class="empty hidden">Nenhum lote com os filtros atuais.</div>
       <div id="cards-grid" class="cards-grid"></div>
       <div id="load-sentinel" class="load-sentinel hidden" aria-hidden="true">
@@ -92,6 +105,7 @@
     </div>
 
     <footer class="footer">
+      <img class="footer-mark" src="assets/logo.png" alt="" width="28" height="28" />
       <span>Leilão Radar · dados da Sodré Santoro vs Tabela FIPE</span>
     </footer>
 
