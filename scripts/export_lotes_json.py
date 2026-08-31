@@ -35,22 +35,16 @@ def normalize_item(item: dict[str, Any]) -> dict[str, Any]:
     fipe_f = float(fipe) if fipe is not None else None
     desconto = item.get("desconto_pct")
     desconto_f = float(desconto) if desconto is not None else None
-    relevance = item.get("relevance_score")
-    days_until = item.get("days_until_auction")
     leilao_fim = item.get("leilao_fim")
     leilao_em = item.get("leilao_em")
     sinistro = item.get("sinistro")
 
-    rel, days, monta_class, excluded = compute_relevance(
+    # Always recompute days/relevance at export time so past auctions are
+    # dropped even when DynamoDB still holds stale days_until_auction values.
+    relevance, days, _monta_class, excluded = compute_relevance(
         desconto_f, leilao_fim, leilao_em, sinistro=sinistro
     )
-    if relevance is None:
-        relevance = rel
-        days_until = days
-    else:
-        relevance = float(relevance)
-        if days_until is not None:
-            days_until = float(days_until)
+    days_until = round(days, 2) if days is not None else None
 
     classificacao = item.get("classificacao_monta") or parse_monta_class(sinistro)
     if excluded or classificacao == "grande":

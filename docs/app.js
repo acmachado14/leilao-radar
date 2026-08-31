@@ -32,17 +32,49 @@ function pct(value) {
 
 function formatDateTime(value) {
   if (!value) return "—";
-  const raw = String(value).trim();
-  const normalized = raw.includes("T") ? raw : raw.replace(" ", "T");
-  const date = new Date(normalized);
-  if (Number.isNaN(date.getTime())) return raw;
+  const date = parseAuctionDate(value);
+  if (!date) return String(value).trim();
   return date.toLocaleString("pt-BR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "America/Sao_Paulo",
   });
+}
+
+/** Parse auction datetimes as America/Sao_Paulo (UTC-3, no DST). */
+function parseAuctionDate(value) {
+  if (!value) return null;
+  const raw = String(value).trim();
+  let normalized = raw.includes("T") ? raw : raw.replace(" ", "T");
+  // Naive timestamps from Sodré are São Paulo local time.
+  if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(normalized)) {
+    normalized = `${normalized}-03:00`;
+  }
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
+}
+
+function daysUntilAuction(row, now = Date.now()) {
+  const date = parseAuctionDate(row.leilao_fim || row.leilao_em);
+  if (!date) return null;
+  return (date.getTime() - now) / 86400000;
+}
+
+function enrichRow(row, now = Date.now()) {
+  const days = daysUntilAuction(row, now);
+  return {
+    ...row,
+    days_until_auction: days == null ? null : Math.round(days * 100) / 100,
+  };
+}
+
+function isUpcomingAuction(row) {
+  const days = row.days_until_auction;
+  return days == null || days >= 0;
 }
 
 function matchTypeLabel(value) {
@@ -67,7 +99,7 @@ function montaClassLabel(value) {
 
 function daysUntilLabel(value) {
   if (value == null || Number.isNaN(value)) return "Sem data";
-  if (value < 0) return `${Math.abs(value).toFixed(1)} dias atrás`;
+  if (value < 0) return "Encerrado";
   if (value < 1) return `${(value * 24).toFixed(0)} h restantes`;
   return `${value.toFixed(1)} dias`;
 }
@@ -119,7 +151,8 @@ function applyFilters() {
   const excludeGrande = document.getElementById("exclude-grande").checked;
   const limit = Number(document.getElementById("row-limit").value) || 100;
 
-  let filtered = state.rows.filter((row) => matchFilter.includes(row.fipe_match));
+  let filtered = state.rows.filter((row) => isUpcomingAuction(row));
+  filtered = filtered.filter((row) => matchFilter.includes(row.fipe_match));
   filtered = filtered.filter((row) => (row.desconto_pct ?? -999) >= minDesconto);
 
   if (excludeGrande) {
@@ -434,7 +467,13 @@ async function loadData() {
   const response = await fetch("./data/lotes.json", { cache: "no-store" });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   state.payload = await response.json();
-  state.rows = state.payload.items || [];
+  const now = Date.now();
+  // Recalculate days_until from auction dates so stale JSON exports
+  // cannot show "Xh restantes" for auctions that already ended.
+  state.rows = (state.payload.items || [])
+    .map((row) => enrichRow(row, now))
+    .filter(isUpcomingAuction);
+  state.payload.count = state.rows.length;
   renderMeta();
   populateMarcas();
   applyFilters();
