@@ -98,8 +98,11 @@
 
     <div id="lightbox" class="lightbox hidden" aria-hidden="true">
       <div class="lightbox-backdrop" data-close-lightbox></div>
+      <button type="button" class="lightbox-close" data-close-lightbox aria-label="Fechar">
+        <span class="lightbox-close-icon" aria-hidden="true">×</span>
+        <span class="lightbox-close-label">Fechar</span>
+      </button>
       <div class="lightbox-dialog" role="dialog" aria-modal="true" aria-labelledby="lightbox-title">
-        <button type="button" class="lightbox-close" data-close-lightbox aria-label="Fechar">×</button>
         <div class="lightbox-main">
           <img id="lightbox-main-img" alt="" referrerpolicy="no-referrer" />
           <button type="button" class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Foto anterior">‹</button>
