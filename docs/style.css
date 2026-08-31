@@ -729,4 +729,9 @@ a {
     margin: 0.5rem;
     padding: 0.5rem;
   }
+
+  .lightbox-close {
+    top: 0.65rem;
+    right: 0.65rem;
+  }
 }
