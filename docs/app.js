@@ -48,6 +48,13 @@ function formatDateTime(value) {
 function parseAuctionDate(value) {
   if (!value) return null;
   const raw = String(value).trim();
+
+  // Palácio exports date-only; treat as open until end of that day in BRT.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const date = new Date(`${raw}T23:59:59-03:00`);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
   let normalized = raw.includes("T") ? raw : raw.replace(" ", "T");
   // Naive timestamps from Sodré are São Paulo local time.
   if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(normalized)) {
@@ -142,6 +149,13 @@ function cardPhotos(row) {
   return [];
 }
 
+function passesMinDesconto(row, minDesconto) {
+  const desconto = row.desconto_pct;
+  // Lots without FIPE have no meaningful discount — don't hide at 0% minimum.
+  if (desconto != null && desconto <= -900) return true;
+  return (desconto ?? -999) >= minDesconto;
+}
+
 function fonteLabel(fonte) {
   if (fonte === "palacio") return "Palácio";
   return "Sodré";
@@ -163,7 +177,7 @@ function applyFilters() {
     return fonteFilter.length === 0 || fonteFilter.includes(fonte);
   });
   filtered = filtered.filter((row) => matchFilter.includes(row.fipe_match));
-  filtered = filtered.filter((row) => (row.desconto_pct ?? -999) >= minDesconto);
+  filtered = filtered.filter((row) => passesMinDesconto(row, minDesconto));
 
   if (excludeGrande) {
     filtered = filtered.filter((row) => row.classificacao_monta !== "grande");

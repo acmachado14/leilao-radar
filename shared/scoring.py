@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from shared.dates import parse_datetime
+from shared.dates import parse_auction_end
 from shared.monta import MontaClass, monta_component
 
 DISCOUNT_CAP = 0.50
@@ -34,7 +34,7 @@ def days_until_auction(
     now: datetime | None = None,
 ) -> float | None:
     reference = now or datetime.now(tz=ZoneInfo("America/Sao_Paulo"))
-    auction_dt = parse_datetime(leilao_fim) or parse_datetime(leilao_em)
+    auction_dt = parse_auction_end(leilao_fim) or parse_auction_end(leilao_em)
     if auction_dt is None:
         return None
     return (auction_dt - reference).total_seconds() / 86400

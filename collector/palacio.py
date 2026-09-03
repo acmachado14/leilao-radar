@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from shared.dates import parse_datetime, to_iso_date
+from shared.dates import parse_auction_end
 from shared.models import PalacioLotRaw
 from shared.numbers import to_float
 
@@ -317,9 +317,9 @@ def parse_detail_html(html: str) -> dict[str, Any]:
 
 
 def compute_ttl(auction_date: str | None) -> int:
-    end_dt = parse_datetime(auction_date)
+    end_dt = parse_auction_end(auction_date)
     if end_dt is None:
         end_dt = datetime.now(tz=ZoneInfo("America/Sao_Paulo"))
     # End of auction day + 1 day retention
-    expiry = end_dt.replace(hour=23, minute=59, second=59) + timedelta(days=1)
+    expiry = end_dt + timedelta(days=1)
     return int(expiry.astimezone(timezone.utc).timestamp())
