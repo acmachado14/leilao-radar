@@ -694,6 +694,13 @@ a {
   font-weight: 650;
 }
 
+.lightbox-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+}
+
 .lightbox-cta {
   display: inline-flex;
   align-items: center;
@@ -709,6 +716,31 @@ a {
 
 .lightbox-cta:hover {
   filter: brightness(1.06);
+}
+
+.lightbox-share {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.95rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: rgba(15, 26, 36, 0.9);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-weight: 650;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.lightbox-share:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.lightbox-share.is-copied {
+  border-color: var(--accent-2);
+  color: var(--accent-2);
 }
 
 @media (max-width: 720px) {

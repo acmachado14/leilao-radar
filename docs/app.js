@@ -374,22 +374,111 @@ function setupObservers() {
   scrollObserver.observe(sentinel);
 }
 
-function openLightbox(row) {
+function lotShareId(row) {
+  return String(row?.lote_id || "").trim();
+}
+
+function lotShareUrl(loteId) {
+  const url = new URL(window.location.href);
+  url.search = "";
+  url.hash = loteId ? `lote=${encodeURIComponent(loteId)}` : "";
+  return url.toString();
+}
+
+function readLoteFromHash() {
+  const raw = window.location.hash.replace(/^#/, "");
+  if (!raw) return null;
+  const params = new URLSearchParams(raw.includes("=") ? raw : `lote=${raw}`);
+  const lote = params.get("lote");
+  return lote ? String(lote).trim() : null;
+}
+
+function setLoteHash(loteId) {
+  const next = loteId ? `#lote=${encodeURIComponent(loteId)}` : "";
+  if (window.location.hash === next) return;
+  if (next) {
+    history.pushState({ loteId }, "", next);
+  } else {
+    history.pushState({}, "", `${window.location.pathname}${window.location.search}`);
+  }
+}
+
+function findLotById(loteId) {
+  if (!loteId) return null;
+  const matchId = (row) => String(row.lote_id) === String(loteId);
+  const fromRows =
+    state.rows.find(matchId) || state.display.filteredRows.find(matchId) || null;
+  if (fromRows) return fromRows;
+  // Fallback: allow share links for lots filtered out (ended / filters).
+  const fromPayload = (state.payload.items || []).find(matchId);
+  return fromPayload ? enrichRow(fromPayload, Date.now()) : null;
+}
+
+function openLightbox(row, { syncHash = true } = {}) {
   const photos = cardPhotos(row);
   state.lightbox = { row, photos, index: 0 };
   const lightbox = document.getElementById("lightbox");
   lightbox.classList.remove("hidden");
   lightbox.setAttribute("aria-hidden", "false");
   document.body.classList.add("lightbox-open");
+  if (syncHash) setLoteHash(lotShareId(row));
   updateLightbox();
 }
 
-function closeLightbox() {
+function closeLightbox({ syncHash = true } = {}) {
   const lightbox = document.getElementById("lightbox");
   lightbox.classList.add("hidden");
   lightbox.setAttribute("aria-hidden", "true");
   document.body.classList.remove("lightbox-open");
   state.lightbox = { row: null, photos: [], index: 0 };
+  if (syncHash) setLoteHash(null);
+  resetShareButton();
+}
+
+function resetShareButton() {
+  const shareBtn = document.getElementById("lightbox-share");
+  if (!shareBtn) return;
+  shareBtn.textContent = "Copiar link";
+  shareBtn.classList.remove("is-copied");
+}
+
+async function copyShareLink() {
+  const row = state.lightbox.row;
+  if (!row) return;
+  const shareUrl = lotShareUrl(lotShareId(row));
+  const shareBtn = document.getElementById("lightbox-share");
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(shareUrl);
+    } else {
+      const input = document.createElement("input");
+      input.value = shareUrl;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      input.remove();
+    }
+    if (shareBtn) {
+      shareBtn.textContent = "Link copiado";
+      shareBtn.classList.add("is-copied");
+      window.setTimeout(resetShareButton, 1800);
+    }
+  } catch (_err) {
+    window.prompt("Copie o link do lote:", shareUrl);
+  }
+}
+
+function openLotFromHash() {
+  const loteId = readLoteFromHash();
+  if (!loteId) {
+    if (state.lightbox.row) closeLightbox({ syncHash: false });
+    return;
+  }
+  if (state.lightbox.row && lotShareId(state.lightbox.row) === loteId) return;
+  const row = findLotById(loteId);
+  if (row) {
+    openLightbox(row, { syncHash: false });
+  }
 }
 
 function updateLightbox() {
@@ -434,6 +523,7 @@ function updateLightbox() {
   link.textContent = `Ver no ${fonteLabel(row.fonte)}`;
   link.href = row.url || "#";
   link.style.display = row.url ? "inline-flex" : "none";
+  resetShareButton();
 
   const showNav = photos.length > 1;
   prevBtn.style.display = showNav ? "flex" : "none";
@@ -490,6 +580,7 @@ async function loadData() {
   renderMeta();
   populateMarcas();
   applyFilters();
+  openLotFromHash();
 }
 
 function bindEvents() {
@@ -530,10 +621,16 @@ function bindEvents() {
   });
 
   document.querySelectorAll("[data-close-lightbox]").forEach((el) => {
-    el.addEventListener("click", closeLightbox);
+    el.addEventListener("click", () => closeLightbox());
   });
   document.getElementById("lightbox-prev").addEventListener("click", () => shiftLightbox(-1));
   document.getElementById("lightbox-next").addEventListener("click", () => shiftLightbox(1));
+  document.getElementById("lightbox-share").addEventListener("click", () => {
+    copyShareLink();
+  });
+
+  window.addEventListener("hashchange", openLotFromHash);
+  window.addEventListener("popstate", openLotFromHash);
 
   document.addEventListener("keydown", (event) => {
     if (state.lightbox.row == null) return;
