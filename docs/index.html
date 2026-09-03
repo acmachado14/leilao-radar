@@ -122,7 +122,16 @@
           <dl id="lightbox-details" class="lightbox-details"></dl>
           <div class="lightbox-actions">
             <a id="lightbox-link" href="#" target="_blank" rel="noopener" class="lightbox-cta">Ver no leilão</a>
-            <button type="button" id="lightbox-share" class="lightbox-share">Copiar link</button>
+            <div class="lightbox-share-group">
+              <input
+                type="text"
+                id="lightbox-share-url"
+                class="lightbox-share-url"
+                readonly
+                aria-label="Link para compartilhar este lote"
+              />
+              <button type="button" id="lightbox-share" class="lightbox-share">Copiar link</button>
+            </div>
           </div>
         </div>
       </div>
