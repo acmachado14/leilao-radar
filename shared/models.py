@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 
 FipeMatchKind = Literal["exact", "closest", "failed"]
+LotFonte = Literal["sodre", "palacio"]
 
 
 class FipeMatchResult(BaseModel):
@@ -43,6 +44,26 @@ class SodreLotRaw(BaseModel):
     lot_pictures: list[Any] | None = None
 
 
+class PalacioLotRaw(BaseModel):
+    lot_id: int
+    auction_id: int
+    lot_title: str | None = None
+    lot_brand: str | None = None
+    lot_model: str | None = None
+    lot_year_manufacture: int | None = None
+    lot_year_model: int | None = None
+    lot_fuel: str | None = None
+    lot_category: str | None = "Automovel"
+    bid_actual: float | None = None
+    bid_initial: float | None = None
+    lot_sinister: str | None = None
+    lot_origin: str | None = None
+    lot_location: str | None = None
+    auction_date: str | None = None
+    lot_pictures: list[str] = Field(default_factory=list)
+    lot_url: str | None = None
+
+
 class LotRecord(BaseModel):
     lote_id: str
     titulo: str
@@ -62,6 +83,7 @@ class LotRecord(BaseModel):
     classificacao_monta: str | None = None
     origem: str | None = None
     patio: str | None = None
+    fonte: LotFonte = "sodre"
     fipe_codigo: str | None = None
     fipe_preco: float | None = None
     fipe_texto: str | None = None
@@ -84,6 +106,7 @@ class LotRecord(BaseModel):
             "lance_atual": Decimal(str(round(self.lance_atual, 2))),
             "url": self.url,
             "leilao_id": self.leilao_id,
+            "fonte": self.fonte,
             "fipe_match": self.fipe_match,
             "gsi_pk": self.gsi_pk,
             "updated_at": self.updated_at,

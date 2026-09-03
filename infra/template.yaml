@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
-Description: Leilao Radar - daily Sodre collector and DynamoDB store
+Description: Leilao Radar - Sodre + Palacio collectors and DynamoDB store
 
 Parameters:
   LogLevel:
@@ -78,7 +78,7 @@ Resources:
           Type: Schedule
           Properties:
             Schedule: cron(0 7 * * ? *)
-            Description: Run collector daily at 04:00 BRT (07:00 UTC)
+            Description: Run Sodre collector daily at 04:00 BRT (07:00 UTC)
             Enabled: true
 
   CollectorLogGroup:
@@ -87,16 +87,54 @@ Resources:
       LogGroupName: !Sub /aws/lambda/${CollectorFunction}
       RetentionInDays: 14
 
+  PalacioCollectorFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: python3.12
+      BuildProperties:
+        RequirementsFile: collector/requirements.txt
+    Properties:
+      FunctionName: leilao-radar-collector-palacio
+      Description: Collects open Palacio dos Leiloes vehicle lots and enriches with FIPE prices
+      CodeUri: ../
+      Handler: collector.palacio_handler.handler
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref LotesTable
+          LOG_LEVEL: !Ref LogLevel
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LotesTable
+      Events:
+        DailySchedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(30 7 * * ? *)
+            Description: Run Palacio collector daily at 04:30 BRT (07:30 UTC)
+            Enabled: true
+
+  PalacioCollectorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${PalacioCollectorFunction}
+      RetentionInDays: 14
+
 Outputs:
   LotesTableName:
     Description: DynamoDB table for auction lots
     Value: !Ref LotesTable
   CollectorFunctionArn:
-    Description: Lambda function ARN
+    Description: Sodre Lambda function ARN
     Value: !GetAtt CollectorFunction.Arn
   CollectorFunctionName:
-    Description: Lambda function name
+    Description: Sodre Lambda function name
     Value: !Ref CollectorFunction
+  PalacioCollectorFunctionArn:
+    Description: Palacio Lambda function ARN
+    Value: !GetAtt PalacioCollectorFunction.Arn
+  PalacioCollectorFunctionName:
+    Description: Palacio Lambda function name
+    Value: !Ref PalacioCollectorFunction
   Region:
     Description: Deployed region
     Value: !Ref AWS::Region

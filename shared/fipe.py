@@ -22,6 +22,8 @@ MIN_PARALLELUM_SCORE = 55
 
 CATEGORY_TO_TIPO: dict[str, FipeTipo] = {
     "carros": "carros",
+    "automovel": "carros",
+    "automóveis": "carros",
     "motos": "motos",
     "caminhões": "caminhoes",
     "caminhoes": "caminhoes",
@@ -56,18 +58,17 @@ def _normalize(text: str) -> str:
 
 def detect_fipe_tipo(category: str | None, marca: str = "", modelo: str = "") -> FipeTipo:
     cat = _normalize(category or "")
-    if cat in CATEGORY_TO_TIPO:
-        return CATEGORY_TO_TIPO[cat]
-
     blob = _normalize(f"{marca} {modelo}")
     if re.search(r"\b(cg|biz|bros|xre|fator|twister|ninja|r1|r3|mt[- ]?0?7)\b", blob):
         return "motos"
     if re.search(
-        r"\b(cargo|constellation|daily|atego|accelo|actros|axor|stralis|"
-        r"\d{2}[.\-]\d{3}|truck|toco|bitruck|cavalo)\b",
+        r"\b(cargo|constellation|daily|atego|accelo|actros|axor|stralis|atron|"
+        r"fh\b|fm\b|\d{2}[.\-]\d{3}|truck|toco|bitruck|cavalo)\b",
         blob,
     ):
         return "caminhoes"
+    if cat in CATEGORY_TO_TIPO:
+        return CATEGORY_TO_TIPO[cat]
     return "carros"
 
 

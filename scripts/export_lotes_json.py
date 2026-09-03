@@ -76,6 +76,7 @@ def normalize_item(item: dict[str, Any]) -> dict[str, Any]:
         "classificacao_monta": classificacao,
         "sinistro_label": monta_label(sinistro),
         "patio": item.get("patio"),
+        "fonte": item.get("fonte") or "sodre",
         "url": item.get("url"),
         "foto_capa": item.get("foto_capa"),
         "fotos": item.get("fotos") or [],

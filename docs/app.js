@@ -142,8 +142,14 @@ function cardPhotos(row) {
   return [];
 }
 
+function fonteLabel(fonte) {
+  if (fonte === "palacio") return "Palácio";
+  return "Sodré";
+}
+
 function applyFilters() {
   const searchQuery = document.getElementById("search-filter").value;
+  const fonteFilter = getSelectedValues(document.getElementById("fonte-filter"));
   const matchFilter = getSelectedValues(document.getElementById("match-filter"));
   const minDesconto = Number(document.getElementById("min-desconto").value) / 100;
   const marcaFilter = getSelectedValues(document.getElementById("marca-filter"));
@@ -152,6 +158,10 @@ function applyFilters() {
   const limit = Number(document.getElementById("row-limit").value) || 100;
 
   let filtered = state.rows.filter((row) => isUpcomingAuction(row));
+  filtered = filtered.filter((row) => {
+    const fonte = row.fonte || "sodre";
+    return fonteFilter.length === 0 || fonteFilter.includes(fonte);
+  });
   filtered = filtered.filter((row) => matchFilter.includes(row.fipe_match));
   filtered = filtered.filter((row) => (row.desconto_pct ?? -999) >= minDesconto);
 
@@ -262,6 +272,7 @@ function createCardElement(row) {
         <div><span>Desconto</span><strong class="${descontoClass}">${row.desconto_label || pct(row.desconto_pct)}</strong></div>
       </div>
       <div class="lot-card-tags">
+        <span class="tag">${fonteLabel(row.fonte)}</span>
         <span class="tag">${row.sinistro_label || row.sinistro || "—"}</span>
         <span class="tag">${matchTypeLabel(row.fipe_match)}</span>
         <span class="tag tag-urgent">${daysUntilLabel(row.days_until_auction)}</span>
@@ -269,7 +280,7 @@ function createCardElement(row) {
       </div>
       <div class="lot-card-footer">
         <span class="lot-card-patio">${row.patio || "—"}</span>
-        ${row.url ? `<a href="${row.url}" target="_blank" rel="noopener" class="lot-card-link" data-external-link>Sodré</a>` : ""}
+        ${row.url ? `<a href="${row.url}" target="_blank" rel="noopener" class="lot-card-link" data-external-link>${fonteLabel(row.fonte)}</a>` : ""}
       </div>
     </div>
   `;
@@ -407,6 +418,7 @@ function updateLightbox() {
     detailItem("Data do leilão", formatDateTime(row.leilao_em || row.leilao_fim)),
     detailItem("Fim do lote", formatDateTime(row.leilao_fim)),
     detailItem("Prazo", daysUntilLabel(row.days_until_auction)),
+    detailItem("Fonte", fonteLabel(row.fonte)),
     detailItem("Match FIPE", matchTypeLabel(row.fipe_match)),
     detailItem("Lance atual", money(row.lance_atual)),
     detailItem("FIPE", money(row.fipe_preco)),
@@ -419,6 +431,7 @@ function updateLightbox() {
     detailItem("ID do lote", row.lote_id || "—"),
   ].join("");
 
+  link.textContent = `Ver no ${fonteLabel(row.fonte)}`;
   link.href = row.url || "#";
   link.style.display = row.url ? "inline-flex" : "none";
 
@@ -489,7 +502,7 @@ function bindEvents() {
 
   document.getElementById("search-filter").addEventListener("input", applyFilters);
 
-  ["match-filter", "marca-filter", "monta-filter", "row-limit", "exclude-grande"].forEach((id) => {
+  ["fonte-filter", "match-filter", "marca-filter", "monta-filter", "row-limit", "exclude-grande"].forEach((id) => {
     const el = document.getElementById(id);
     el.addEventListener("change", applyFilters);
     if (el.type === "checkbox") {

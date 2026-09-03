@@ -117,19 +117,3 @@ def compute_ttl(lot_date_end: str | None, auction_date_init: str | None) -> int:
         end_dt = datetime.now(tz=ZoneInfo("America/Sao_Paulo"))
     expiry = end_dt + timedelta(days=1)
     return int(expiry.astimezone(timezone.utc).timestamp())
-
-
-def to_float(value: Any) -> float | None:
-    if value is None:
-        return None
-    if isinstance(value, (int, float)):
-        return float(value)
-    text = str(value).strip()
-    if not text:
-        return None
-    if "," in text:
-        text = text.replace(".", "").replace(",", ".")
-    try:
-        return float(text)
-    except ValueError:
-        return None

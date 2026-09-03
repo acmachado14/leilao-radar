@@ -5,18 +5,15 @@ Daily collector for **Sodré Santoro** vehicle auction lots. Enriches each lot w
 ## Architecture
 
 ```
-EventBridge (04:00 BRT) → Lambda collector
-                              ↓
-                    Sodré Elasticsearch (via public Nuxt bootstrap)
-                              ↓
-                    tabelafipe.info (+ Parallelum fallback)
+EventBridge (04:00 BRT) → Lambda Sodré collector
+EventBridge (04:30 BRT) → Lambda Palácio collector
                               ↓
                     DynamoDB (TTL = auction end + 1 day)
-
-Streamlit dashboard → DynamoDB (ranking by desconto_pct)
+                              ↓
+GitHub Actions (05:00 BRT) → docs/data/lotes.json → Pages
 ```
 
-The collector does **not** use Cursor or browser automation. It reads the same Elasticsearch index the Sodré website uses. Credentials (`elasticURL`, `elasticApiKey`) are extracted from the public HTML at `https://leilao.sodresantoro.com.br/` on each run.
+The collectors do **not** use Cursor or browser automation. Sodré reads the public Elasticsearch index; Palácio uses the site AJAX endpoints (`listar_lote` / `exibir_lote_m`).
 
 ## Project layout
 
@@ -129,22 +126,23 @@ make aws-build
 # 2) Deploy stack leilao-radar in sa-east-1
 make aws-deploy
 
-# 3) Optional: run collector now (instead of waiting for 04:00 BRT)
+# 3) Optional: run collectors now (instead of waiting for schedule)
 make aws-invoke
+make aws-invoke-palacio
 
 # 4) Follow logs
 make aws-logs
+make aws-logs-palacio
 ```
 
 Stack creates:
 
 - DynamoDB table `leilao-radar-lotes` (on-demand, TTL, GSI `gsi_relevancia` + `gsi_desconto`)
-- Lambda `leilao-radar-collector` (15 min timeout, arm64, 512 MB)
-- EventBridge schedule: `cron(0 7 * * ? *)` → 04:00 America/Sao_Paulo
+- Lambda `leilao-radar-collector` (Sodré, 04:00 BRT)
+- Lambda `leilao-radar-collector-palacio` (Palácio, 04:30 BRT)
 - CloudWatch Logs with 14-day retention
 
-Point the local dashboard at real AWS by removing `DYNAMODB_ENDPOINT_URL` from `.env` (and using real AWS credentials).
-
+Each lot stores `fonte` (`sodre` | `palacio`). Palácio IDs are namespaced as `palacio:{id}` to avoid PK collisions.
 ## GitHub Pages (static dashboard)
 
 Public dashboard at GitHub Pages — no Streamlit server. Data is exported from DynamoDB to `docs/data/lotes.json` and deployed by GitHub Actions.

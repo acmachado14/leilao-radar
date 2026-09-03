@@ -4,6 +4,7 @@ from typing import Any
 
 SODRE_HOST = "https://leilao.sodresantoro.com.br"
 PHOTOS_HOST = "https://photos.sodresantoro.com.br"
+PALACIO_HOST = "https://www.palaciodosleiloes.com.br/site"
 MAX_PHOTOS = 8
 
 
@@ -21,7 +22,7 @@ def _extract_url(value: Any) -> str | None:
     return None
 
 
-def normalize_photo_url(url: str) -> str | None:
+def normalize_photo_url(url: str, *, relative_base: str | None = None) -> str | None:
     text = url.strip()
     if not text:
         return None
@@ -29,14 +30,23 @@ def normalize_photo_url(url: str) -> str | None:
         return f"https:{text}"
     if text.startswith("http://") or text.startswith("https://"):
         return text
+
+    base = (relative_base or PHOTOS_HOST).rstrip("/")
     if text.startswith("/"):
+        if relative_base:
+            return f"{base}{text}"
         if text.startswith("/veiculos/") or text.startswith("/photos/"):
             return f"{PHOTOS_HOST}{text}"
         return f"{SODRE_HOST}{text}"
-    return f"{PHOTOS_HOST}/{text.lstrip('/')}"
+    return f"{base}/{text.lstrip('/')}"
 
 
-def normalize_lot_pictures(raw: Any, max_photos: int = MAX_PHOTOS) -> tuple[str | None, list[str]]:
+def normalize_lot_pictures(
+    raw: Any,
+    max_photos: int = MAX_PHOTOS,
+    *,
+    relative_base: str | None = None,
+) -> tuple[str | None, list[str]]:
     if raw is None:
         return None, []
 
@@ -52,7 +62,7 @@ def normalize_lot_pictures(raw: Any, max_photos: int = MAX_PHOTOS) -> tuple[str 
         url = _extract_url(item)
         if not url:
             continue
-        normalized = normalize_photo_url(url)
+        normalized = normalize_photo_url(url, relative_base=relative_base)
         if not normalized or normalized in seen:
             continue
         seen.add(normalized)
