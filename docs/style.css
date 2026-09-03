@@ -699,6 +699,8 @@ a {
   flex-wrap: wrap;
   gap: 0.6rem;
   margin-top: 0.25rem;
+  position: relative;
+  z-index: 3;
 }
 
 .lightbox-cta {
@@ -730,35 +732,13 @@ a {
   font-weight: 650;
   font-size: 0.9rem;
   cursor: pointer;
-  flex-shrink: 0;
+  touch-action: manipulation;
   transition: border-color 0.15s ease, color 0.15s ease;
 }
 
-.lightbox-share-group {
-  display: flex;
-  align-items: stretch;
-  gap: 0.45rem;
-  flex: 1 1 220px;
-  min-width: 0;
-}
-
-.lightbox-share-url {
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 0.45rem 0.65rem;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: rgba(8, 14, 20, 0.85);
-  color: var(--text-muted);
-  font-family: var(--font-ui);
-  font-size: 0.78rem;
-  line-height: 1.2;
-}
-
-.lightbox-share-url:focus {
-  outline: none;
-  border-color: var(--accent);
-  color: var(--text);
+.lightbox-share.is-error {
+  border-color: #f87171;
+  color: #f87171;
 }
 
 .lightbox-share:hover {

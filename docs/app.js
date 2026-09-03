@@ -453,78 +453,98 @@ function resetShareButton() {
   const shareBtn = document.getElementById("lightbox-share");
   if (!shareBtn) return;
   shareBtn.textContent = "Copiar link";
-  shareBtn.classList.remove("is-copied");
+  shareBtn.classList.remove("is-copied", "is-error");
 }
 
 function copyTextSync(text) {
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  textarea.setAttribute("readonly", "");
-  textarea.style.cssText =
-    "position:fixed;left:0;top:0;width:2em;height:2em;padding:0;border:none;outline:none;background:transparent;opacity:0;";
-  document.body.appendChild(textarea);
-  textarea.focus();
-  textarea.select();
-  textarea.setSelectionRange(0, text.length);
+  if (!text) return false;
+
+  const active = document.activeElement;
+  const el = document.createElement("textarea");
+  el.value = text;
+  el.setAttribute("readonly", "");
+  el.setAttribute("aria-hidden", "true");
+  el.tabIndex = -1;
+  el.style.position = "fixed";
+  el.style.top = "0";
+  el.style.left = "0";
+  el.style.width = "1px";
+  el.style.height = "1px";
+  el.style.padding = "0";
+  el.style.border = "none";
+  el.style.opacity = "0";
+  el.style.pointerEvents = "none";
+
+  document.body.appendChild(el);
+  el.focus({ preventScroll: true });
+  el.select();
+  el.setSelectionRange(0, text.length);
+
   let copied = false;
   try {
     copied = document.execCommand("copy");
   } catch (_err) {
     copied = false;
   }
-  textarea.remove();
+
+  el.remove();
+  if (active && typeof active.focus === "function") {
+    active.focus({ preventScroll: true });
+  }
   return copied;
 }
 
 function showShareCopied() {
   const shareBtn = document.getElementById("lightbox-share");
   if (!shareBtn) return;
-  shareBtn.textContent = "Link copiado";
+  shareBtn.textContent = "Link copiado!";
+  shareBtn.classList.remove("is-error");
   shareBtn.classList.add("is-copied");
   window.clearTimeout(shareBtn._copiedTimer);
   shareBtn._copiedTimer = window.setTimeout(resetShareButton, 2000);
 }
 
+function showShareError() {
+  const shareBtn = document.getElementById("lightbox-share");
+  if (!shareBtn) return;
+  shareBtn.textContent = "Não copiou — tente de novo";
+  shareBtn.classList.remove("is-copied");
+  shareBtn.classList.add("is-error");
+  window.clearTimeout(shareBtn._copiedTimer);
+  shareBtn._copiedTimer = window.setTimeout(resetShareButton, 2200);
+}
+
 function copyShareLink(event) {
-  event?.preventDefault?.();
-  event?.stopPropagation?.();
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
 
   const row = state.lightbox.row;
   if (!row) return;
 
   const shareUrl = lotShareUrl(lotShareId(row));
-  const shareInput = document.getElementById("lightbox-share-url");
-  if (shareInput) {
-    shareInput.value = shareUrl;
-    shareInput.focus();
-    shareInput.select();
-    shareInput.setSelectionRange(0, shareUrl.length);
-  }
+  let settled = false;
+
+  const finish = (ok) => {
+    if (settled) return;
+    settled = true;
+    if (ok) showShareCopied();
+    else showShareError();
+  };
 
   if (copyTextSync(shareUrl)) {
-    showShareCopied();
+    finish(true);
     return;
   }
 
   const clipboard = navigator.clipboard;
   if (clipboard?.writeText) {
-    clipboard.writeText(shareUrl).then(showShareCopied).catch(() => {
-      if (shareInput) {
-        shareInput.focus();
-        shareInput.select();
-      }
-      const shareBtn = document.getElementById("lightbox-share");
-      if (shareBtn) shareBtn.textContent = "Selecione e copie";
-    });
+    clipboard.writeText(shareUrl).then(() => finish(true)).catch(() => finish(false));
     return;
   }
 
-  if (shareInput) {
-    shareInput.focus();
-    shareInput.select();
-  }
-  const shareBtn = document.getElementById("lightbox-share");
-  if (shareBtn) shareBtn.textContent = "Selecione e copie";
+  finish(false);
 }
 
 function openLotFromHash() {
@@ -582,10 +602,6 @@ function updateLightbox() {
   link.textContent = `Ver no ${fonteLabel(row.fonte)}`;
   link.href = row.url || "#";
   link.style.display = row.url ? "inline-flex" : "none";
-
-  const shareUrl = lotShareUrl(lotShareId(row));
-  const shareInput = document.getElementById("lightbox-share-url");
-  if (shareInput) shareInput.value = shareUrl;
   resetShareButton();
 
   const showNav = photos.length > 1;
@@ -688,15 +704,7 @@ function bindEvents() {
   });
   document.getElementById("lightbox-prev").addEventListener("click", () => shiftLightbox(-1));
   document.getElementById("lightbox-next").addEventListener("click", () => shiftLightbox(1));
-  document.getElementById("lightbox-share").addEventListener("click", (event) => {
-    copyShareLink(event);
-  });
-  const shareUrlEl = document.getElementById("lightbox-share-url");
-  if (shareUrlEl) {
-    shareUrlEl.addEventListener("click", (event) => {
-      copyShareLink(event);
-    });
-  }
+  document.getElementById("lightbox-share").addEventListener("click", copyShareLink, true);
 
   window.addEventListener("hashchange", openLotFromHash);
   window.addEventListener("popstate", openLotFromHash);
