@@ -66,4 +66,41 @@ class DispatchAlertsTest extends TestCase
 
         Mail::assertQueued(LotMatchMail::class, 1);
     }
+
+    public function test_unions_lots_from_multiple_preferences(): void
+    {
+        Mail::fake();
+
+        $user = User::factory()->create();
+        $user->alertPreferences()->create(array_merge(AlertPreference::defaults(), [
+            'name' => 'Jetta',
+            'search' => 'Jetta',
+        ]));
+        $user->alertPreferences()->create(array_merge(AlertPreference::defaults(), [
+            'name' => 'Amarok',
+            'search' => 'Amarok',
+        ]));
+
+        Lot::factory()->create([
+            'lote_id' => 'jetta-1',
+            'marca' => 'Volkswagen',
+            'modelo' => 'Jetta GLI',
+            'titulo' => 'Jetta GLI',
+        ]);
+        Lot::factory()->create([
+            'lote_id' => 'amarok-1',
+            'marca' => 'Volkswagen',
+            'modelo' => 'Amarok',
+            'titulo' => 'Amarok Highline',
+        ]);
+
+        $result = app(AlertDispatcher::class)->dispatch();
+
+        $this->assertSame(1, $result['emails']);
+        Mail::assertQueued(LotMatchMail::class, function (LotMatchMail $mail) {
+            $ids = $mail->lots->pluck('lote_id')->all();
+
+            return in_array('jetta-1', $ids, true) && in_array('amarok-1', $ids, true);
+        });
+    }
 }

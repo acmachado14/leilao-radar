@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'user_id',
+    'name',
     'search',
     'marcas',
     'fontes',
@@ -42,6 +43,7 @@ class AlertPreference extends Model
     public static function defaults(): array
     {
         return [
+            'name' => '',
             'search' => '',
             'marcas' => [],
             'fontes' => ['sodre', 'palacio'],
@@ -53,6 +55,21 @@ class AlertPreference extends Model
             'notify_email' => true,
             'notify_whatsapp' => false,
         ];
+    }
+
+    public function label(): string
+    {
+        $name = trim((string) $this->name);
+        if ($name !== '') {
+            return $name;
+        }
+
+        $search = trim((string) $this->search);
+        if ($search !== '') {
+            return $search;
+        }
+
+        return 'Todas as ofertas';
     }
 
     public function user(): BelongsTo

@@ -12,7 +12,7 @@ class UnsubscribeAlertsController extends Controller
     {
         abort_unless($request->hasValidSignature(), 403);
 
-        $user->alertPreference?->update(['notify_email' => false]);
+        $user->alertPreferences()->update(['notify_email' => false]);
 
         return redirect()
             ->route('catalog')

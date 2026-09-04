@@ -12,14 +12,10 @@ class Dashboard extends Component
     public function render(AlertDispatcher $dispatcher)
     {
         $user = Auth::user();
-        $preference = $user->alertPreference;
-        $matches = $preference
-            ? $dispatcher->preview($user, $preference, 8)
-            : collect();
+        $matches = $dispatcher->previewForUser($user, 8);
 
         return view('livewire.dashboard', [
             'user' => $user,
-            'preference' => $preference,
             'matches' => $matches,
             'lotCount' => Lot::query()->count(),
             'whatsappReady' => (bool) config('radar.whatsapp.enabled'),

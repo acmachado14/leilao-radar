@@ -100,9 +100,14 @@ class User extends Authenticatable
         };
     }
 
+    public function alertPreferences(): HasMany
+    {
+        return $this->hasMany(AlertPreference::class)->orderBy('created_at');
+    }
+
     public function alertPreference(): HasOne
     {
-        return $this->hasOne(AlertPreference::class);
+        return $this->hasOne(AlertPreference::class)->oldestOfMany();
     }
 
     public function lotAlertSends(): HasMany

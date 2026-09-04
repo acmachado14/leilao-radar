@@ -30,7 +30,7 @@ class AlertDispatcher
         $skipped = 0;
 
         User::query()
-            ->with('alertPreference')
+            ->with('alertPreferences')
             ->where('active', true)
             ->each(function (User $user) use ($lots, &$emails, &$users, &$skipped): void {
                 if (! $user->canReceiveAlerts()) {
@@ -39,17 +39,14 @@ class AlertDispatcher
                     return;
                 }
 
-                $preference = $user->alertPreference;
-                if ($preference === null) {
+                $preferences = $user->alertPreferences;
+                if ($preferences->isEmpty()) {
                     $skipped++;
 
                     return;
                 }
 
-                $matched = $lots
-                    ->filter(fn (Lot $lot) => $this->matcher->matches($lot, $preference))
-                    ->sortByDesc(fn (Lot $lot) => $lot->relevance_score ?? 0)
-                    ->values();
+                $matched = $this->matchLots($lots, $preferences);
 
                 if ($matched->isEmpty()) {
                     $skipped++;
@@ -59,7 +56,8 @@ class AlertDispatcher
 
                 $sentAny = false;
                 foreach ($this->channels as $channel) {
-                    if (! $channel->enabledFor($user, $preference)) {
+                    $preference = $this->channelPreference($user, $preferences, $channel);
+                    if ($preference === null) {
                         continue;
                     }
 
@@ -99,6 +97,58 @@ class AlertDispatcher
             ->sortByDesc(fn (Lot $lot) => $lot->relevance_score ?? 0)
             ->take($limit)
             ->values();
+    }
+
+    /**
+     * @return Collection<int, Lot>
+     */
+    public function previewForUser(User $user, int $limit = 24): Collection
+    {
+        $preferences = $user->alertPreferences;
+        if ($preferences->isEmpty()) {
+            return collect();
+        }
+
+        return $this->matchLots(
+            Lot::query()->get()->filter(fn (Lot $lot) => $lot->isUpcoming())->values(),
+            $preferences,
+        )->take($limit)->values();
+    }
+
+    /**
+     * @param  Collection<int, Lot>  $lots
+     * @param  Collection<int, AlertPreference>  $preferences
+     * @return Collection<int, Lot>
+     */
+    public function matchLots(Collection $lots, Collection $preferences): Collection
+    {
+        return $lots
+            ->filter(function (Lot $lot) use ($preferences): bool {
+                foreach ($preferences as $preference) {
+                    if ($this->matcher->matches($lot, $preference)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            })
+            ->unique('lote_id')
+            ->sortByDesc(fn (Lot $lot) => $lot->relevance_score ?? 0)
+            ->values();
+    }
+
+    /**
+     * @param  Collection<int, AlertPreference>  $preferences
+     */
+    private function channelPreference(User $user, Collection $preferences, NotificationChannel $channel): ?AlertPreference
+    {
+        foreach ($preferences as $preference) {
+            if ($channel->enabledFor($user, $preference)) {
+                return $preference;
+            }
+        }
+
+        return null;
     }
 
     /**

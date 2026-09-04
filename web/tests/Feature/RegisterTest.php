@@ -37,6 +37,7 @@ class RegisterTest extends TestCase
         $this->assertSame(SubscriptionStatus::TRIAL, $user->subscription_status);
         $this->assertTrue($user->canReceiveAlerts());
         $this->assertNotNull($user->alertPreference);
+        $this->assertSame(1, $user->alertPreferences()->count());
         $this->assertTrue($user->alertPreference->notify_email);
         $this->assertFalse($user->alertPreference->notify_whatsapp);
     }

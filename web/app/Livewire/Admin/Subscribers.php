@@ -57,7 +57,7 @@ class Subscribers extends Component
     public function render()
     {
         $users = User::query()
-            ->with('alertPreference')
+            ->with('alertPreferences')
             ->when($this->search !== '', function ($query) {
                 $term = '%'.$this->search.'%';
                 $query->where(function ($inner) use ($term) {

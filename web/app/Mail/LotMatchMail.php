@@ -23,17 +23,21 @@ class LotMatchMail extends Mailable implements ShouldQueue
     public function __construct(
         public User $user,
         public Collection $lots,
+        public bool $isTest = false,
     ) {}
 
     public function envelope(): Envelope
     {
         $count = $this->lots->count();
+        $subject = $count === 1
+            ? 'Novo lote no Radar: '.$this->lots->first()?->titulo
+            : "{$count} lotes novos no Leilão Radar";
 
-        return new Envelope(
-            subject: $count === 1
-                ? 'Novo lote no Radar: '.$this->lots->first()?->titulo
-                : "{$count} lotes novos no Leilão Radar",
-        );
+        if ($this->isTest) {
+            $subject = '[teste] '.$subject;
+        }
+
+        return new Envelope(subject: $subject);
     }
 
     public function content(): Content
@@ -46,6 +50,7 @@ class LotMatchMail extends Mailable implements ShouldQueue
                 'catalogUrl' => url('/'),
                 'alertsUrl' => route('alertas'),
                 'unsubscribeUrl' => URL::signedRoute('alertas.unsubscribe', ['user' => $this->user->id]),
+                'isTest' => $this->isTest,
             ],
         );
     }
