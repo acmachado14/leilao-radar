@@ -161,19 +161,11 @@ Public dashboard at GitHub Pages — no Streamlit server. Data is exported from 
    - `AWS_SECRET_ACCESS_KEY`
 4. Run the workflow **Export and GitHub Pages** manually (Actions tab) or wait for the daily schedule (05:00 BRT).
 
-### Custom domain
+### GitHub Pages snapshot
 
-Site URL: **https://radar.angelocupertino.com.br**
+The JSON snapshot still deploys to `https://acmachado14.github.io/leilao-radar/data/lotes.json`. The product app lives on Oracle at **https://radar.angelocupertino.com.br**.
 
-1. `docs/CNAME` contains `radar.angelocupertino.com.br` (kept on each deploy).
-2. In the repo: **Settings → Pages → Custom domain** → `radar.angelocupertino.com.br`.
-3. At your DNS provider for `angelocupertino.com.br`, add:
-
-   | Type | Host | Value |
-   |------|------|-------|
-   | CNAME | `radar` | `acmachado14.github.io` |
-
-4. After DNS propagates, enable **Enforce HTTPS** in GitHub Pages settings.
+In Hostinger DNS, `radar` must be **only** an A record to `168.75.108.171`. Do **not** keep a CNAME to `acmachado14.github.io` on the same name — CNAME + A together makes browsers keep hitting GitHub Pages.
 
 Local export (uses `aws configure` credentials):
 
