@@ -13,7 +13,7 @@ sudo ln -sf "${DST}" /etc/nginx/sites-enabled/radar.angelocupertino.com.br
 sudo nginx -t
 sudo systemctl reload nginx
 
-if [ ! -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" ]; then
+if ! sudo test -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem"; then
   echo "Issuing TLS certificate for ${DOMAIN}..."
   sudo certbot --nginx -d "${DOMAIN}" --non-interactive --agree-tos -m "${EMAIL}" --redirect || \
   sudo certbot certonly --webroot -w /var/www/html -d "${DOMAIN}" --non-interactive --agree-tos -m "${EMAIL}"
@@ -21,7 +21,7 @@ else
   echo "Certificate already exists for ${DOMAIN}."
 fi
 
-if [ -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" ]; then
+if sudo test -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem"; then
   sudo cp "${SSL_SRC}" "${DST}"
   sudo nginx -t
   sudo systemctl reload nginx

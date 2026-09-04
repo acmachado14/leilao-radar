@@ -11,7 +11,9 @@ DST="/etc/nginx/sites-available/radar.angelocupertino.com.br"
 CERT="/etc/letsencrypt/live/radar.angelocupertino.com.br/fullchain.pem"
 
 if command -v sudo >/dev/null 2>&1; then
-  if [ -f "${CERT}" ] && [ -f "${SSL_SRC}" ]; then
+  # /etc/letsencrypt/live is root-only; test the cert with sudo or every deploy
+  # silently falls back to the HTTP vhost and HTTPS starts serving another site's expired cert.
+  if sudo test -f "${CERT}" && [ -f "${SSL_SRC}" ]; then
     sudo cp "${SSL_SRC}" "${DST}"
   elif [ -f "${HTTP_SRC}" ]; then
     sudo cp "${HTTP_SRC}" "${DST}"
