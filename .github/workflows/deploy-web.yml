@@ -40,18 +40,18 @@ jobs:
             --exclude '.env.backup' \
             --exclude 'database/*.sqlite' \
             --exclude '.phpunit.result.cache' \
-            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes" \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=120" \
             web/ \
             ubuntu@${{ secrets.SERVER_HOST }}:/home/ubuntu/leilao-radar/
 
       - name: Build images and restart stack
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes \
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=120 \
             ubuntu@${{ secrets.SERVER_HOST }} \
             'cd /home/ubuntu/leilao-radar && chmod +x build.sh deploy/*.sh && PUSH=false bash build.sh && SKIP_PULL=true bash deploy/deploy.sh'
 
       - name: Apply host nginx
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes \
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=120 \
             ubuntu@${{ secrets.SERVER_HOST }} \
             'cd /home/ubuntu/leilao-radar && bash deploy/post-deploy.sh'

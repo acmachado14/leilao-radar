@@ -14,6 +14,7 @@ fi
 
 echo "Building app image (${PLATFORM})..."
 docker buildx build \
+  --progress=plain \
   --platform "${PLATFORM}" \
   -f Dockerfile \
   -t "${APP_IMAGE}" \
@@ -22,6 +23,7 @@ docker buildx build \
 
 echo "Building nginx image (${PLATFORM})..."
 docker buildx build \
+  --progress=plain \
   --platform "${PLATFORM}" \
   --build-arg APP_IMAGE="${APP_IMAGE}" \
   -f Dockerfile.nginx \
