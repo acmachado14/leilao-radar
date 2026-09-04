@@ -1,0 +1,107 @@
+name: leilao-radar
+
+services:
+  app:
+    image: acmachado14/leilao-radar:main
+    container_name: radar-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - app-storage:/var/www/storage
+      - app-public-data:/var/www/public/data
+    env_file:
+      - .env
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - radar-net
+
+  nginx:
+    image: acmachado14/leilao-radar-nginx:main
+    container_name: radar-nginx
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2103:80"
+    volumes:
+      - app-public-data:/var/www/public/data
+    depends_on:
+      - app
+    networks:
+      - radar-net
+
+  mysql:
+    image: mysql:8.0
+    container_name: radar-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-leilao_radar}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME:-radar}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - radar-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: radar-redis
+    restart: unless-stopped
+    networks:
+      - radar-net
+
+  queue:
+    image: acmachado14/leilao-radar:main
+    container_name: radar-queue
+    restart: unless-stopped
+    working_dir: /var/www
+    command: php artisan queue:work redis --sleep=1 --tries=3 --max-time=3600
+    volumes:
+      - app-storage:/var/www/storage
+      - app-public-data:/var/www/public/data
+    env_file:
+      - .env
+    depends_on:
+      - app
+      - redis
+      - mysql
+    networks:
+      - radar-net
+
+  scheduler:
+    image: acmachado14/leilao-radar:main
+    container_name: radar-scheduler
+    restart: unless-stopped
+    working_dir: /var/www
+    command: php artisan schedule:work
+    volumes:
+      - app-storage:/var/www/storage
+      - app-public-data:/var/www/public/data
+    env_file:
+      - .env
+    depends_on:
+      - app
+      - mysql
+      - redis
+    networks:
+      - radar-net
+
+networks:
+  radar-net:
+    driver: bridge
+
+volumes:
+  mysql-data:
+    name: leilao_radar_mysql_data
+  app-storage:
+    name: leilao_radar_app_storage
+  app-public-data:
+    name: leilao_radar_public_data

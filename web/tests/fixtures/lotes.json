@@ -1,0 +1,41 @@
+{
+  "exported_at": "2026-09-03 00:00:00",
+  "items": [
+    {
+      "lote_id": "2798842",
+      "titulo": "Toyota Corolla Xei",
+      "marca": "Toyota",
+      "modelo": "Corolla Xei",
+      "ano_mod": 2018,
+      "lance_atual": 20000,
+      "fipe_preco": 80000,
+      "desconto_pct": 0.75,
+      "desconto_label": "75.0%",
+      "relevance_score": 0.91,
+      "leilao_fim": "2026-09-08 14:00:00",
+      "leilao_em": "2026-09-08 14:00:00",
+      "fipe_match": "exact",
+      "classificacao_monta": "pequena",
+      "fonte": "sodre",
+      "url": "https://example.test/sodre/2798842"
+    },
+    {
+      "lote_id": "palacio:1565802",
+      "titulo": "Vw/Santana 2.0",
+      "marca": "Volkswagen",
+      "modelo": "Santana 2.0",
+      "ano_mod": 2000,
+      "lance_atual": 500,
+      "fipe_preco": 22000,
+      "desconto_pct": 0.97,
+      "desconto_label": "97.0%",
+      "relevance_score": 0.99,
+      "leilao_fim": "2026-09-10",
+      "leilao_em": "2026-09-10",
+      "fipe_match": "failed",
+      "classificacao_monta": "media",
+      "fonte": "palacio",
+      "url": "https://example.test/palacio/1565802"
+    }
+  ]
+}

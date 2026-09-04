@@ -11,9 +11,13 @@ EventBridge (04:30 BRT) → Lambda Palácio collector
                     DynamoDB (TTL = auction end + 1 day)
                               ↓
 GitHub Actions (05:00 BRT) → docs/data/lotes.json → Pages
+                              ↓
+                    Laravel app (`web/`) 05:30 BRT → e-mail digest
 ```
 
 The collectors do **not** use Cursor or browser automation. Sodré reads the public Elasticsearch index; Palácio uses the site AJAX endpoints (`listar_lote` / `exibir_lote_m`).
+
+The **product app** (cadastro, preferências, alertas) lives in `web/` — Laravel 13 + Livewire, visual alinhado à VerifyCar. Collectors Python/AWS remain unchanged. Pagamento fica fora do app (admin ativa a assinatura). WhatsApp Cloud API está preparado e desligado (`RADAR_WHATSAPP_ENABLED=false`).
 
 ## Project layout
 
@@ -21,7 +25,8 @@ The collectors do **not** use Cursor or browser automation. Sodré reads the pub
 leilao-radar/
   collector/          # Lambda handler, Sodré + DynamoDB clients
   shared/             # Pydantic models + FIPE client
-  dashboard/          # Streamlit app
+  web/                # Laravel product: cadastro, preferências, alertas
+  docs/               # GitHub Pages snapshot (catálogo estático)
   infra/template.yaml # AWS SAM stack
   scripts/            # LocalStack init helpers
   docker-compose.yml  # LocalStack for local DynamoDB
@@ -177,6 +182,28 @@ make export-docs
 ```
 
 The default GitHub URL is `https://acmachado14.github.io/leilao-radar/`; production uses the custom domain above.
+
+## Product app (Laravel)
+
+Cadastro, preferências de alerta e digest diário por e-mail. Visual slate/emerald (grupo VerifyCar).
+
+```bash
+make web-setup
+make web-serve          # http://localhost:8000
+make web-sync           # importa docs/data/lotes.json (ou RADAR_LOTS_URL)
+make web-alerts         # enfileira e-mails para assinantes trial/active
+make web-test
+```
+
+- Trial de 7 dias no cadastro. Depois disso, ative em `/admin/assinantes` (e-mails em `APP_ADMIN_EMAILS`).
+- Cron: `radar:sync-lots` 05:20 BRT e `radar:dispatch-alerts --skip-sync` 05:30 BRT (`web/routes/console.php`).
+- WhatsApp: campo + opt-in no cadastro; envio só com `RADAR_WHATSAPP_ENABLED=true` e credenciais Meta Cloud API.
+
+### Production (Oracle, mesmo host da VerifyCar)
+
+GitHub Actions (`.github/workflows/deploy-web.yml`) faz rsync de `web/` para `/home/ubuntu/leilao-radar`, build Docker ARM64 na máquina e recarrega o nginx do host (`127.0.0.1:2103`). Secrets: `SSH_PRIVATE_KEY`, `SERVER_HOST`.
+
+O `.env` de produção fica só no servidor (não vai no git). Snapshot de lotes continua no GitHub Pages (`RADAR_LOTS_URL` = `https://acmachado14.github.io/leilao-radar/data/lotes.json`). TLS (`radar.angelocupertino.com.br`) só depois do DNS na Hostinger apontar para o IP da Oracle.
 
 From the `infra/` directory you can also run:
 

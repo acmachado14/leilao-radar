@@ -1,6 +1,6 @@
 .PHONY: local-up local-down local-init local-status local-collect local-collect-palacio \
 	local-dashboard aws-build aws-deploy aws-invoke aws-invoke-palacio aws-logs aws-logs-palacio \
-	aws-status export-docs
+	aws-status export-docs web-setup web-install web-test web-sync web-alerts web-serve
 
 local-up:
 	docker compose up -d
@@ -105,3 +105,26 @@ aws-status:
 export-docs:
 	unset DYNAMODB_ENDPOINT_URL AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN; \
 	PYTHONPATH=. python scripts/export_lotes_json.py
+
+web-setup:
+	cd web && composer install --no-interaction
+	cd web && test -f .env || cp .env.example .env
+	cd web && php artisan key:generate --force
+	cd web && php artisan migrate --force
+	cd web && npm install --ignore-scripts && npm run build
+	cd web && php artisan radar:sync-lots || true
+
+web-install:
+	cd web && composer install && npm install && npm run build
+
+web-test:
+	cd web && php artisan test
+
+web-sync:
+	cd web && php artisan radar:sync-lots
+
+web-alerts:
+	cd web && php artisan radar:dispatch-alerts --skip-sync
+
+web-serve:
+	cd web && php artisan serve

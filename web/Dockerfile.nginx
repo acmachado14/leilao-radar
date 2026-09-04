@@ -1,0 +1,8 @@
+ARG APP_IMAGE=acmachado14/leilao-radar:main
+
+FROM ${APP_IMAGE} AS app
+
+FROM nginx:alpine
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=app /var/www/public /var/www/public
