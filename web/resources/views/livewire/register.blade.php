@@ -1,6 +1,6 @@
 <div class="mx-auto max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 sm:p-8">
     <h1 class="text-2xl font-bold">Criar conta</h1>
-    <p class="mt-1 text-sm text-slate-400">Trial de {{ config('radar.trial_days') }} dias para receber alertas. Pagamento é combinado por fora.</p>
+    <p class="mt-1 text-sm text-slate-400">Cadastro gratuito. Depois do PIX, a equipe aprova a conta e os alertas passam a chegar no e-mail.</p>
     <form wire:submit="register" class="mt-6 space-y-4">
         <div>
             <label class="mb-1 block text-sm text-slate-300">Nome</label>
@@ -41,7 +41,7 @@
         </label>
         @error('terms_accepted') <p class="text-sm text-red-400">{{ $message }}</p> @enderror
         <button type="submit" class="w-full rounded-lg bg-emerald-500 py-3 font-semibold text-slate-950 hover:bg-emerald-400">
-            Criar conta e configurar alertas
+            Criar conta
         </button>
     </form>
     <p class="mt-6 text-center text-sm text-slate-400">

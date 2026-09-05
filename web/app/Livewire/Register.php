@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Constants\SubscriptionStatus;
 use App\Models\AlertPreference;
 use App\Models\User;
+use App\Services\Admin\AdminAuditor;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
@@ -44,7 +45,7 @@ class Register extends Component
         ];
     }
 
-    public function register(): void
+    public function register(AdminAuditor $auditor): void
     {
         $this->validate();
 
@@ -60,8 +61,9 @@ class Register extends Component
             'phone' => $this->phone !== '' ? $this->phone : null,
             'password' => Hash::make($this->password),
             'active' => true,
-            'subscription_status' => SubscriptionStatus::TRIAL,
-            'subscription_until' => now()->addDays((int) config('radar.trial_days', 7)),
+            'subscription_status' => SubscriptionStatus::PENDING,
+            'subscription_until' => null,
+            'approved_at' => null,
             'last_login_at' => now(),
         ]);
 
@@ -70,8 +72,9 @@ class Register extends Component
         $user->alertPreference()->create($defaults);
 
         Auth::login($user);
+        $auditor->record('registered', "Novo cadastro: {$user->name} ({$user->email})", $user);
 
-        $this->redirectRoute('alertas', navigate: true);
+        $this->redirectRoute('aguardando', navigate: true);
     }
 
     public function render()

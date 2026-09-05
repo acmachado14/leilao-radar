@@ -3,74 +3,62 @@
 namespace App\Livewire\Admin;
 
 use App\Constants\SubscriptionStatus;
+use App\Livewire\Admin\Concerns\ManagesSubscribers;
 use App\Models\User;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class Subscribers extends Component
 {
+    use ManagesSubscribers;
     use WithPagination;
 
+    #[Url(as: 'q')]
     public string $search = '';
 
-    public function activate(string $userId, int $days = 30): void
+    #[Url(as: 'filtro')]
+    public string $filter = 'all';
+
+    public function updatedSearch(): void
     {
-        $user = User::query()->findOrFail($userId);
-        $user->update([
-            'subscription_status' => SubscriptionStatus::ACTIVE,
-            'subscription_until' => now()->addDays($days),
-            'active' => true,
-        ]);
-        session()->flash('success', "Assinatura de {$user->name} ativada por {$days} dias.");
+        $this->resetPage();
     }
 
-    public function pause(string $userId): void
+    public function updatedFilter(): void
     {
-        $user = User::query()->findOrFail($userId);
-        $user->update(['subscription_status' => SubscriptionStatus::PAUSED]);
-        session()->flash('success', "Assinatura de {$user->name} pausada.");
-    }
-
-    public function expire(string $userId): void
-    {
-        $user = User::query()->findOrFail($userId);
-        $user->update([
-            'subscription_status' => SubscriptionStatus::EXPIRED,
-            'subscription_until' => now(),
-        ]);
-        session()->flash('success', "Assinatura de {$user->name} expirada.");
-    }
-
-    public function toggleActive(string $userId): void
-    {
-        $user = User::query()->findOrFail($userId);
-        if ($user->isAdmin() && $user->id === auth()->id()) {
-            session()->flash('error', 'Você não pode bloquear a própria conta admin.');
-
-            return;
-        }
-
-        $user->update(['active' => ! $user->active]);
-        session()->flash('success', $user->active ? 'Conta reativada.' : 'Conta bloqueada.');
+        $this->resetPage();
     }
 
     public function render()
     {
         $users = User::query()
-            ->with('alertPreferences')
+            ->withCount('alertPreferences')
             ->when($this->search !== '', function ($query) {
                 $term = '%'.$this->search.'%';
                 $query->where(function ($inner) use ($term) {
                     $inner->where('name', 'like', $term)->orWhere('email', 'like', $term);
                 });
             })
+            ->when($this->filter === 'pending', fn ($query) => $query->where('subscription_status', SubscriptionStatus::PENDING)->whereNull('approved_at'))
+            ->when($this->filter === 'active', function ($query) {
+                $query->where('active', true)
+                    ->whereNotNull('approved_at')
+                    ->whereIn('subscription_status', [SubscriptionStatus::TRIAL, SubscriptionStatus::ACTIVE])
+                    ->where(function ($inner) {
+                        $inner->whereNull('subscription_until')->orWhere('subscription_until', '>', now());
+                    });
+            })
+            ->when($this->filter === 'paused', fn ($query) => $query->where('subscription_status', SubscriptionStatus::PAUSED))
+            ->when($this->filter === 'expired', fn ($query) => $query->where('subscription_status', SubscriptionStatus::EXPIRED))
+            ->when($this->filter === 'blocked', fn ($query) => $query->where('active', false))
             ->orderByDesc('created_at')
             ->paginate(20);
 
         return view('livewire.admin.subscribers', [
             'users' => $users,
         ])->layout('layouts.app', [
-            'title' => 'Assinantes — Leilão Radar',
+            'title' => 'Usuários — Leilão Radar',
         ]);
     }
 }

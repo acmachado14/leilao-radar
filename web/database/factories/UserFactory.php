@@ -28,6 +28,8 @@ class UserFactory extends Factory
             'active' => true,
             'subscription_status' => SubscriptionStatus::TRIAL,
             'subscription_until' => now()->addDays(7),
+            'approved_at' => now(),
+            'rejected_at' => null,
             'remember_token' => Str::random(10),
         ];
     }
@@ -37,6 +39,16 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'type' => UserType::ADMIN,
             'active' => true,
+        ]);
+    }
+
+    public function pending(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'subscription_status' => SubscriptionStatus::PENDING,
+            'subscription_until' => null,
+            'approved_at' => null,
+            'rejected_at' => null,
         ]);
     }
 

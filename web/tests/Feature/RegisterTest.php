@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Constants\SubscriptionStatus;
 use App\Livewire\Register;
+use App\Models\AdminActivityLog;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -20,7 +21,7 @@ class RegisterTest extends TestCase
         $this->get(route('catalog'))->assertOk();
     }
 
-    public function test_register_creates_trial_user_and_preferences(): void
+    public function test_register_creates_pending_user_and_preferences(): void
     {
         Livewire::test(Register::class)
             ->set('name', 'Ana Radar')
@@ -30,15 +31,22 @@ class RegisterTest extends TestCase
             ->set('terms_accepted', true)
             ->call('register')
             ->assertHasNoErrors()
-            ->assertRedirect(route('alertas'));
+            ->assertRedirect(route('aguardando'));
 
         $user = User::query()->where('email', 'ana@example.com')->first();
         $this->assertNotNull($user);
-        $this->assertSame(SubscriptionStatus::TRIAL, $user->subscription_status);
-        $this->assertTrue($user->canReceiveAlerts());
+        $this->assertSame(SubscriptionStatus::PENDING, $user->subscription_status);
+        $this->assertNull($user->approved_at);
+        $this->assertTrue($user->isPending());
+        $this->assertFalse($user->canReceiveAlerts());
         $this->assertNotNull($user->alertPreference);
         $this->assertSame(1, $user->alertPreferences()->count());
         $this->assertTrue($user->alertPreference->notify_email);
         $this->assertFalse($user->alertPreference->notify_whatsapp);
+        $this->assertDatabaseHas('admin_activity_logs', [
+            'action' => 'registered',
+            'subject_user_id' => $user->id,
+        ]);
+        $this->assertSame(1, AdminActivityLog::query()->count());
     }
 }

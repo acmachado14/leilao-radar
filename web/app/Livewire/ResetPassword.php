@@ -64,10 +64,7 @@ class ResetPassword extends Component
         }
 
         session()->regenerate();
-        $this->redirectRoute(
-            Auth::user()->isAdmin() ? 'admin.assinantes' : 'dashboard',
-            navigate: true,
-        );
+        $this->redirectRoute(Auth::user()->homeRoute(), navigate: true);
     }
 
     public function render()

@@ -45,10 +45,7 @@ class Login extends Component
             ->whereKey(Auth::id())
             ->update(['last_login_at' => now()]);
 
-        $this->redirectRoute(
-            Auth::user()->isAdmin() ? 'admin.assinantes' : 'dashboard',
-            navigate: true,
-        );
+        $this->redirectRoute(Auth::user()->homeRoute(), navigate: true);
     }
 
     public function logout()

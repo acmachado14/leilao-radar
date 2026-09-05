@@ -38,20 +38,7 @@
             </button>
 
             <div class="hidden items-center gap-5 text-sm md:flex">
-                @auth
-                    @if (auth()->user()->isAdmin())
-                        <a href="{{ route('admin.assinantes') }}" class="text-amber-300 hover:text-amber-200">Assinantes</a>
-                    @endif
-                    <a href="{{ route('catalog') }}" class="hover:text-emerald-400">Ofertas</a>
-                    <a href="{{ route('dashboard') }}" class="hover:text-emerald-400">Painel</a>
-                    <a href="{{ route('alertas') }}" class="hover:text-emerald-400">Alertas</a>
-                    <a href="{{ route('conta') }}" class="hover:text-emerald-400">Minha conta</a>
-                    <a href="{{ route('logout') }}" class="text-slate-400 hover:text-white">Sair</a>
-                @else
-                    <a href="{{ route('catalog') }}" class="hover:text-emerald-400">Ofertas</a>
-                    <a href="{{ route('login') }}" class="hover:text-emerald-400">Entrar</a>
-                    <a href="{{ route('register') }}" class="btn-emerald px-4 py-2 text-sm">Receber alertas</a>
-                @endauth
+                @include('layouts.partials.nav-links', ['mobile' => false])
             </div>
         </div>
 
@@ -63,20 +50,7 @@
             class="border-t border-slate-800 bg-slate-950 px-4 py-3 md:hidden"
         >
             <div class="flex flex-col gap-1 text-base">
-                @auth
-                    @if (auth()->user()->isAdmin())
-                        <a href="{{ route('admin.assinantes') }}" class="rounded-lg px-3 py-3 text-amber-300 hover:bg-slate-800" @click="open = false">Assinantes</a>
-                    @endif
-                    <a href="{{ route('catalog') }}" class="rounded-lg px-3 py-3 hover:bg-slate-800" @click="open = false">Ofertas</a>
-                    <a href="{{ route('dashboard') }}" class="rounded-lg px-3 py-3 hover:bg-slate-800" @click="open = false">Painel</a>
-                    <a href="{{ route('alertas') }}" class="rounded-lg px-3 py-3 hover:bg-slate-800" @click="open = false">Alertas</a>
-                    <a href="{{ route('conta') }}" class="rounded-lg px-3 py-3 hover:bg-slate-800" @click="open = false">Minha conta</a>
-                    <a href="{{ route('logout') }}" class="rounded-lg px-3 py-3 text-slate-400 hover:bg-slate-800" @click="open = false">Sair</a>
-                @else
-                    <a href="{{ route('catalog') }}" class="rounded-lg px-3 py-3 hover:bg-slate-800" @click="open = false">Ofertas</a>
-                    <a href="{{ route('login') }}" class="rounded-lg px-3 py-3 hover:bg-slate-800" @click="open = false">Entrar</a>
-                    <a href="{{ route('register') }}" class="btn-emerald px-3 py-3" @click="open = false">Receber alertas</a>
-                @endauth
+                @include('layouts.partials.nav-links', ['mobile' => true])
             </div>
         </div>
     </nav>
