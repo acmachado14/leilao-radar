@@ -1,8 +1,14 @@
-    <div id="catalog-root" data-lots-url="{{ file_exists(public_path('data/lotes.json')) ? asset('data/lotes.json') : config('radar.lots_url') }}">
+    <div
+        id="catalog-root"
+        data-lots-url="{{ file_exists(public_path('data/lotes.json')) ? asset('data/lotes.json') : config('radar.lots_url') }}"
+        data-auth="{{ auth()->check() ? '1' : '0' }}"
+        data-login-url="{{ route('login') }}"
+        data-interests-url="{{ url('/interesses') }}"
+    >
     <section class="hero-stage mx-auto max-w-6xl px-4 py-8 sm:py-12">
         <p class="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-400">VerifyRadar</p>
         <h1 class="mt-3 max-w-3xl text-3xl font-bold sm:text-5xl">Ofertas próximas com desconto vs FIPE.</h1>
-        <p class="mt-4 max-w-2xl text-slate-400">Sodré Santoro e Palácio dos Leilões, atualizado todo dia. Cadastre-se e receba no e-mail os lotes que combinam com o seu filtro.</p>
+        <p class="mt-4 max-w-2xl text-slate-400">Sodré Santoro e Palácio dos Leilões, atualizado todo dia. O digest avisa a faixa que você cadastrou. O e-mail de 1 hora antes vai só para os carros em que você marcar interesse.</p>
         <div class="mt-6 flex flex-wrap gap-3">
             @guest
                 <a href="{{ route('register') }}" class="btn-emerald px-5 py-3">Receber alertas</a>
@@ -125,6 +131,7 @@
                 <dl id="lightbox-details" class="lightbox-details"></dl>
                 <div class="lightbox-actions">
                     <a id="lightbox-link" href="#" target="_blank" rel="noopener" class="lightbox-cta">Ver no leilão</a>
+                    <button type="button" id="lightbox-interest" class="lightbox-interest">Tenho interesse</button>
                     <button type="button" id="lightbox-share" class="lightbox-share">Copiar link</button>
                 </div>
             </div>

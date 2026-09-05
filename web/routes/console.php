@@ -15,3 +15,7 @@ Schedule::command('radar:sync-lots')
 Schedule::command('radar:dispatch-alerts --skip-sync')
     ->dailyAt('05:30')
     ->timezone('America/Sao_Paulo');
+
+Schedule::command('radar:dispatch-auction-reminders')
+    ->everyTenMinutes()
+    ->timezone('America/Sao_Paulo');

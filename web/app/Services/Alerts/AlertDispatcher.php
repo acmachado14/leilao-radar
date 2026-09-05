@@ -2,6 +2,7 @@
 
 namespace App\Services\Alerts;
 
+use App\Constants\AlertSendKind;
 use App\Models\AlertPreference;
 use App\Models\Lot;
 use App\Models\LotAlertSend;
@@ -61,14 +62,14 @@ class AlertDispatcher
                         continue;
                     }
 
-                    $fresh = $this->unsents($user, $matched, $channel->name());
+                    $fresh = $this->unsents($user, $matched, $channel->name(), AlertSendKind::MATCH);
                     if ($fresh->isEmpty()) {
                         continue;
                     }
 
                     $digest = $fresh->take((int) config('radar.digest_limit', 8));
                     $channel->send($user, $digest);
-                    $this->markSent($user, $digest, $channel->name());
+                    $this->markSent($user, $digest, $channel->name(), AlertSendKind::MATCH);
                     $sentAny = true;
                     if ($channel->name() === 'email') {
                         $emails++;
@@ -155,11 +156,12 @@ class AlertDispatcher
      * @param  Collection<int, Lot>  $lots
      * @return Collection<int, Lot>
      */
-    private function unsents(User $user, Collection $lots, string $channel): Collection
+    private function unsents(User $user, Collection $lots, string $channel, string $kind = AlertSendKind::MATCH): Collection
     {
         $already = LotAlertSend::query()
             ->where('user_id', $user->id)
             ->where('channel', $channel)
+            ->where('kind', $kind)
             ->whereIn('lote_id', $lots->pluck('lote_id'))
             ->pluck('lote_id')
             ->all();
@@ -170,7 +172,7 @@ class AlertDispatcher
     /**
      * @param  Collection<int, Lot>  $lots
      */
-    private function markSent(User $user, Collection $lots, string $channel): void
+    private function markSent(User $user, Collection $lots, string $channel, string $kind = AlertSendKind::MATCH): void
     {
         foreach ($lots as $lot) {
             LotAlertSend::query()->firstOrCreate(
@@ -178,6 +180,7 @@ class AlertDispatcher
                     'user_id' => $user->id,
                     'lote_id' => $lot->lote_id,
                     'channel' => $channel,
+                    'kind' => $kind,
                 ],
                 ['sent_at' => now()],
             );

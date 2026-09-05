@@ -12,6 +12,7 @@ const state = {
     photos: [],
     index: 0,
   },
+  interests: new Set(),
 };
 
 let scrollObserver = null;
@@ -82,6 +83,96 @@ function enrichRow(row, now = Date.now()) {
 function isUpcomingAuction(row) {
   const days = row.days_until_auction;
   return days == null || days >= 0;
+}
+
+function catalogConfig() {
+  const root = document.getElementById("catalog-root");
+  return {
+    isAuth: root?.dataset.auth === "1",
+    loginUrl: root?.dataset.loginUrl || "/login",
+    interestsUrl: (root?.dataset.interestsUrl || "/interesses").replace(/\/$/, ""),
+    csrf: document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "",
+  };
+}
+
+function isInterested(loteId) {
+  return state.interests.has(String(loteId));
+}
+
+function goToLoginForInterest() {
+  const cfg = catalogConfig();
+  const next = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  window.location.href = `${cfg.loginUrl}?redirect=${encodeURIComponent(next)}`;
+}
+
+function setInterestButtonState(button, loteId) {
+  if (!button) return;
+  const on = isInterested(loteId);
+  const compact = button.hasAttribute("data-interest-toggle");
+  button.classList.toggle("is-on", on);
+  button.setAttribute("aria-pressed", on ? "true" : "false");
+  button.textContent = on
+    ? "Com interesse"
+    : compact
+      ? "Interesse"
+      : "Tenho interesse";
+}
+
+function syncInterestUi(loteId) {
+  const id = String(loteId);
+  document.querySelectorAll(`[data-open-lote="${id}"]`).forEach((card) => {
+    card.classList.toggle("is-interested", isInterested(id));
+    setInterestButtonState(card.querySelector("[data-interest-toggle]"), id);
+  });
+  const lightboxBtn = document.getElementById("lightbox-interest");
+  const openId = state.lightbox.row ? String(state.lightbox.row.lote_id) : "";
+  if (lightboxBtn && openId === id) {
+    setInterestButtonState(lightboxBtn, id);
+  }
+}
+
+async function loadInterests() {
+  const cfg = catalogConfig();
+  if (!cfg.isAuth) return;
+  const response = await fetch(cfg.interestsUrl, {
+    headers: { Accept: "application/json" },
+    credentials: "same-origin",
+  });
+  if (!response.ok) return;
+  const payload = await response.json();
+  state.interests = new Set((payload.lote_ids || []).map((id) => String(id)));
+}
+
+async function toggleInterest(loteId) {
+  const cfg = catalogConfig();
+  if (!cfg.isAuth) {
+    goToLoginForInterest();
+    return;
+  }
+
+  const wanted = !isInterested(loteId);
+  const response = await fetch(`${cfg.interestsUrl}/${encodeURIComponent(loteId)}`, {
+    method: wanted ? "POST" : "DELETE",
+    headers: {
+      Accept: "application/json",
+      "X-CSRF-TOKEN": cfg.csrf,
+      "X-Requested-With": "XMLHttpRequest",
+    },
+    credentials: "same-origin",
+  });
+
+  if (response.status === 401 || response.status === 419) {
+    goToLoginForInterest();
+    return;
+  }
+  if (!response.ok) return;
+
+  if (wanted) {
+    state.interests.add(String(loteId));
+  } else {
+    state.interests.delete(String(loteId));
+  }
+  syncInterestUi(loteId);
 }
 
 function matchTypeLabel(value) {
@@ -266,7 +357,7 @@ function resetCardsGrid() {
 
 function createCardElement(row) {
   const card = document.createElement("article");
-  card.className = "lot-card";
+  card.className = `lot-card${isInterested(row.lote_id) ? " is-interested" : ""}`;
   card.setAttribute("data-open-lote", row.lote_id);
   card.setAttribute("role", "button");
   card.setAttribute("tabindex", "0");
@@ -306,6 +397,9 @@ function createCardElement(row) {
       </div>
       <div class="lot-card-footer">
         <span class="lot-card-patio">${row.patio || "—"}</span>
+        <button type="button" class="lot-card-interest${isInterested(row.lote_id) ? " is-on" : ""}" data-interest-toggle data-interest-lote="${row.lote_id}" aria-pressed="${isInterested(row.lote_id) ? "true" : "false"}">
+          ${isInterested(row.lote_id) ? "Com interesse" : "Interesse"}
+        </button>
         ${row.url ? `<a href="${row.url}" target="_blank" rel="noopener" class="lot-card-link" data-external-link>${fonteLabel(row.fonte)}</a>` : ""}
       </div>
     </div>
@@ -615,6 +709,7 @@ function updateLightbox() {
   link.href = row.url || "#";
   link.style.display = row.url ? "inline-flex" : "none";
   resetShareButton();
+  setInterestButtonState(document.getElementById("lightbox-interest"), row.lote_id);
 
   const showNav = photos.length > 1;
   prevBtn.style.display = showNav ? "flex" : "none";
@@ -684,6 +779,7 @@ async function loadData() {
     .map((row) => enrichRow(row, now))
     .filter(isUpcomingAuction);
   state.payload.count = state.rows.length;
+  await loadInterests();
   renderMeta();
   populateMarcas();
   applyFilters();
@@ -719,6 +815,13 @@ function bindEvents() {
   });
 
   document.getElementById("cards-grid").addEventListener("click", (event) => {
+    const interestBtn = event.target.closest("[data-interest-toggle]");
+    if (interestBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleInterest(interestBtn.getAttribute("data-interest-lote"));
+      return;
+    }
     if (event.target.closest("[data-external-link]")) return;
     const card = event.target.closest("[data-open-lote]");
     if (!card) return;
@@ -743,6 +846,10 @@ function bindEvents() {
   document.getElementById("lightbox-prev").addEventListener("click", () => shiftLightbox(-1));
   document.getElementById("lightbox-next").addEventListener("click", () => shiftLightbox(1));
   document.getElementById("lightbox-share").addEventListener("click", copyShareLink, true);
+  document.getElementById("lightbox-interest").addEventListener("click", () => {
+    const row = state.lightbox.row;
+    if (row) toggleInterest(row.lote_id);
+  });
 
   window.addEventListener("hashchange", openLotFromHash);
   window.addEventListener("popstate", openLotFromHash);
