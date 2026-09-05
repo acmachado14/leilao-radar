@@ -143,6 +143,19 @@ async function loadInterests() {
   state.interests = new Set((payload.lote_ids || []).map((id) => String(id)));
 }
 
+function showInterestError(message) {
+  const button = document.getElementById("lightbox-interest");
+  if (!button) return;
+  const previous = button.textContent;
+  button.textContent = message || "Não salvou — tente de novo";
+  button.classList.add("is-error");
+  window.clearTimeout(button._errorTimer);
+  button._errorTimer = window.setTimeout(() => {
+    button.classList.remove("is-error");
+    button.textContent = previous;
+  }, 2200);
+}
+
 async function toggleInterest(loteId) {
   const cfg = catalogConfig();
   if (!cfg.isAuth) {
@@ -165,7 +178,10 @@ async function toggleInterest(loteId) {
     goToLoginForInterest();
     return;
   }
-  if (!response.ok) return;
+  if (!response.ok) {
+    showInterestError(response.status === 404 ? "Lote não encontrado" : "Não salvou — tente de novo");
+    return;
+  }
 
   if (wanted) {
     state.interests.add(String(loteId));

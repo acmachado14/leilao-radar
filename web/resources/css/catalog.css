@@ -662,6 +662,11 @@ body.lightbox-open {
   color: #06202c;
 }
 
+.lightbox-interest.is-error {
+  border-color: #f87171;
+  color: #f87171;
+}
+
 .lot-card.is-interested {
   border-color: rgba(16, 185, 129, 0.55);
 }
