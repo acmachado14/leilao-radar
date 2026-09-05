@@ -172,7 +172,7 @@ class AlertPreferencesForm extends Component
             'whatsappReady' => (bool) config('radar.whatsapp.enabled'),
             'maxPreferences' => (int) config('radar.max_preferences', 12),
         ])->layout('layouts.app', [
-            'title' => 'Alertas — Leilão Radar',
+            'title' => 'Alertas — VerifyRadar',
         ]);
     }
 

@@ -71,7 +71,7 @@ class Account extends Component
         return view('livewire.account', [
             'user' => Auth::user(),
         ])->layout('layouts.app', [
-            'title' => 'Minha conta — Leilão Radar',
+            'title' => 'Minha conta — VerifyRadar',
         ]);
     }
 }

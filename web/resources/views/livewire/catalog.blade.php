@@ -1,6 +1,6 @@
     <div id="catalog-root" data-lots-url="{{ file_exists(public_path('data/lotes.json')) ? asset('data/lotes.json') : config('radar.lots_url') }}">
     <section class="hero-stage mx-auto max-w-6xl px-4 py-8 sm:py-12">
-        <p class="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-400">Leilão Radar</p>
+        <p class="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-400">VerifyRadar</p>
         <h1 class="mt-3 max-w-3xl text-3xl font-bold sm:text-5xl">Ofertas próximas com desconto vs FIPE.</h1>
         <p class="mt-4 max-w-2xl text-slate-400">Sodré Santoro e Palácio dos Leilões, atualizado todo dia. Cadastre-se e receba no e-mail os lotes que combinam com o seu filtro.</p>
         <div class="mt-6 flex flex-wrap gap-3">

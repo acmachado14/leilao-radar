@@ -30,8 +30,8 @@ class LotMatchMail extends Mailable implements ShouldQueue
     {
         $count = $this->lots->count();
         $subject = $count === 1
-            ? 'Novo lote no Radar: '.$this->lots->first()?->titulo
-            : "{$count} lotes novos no Leilão Radar";
+            ? 'Novo lote no VerifyRadar: '.$this->lots->first()?->titulo
+            : "{$count} lotes novos no VerifyRadar";
 
         if ($this->isTest) {
             $subject = '[teste] '.$subject;

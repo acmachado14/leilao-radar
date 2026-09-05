@@ -1,5 +1,5 @@
 <x-mail::message>
-# {{ $isTest ? 'Teste de alerta' : 'Novos lotes no Radar' }}
+# {{ $isTest ? 'Teste de alerta' : 'Novos lotes no VerifyRadar' }}
 
 Olá, **{{ $user->name }}**. {{ $isTest ? 'Este é um e-mail de teste — o formato é o mesmo do digest diário.' : 'Encontramos ofertas que batem com as suas preferências.' }}
 
@@ -8,14 +8,14 @@ Olá, **{{ $user->name }}**. {{ $isTest ? 'Este é um e-mail de teste — o form
 @endforeach
 
 <x-mail::button :url="$catalogUrl">
-Ver ofertas no Radar
+Ver ofertas no VerifyRadar
 </x-mail::button>
 
 <x-mail::button :url="$alertsUrl">
 Ajustar preferências
 </x-mail::button>
 
-Leilão Radar — do grupo VerifyCar.
+VerifyRadar — do grupo VerifyCar.
 
 [Parar alertas por e-mail]({{ $unsubscribeUrl }})
 </x-mail::message>

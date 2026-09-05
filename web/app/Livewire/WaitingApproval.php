@@ -20,7 +20,7 @@ class WaitingApproval extends Component
         return view('livewire.waiting-approval', [
             'user' => Auth::user(),
         ])->layout('layouts.app', [
-            'title' => 'Aguardando aprovação — Leilão Radar',
+            'title' => 'Aguardando aprovação — VerifyRadar',
         ]);
     }
 }

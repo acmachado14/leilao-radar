@@ -2,14 +2,16 @@
 set -euo pipefail
 
 CONF_DIR="$(cd "$(dirname "$0")" && pwd)/nginx"
-HTTP_SRC="${CONF_DIR}/radar.angelocupertino.com.br.http.conf"
-SSL_SRC="${CONF_DIR}/radar.angelocupertino.com.br.conf"
-DST="/etc/nginx/sites-available/radar.angelocupertino.com.br"
-DOMAIN="radar.angelocupertino.com.br"
+DOMAIN="radar.verifycar.com.br"
+OLD_DOMAIN="radar.angelocupertino.com.br"
+HTTP_SRC="${CONF_DIR}/${DOMAIN}.http.conf"
+SSL_SRC="${CONF_DIR}/${DOMAIN}.conf"
+DST="/etc/nginx/sites-available/${DOMAIN}"
 EMAIL="${CERTBOT_EMAIL:-contato.verifycar@gmail.com}"
 
 sudo cp "${HTTP_SRC}" "${DST}"
-sudo ln -sf "${DST}" /etc/nginx/sites-enabled/radar.angelocupertino.com.br
+sudo ln -sf "${DST}" "/etc/nginx/sites-enabled/${DOMAIN}"
+sudo rm -f "/etc/nginx/sites-enabled/${OLD_DOMAIN}"
 sudo nginx -t
 sudo systemctl reload nginx
 

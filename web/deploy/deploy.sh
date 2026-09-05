@@ -29,4 +29,4 @@ docker compose restart queue scheduler
 
 docker image prune -f
 
-echo "Leilão Radar stack is up."
+echo "VerifyRadar stack is up."

@@ -31,7 +31,7 @@ Botão **Avise-me** no header de `docs/index.html` (ao lado do meta). Abre um mo
 
 Após o POST: mensagem “enviamos um link de confirmação”. O link “Sodré” nos cards continua indo para o leilão, sem abrir o modal.
 
-URL da API em `docs/config.js` (`alertsApiUrl`), lida por `docs/app.js`. CORS liberado para `https://radar.angelocupertino.com.br`.
+URL da API em `docs/config.js` (`alertsApiUrl`), lida por `docs/app.js`. CORS liberado para `https://radar.verifycar.com.br`.
 
 ## API (sem autenticação)
 
@@ -68,10 +68,10 @@ E-mail de confirmação: resumo do texto/lance e botão “Ativar alerta”.
 - Tabela de alertas + TTL opcional só em tokens pending (ex. 7 dias sem confirmar)
 - `AlertsApiFunction` (timeout curto) com HTTP API, CORS, IAM DynamoDB + SES
 - `NotifierFunction` com SES + leitura das duas tabelas
-- Parâmetro `SenderEmail` (ex. `avisos@radar.angelocupertino.com.br`)
+- Parâmetro `SenderEmail` (ex. `avisos@radar.verifycar.com.br`)
 - Output `AlertsApiUrl` para colar em `docs/config.js`
 
-**Passo manual (AWS):** verificar identidade SES em `sa-east-1` (domínio `angelocupertino.com.br` ou o e-mail remetente) e sair do sandbox do SES. Sem isso o double opt-in só entrega em endereços já verificados.
+**Passo manual (AWS):** verificar identidade SES em `sa-east-1` (domínio `verifycar.com.br` ou o e-mail remetente) e sair do sandbox do SES. Sem isso o double opt-in só entrega em endereços já verificados.
 
 ## Código novo / tocado
 

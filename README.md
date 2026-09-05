@@ -1,4 +1,4 @@
-# Leilão Radar
+# VerifyRadar
 
 Daily collector for **Sodré Santoro** vehicle auction lots. Enriches each lot with **FIPE** prices and stores results in **DynamoDB** with TTL. Includes a **Streamlit** dashboard to rank the best deals (bid vs FIPE).
 
@@ -17,7 +17,7 @@ GitHub Actions (05:00 BRT) → docs/data/lotes.json → Pages
 
 The collectors do **not** use Cursor or browser automation. Sodré reads the public Elasticsearch index; Palácio uses the site AJAX endpoints (`listar_lote` / `exibir_lote_m`).
 
-The **product app** (cadastro, preferências, alertas) lives in `web/` — Laravel 13 + Livewire, visual alinhado à VerifyCar. Collectors Python/AWS remain unchanged. Pagamento fica fora do app (admin ativa a assinatura). WhatsApp Cloud API está preparado e desligado (`RADAR_WHATSAPP_ENABLED=false`).
+The **product app** (cadastro, preferências, alertas) lives in `web/` — Laravel 13 + Livewire, marca **VerifyRadar** (grupo VerifyCar). Collectors Python/AWS remain unchanged. Pagamento fica fora do app (admin ativa a assinatura). WhatsApp Cloud API está preparado e desligado (`RADAR_WHATSAPP_ENABLED=false`).
 
 ## Project layout
 
@@ -163,9 +163,9 @@ Public dashboard at GitHub Pages — no Streamlit server. Data is exported from 
 
 ### GitHub Pages snapshot
 
-The JSON snapshot still deploys to `https://acmachado14.github.io/leilao-radar/data/lotes.json`. The product app lives on Oracle at **https://radar.angelocupertino.com.br**.
+The JSON snapshot still deploys to `https://acmachado14.github.io/leilao-radar/data/lotes.json`. The product app lives on Oracle at **https://radar.verifycar.com.br**.
 
-In Hostinger DNS, `radar` must be **only** an A record to `168.75.108.171`. Do **not** keep a CNAME to `acmachado14.github.io` on the same name — CNAME + A together makes browsers keep hitting GitHub Pages.
+In Hostinger DNS for `verifycar.com.br`, `radar` must be **only** an A record to `168.75.108.171`. Do **not** keep a CNAME to `acmachado14.github.io` on the same name — CNAME + A together makes browsers keep hitting GitHub Pages.
 
 Local export (uses `aws configure` credentials):
 
@@ -177,7 +177,7 @@ The default GitHub URL is `https://acmachado14.github.io/leilao-radar/`; product
 
 ## Product app (Laravel)
 
-Cadastro, preferências de alerta e digest diário por e-mail. Visual slate/emerald (grupo VerifyCar).
+Cadastro, preferências de alerta e digest diário por e-mail. Marca VerifyRadar, visual slate/emerald (grupo VerifyCar).
 
 ```bash
 make web-setup
@@ -195,7 +195,7 @@ make web-test
 
 GitHub Actions (`.github/workflows/deploy-web.yml`) faz rsync de `web/` para `/home/ubuntu/leilao-radar`, build Docker ARM64 na máquina e recarrega o nginx do host (`127.0.0.1:2103`). Secrets: `SSH_PRIVATE_KEY`, `SERVER_HOST`.
 
-O `.env` de produção fica só no servidor (não vai no git). Snapshot de lotes continua no GitHub Pages (`RADAR_LOTS_URL` = `https://acmachado14.github.io/leilao-radar/data/lotes.json`). TLS (`radar.angelocupertino.com.br`) só depois do DNS na Hostinger apontar para o IP da Oracle.
+O `.env` de produção fica só no servidor (não vai no git). Snapshot de lotes continua no GitHub Pages (`RADAR_LOTS_URL` = `https://acmachado14.github.io/leilao-radar/data/lotes.json`). TLS (`radar.verifycar.com.br`) depois do DNS `radar` em `verifycar.com.br` apontar para o IP da Oracle.
 
 From the `infra/` directory you can also run:
 

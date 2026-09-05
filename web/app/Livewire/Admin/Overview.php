@@ -40,7 +40,7 @@ class Overview extends Component
                 ->limit(12)
                 ->get(),
         ])->layout('layouts.app', [
-            'title' => 'Admin — Leilão Radar',
+            'title' => 'Admin — VerifyRadar',
         ]);
     }
 }

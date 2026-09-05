@@ -20,7 +20,7 @@ class Dashboard extends Component
             'lotCount' => Lot::query()->count(),
             'whatsappReady' => (bool) config('radar.whatsapp.enabled'),
         ])->layout('layouts.app', [
-            'title' => 'Painel — Leilão Radar',
+            'title' => 'Painel — VerifyRadar',
         ]);
     }
 }

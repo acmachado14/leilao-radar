@@ -20,7 +20,7 @@ class Logs extends Component
                 ->paginate(30),
             'appLogLines' => $this->tailAppLog(),
         ])->layout('layouts.app', [
-            'title' => 'Logs — Leilão Radar',
+            'title' => 'Logs — VerifyRadar',
         ]);
     }
 

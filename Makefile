@@ -18,7 +18,7 @@ local-status:
 	curl -s http://localhost:4566/_localstack/health | python -m json.tool
 
 local-collect:
-	@echo "=== Leilão Radar — Collector Sodré ==="
+	@echo "=== VerifyRadar — Collector Sodré ==="
 	@set -a && [ -f .env ] && . ./.env; set +a; \
 	echo "TABLE_NAME=$${TABLE_NAME:-leilao-radar-lotes}"; \
 	echo "DYNAMODB_ENDPOINT_URL=$${DYNAMODB_ENDPOINT_URL:-AWS default}"; \
@@ -35,7 +35,7 @@ local-collect:
 	LOG_LEVEL=INFO PYTHONPATH=. python -m collector.handler
 
 local-collect-palacio:
-	@echo "=== Leilão Radar — Collector Palácio ==="
+	@echo "=== VerifyRadar — Collector Palácio ==="
 	@set -a && [ -f .env ] && . ./.env; set +a; \
 	echo "TABLE_NAME=$${TABLE_NAME:-leilao-radar-lotes}"; \
 	echo "DYNAMODB_ENDPOINT_URL=$${DYNAMODB_ENDPOINT_URL:-AWS default}"; \
@@ -47,7 +47,7 @@ local-collect-palacio:
 	LOG_LEVEL=INFO PYTHONPATH=. python -m collector.palacio_handler
 
 local-dashboard:
-	@echo "=== Leilão Radar — Dashboard ==="
+	@echo "=== VerifyRadar — Dashboard ==="
 	@set -a && [ -f .env ] && . ./.env; set +a; \
 	echo "TABLE_NAME=$${TABLE_NAME:-leilao-radar-lotes}"; \
 	echo "DYNAMODB_ENDPOINT_URL=$${DYNAMODB_ENDPOINT_URL:-AWS default}"; \

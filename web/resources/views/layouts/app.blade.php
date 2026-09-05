@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#020617">
     <meta name="description" content="{{ $metaDescription ?? 'Ofertas de leilão vs tabela FIPE. Alertas por e-mail com base nas suas preferências.' }}">
-    <title>{{ $title ?? config('app.name', 'Leilão Radar') }}</title>
+    <title>{{ $title ?? config('app.name', 'VerifyRadar') }}</title>
     <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
     @vite(['resources/css/app.css', 'resources/css/catalog.css', 'resources/js/app.js'])
     @livewireStyles
@@ -14,9 +14,9 @@
     <nav class="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur" x-data="{ open: false }" @keydown.escape.window="open = false">
         <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:py-4">
             <a href="{{ route('catalog') }}" class="flex shrink-0 items-center gap-3">
-                <img src="{{ asset('images/logo.png') }}" alt="" class="h-8 w-8 rounded-lg">
+                <img src="{{ asset('images/logo.png') }}" alt="VerifyRadar" class="h-8 w-8 rounded-lg">
                 <span>
-                    <span class="block text-sm font-semibold text-white">Leilão Radar</span>
+                    <span class="block text-sm font-semibold text-white">Verify<span class="text-emerald-400">Radar</span></span>
                     <span class="block text-[11px] uppercase tracking-[0.16em] text-emerald-400">grupo VerifyCar</span>
                 </span>
             </a>
@@ -72,8 +72,8 @@
 
     <footer class="border-t border-slate-800 bg-slate-950">
         <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-            <p>Leilão Radar — do grupo VerifyCar. Ofertas vs tabela FIPE.</p>
-            <p>radar.angelocupertino.com.br</p>
+            <p>VerifyRadar — do grupo VerifyCar. Ofertas vs tabela FIPE.</p>
+            <p>radar.verifycar.com.br</p>
         </div>
     </footer>
 

@@ -22,7 +22,7 @@ class ResetPasswordMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Redefinir senha — Leilão Radar',
+            subject: 'Redefinir senha — VerifyRadar',
         );
     }
 

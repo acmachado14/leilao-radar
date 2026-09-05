@@ -58,7 +58,7 @@ class Subscribers extends Component
         return view('livewire.admin.subscribers', [
             'users' => $users,
         ])->layout('layouts.app', [
-            'title' => 'Usuários — Leilão Radar',
+            'title' => 'Usuários — VerifyRadar',
         ]);
     }
 }

@@ -80,7 +80,7 @@ class Register extends Component
     public function render()
     {
         return view('livewire.register')->layout('layouts.app', [
-            'title' => 'Criar conta — Leilão Radar',
+            'title' => 'Criar conta — VerifyRadar',
         ]);
     }
 }

@@ -1,4 +1,4 @@
-name: Deploy Leilão Radar
+name: Deploy VerifyRadar
 
 on:
   push:

@@ -60,7 +60,7 @@ class Login extends Component
     public function render()
     {
         return view('livewire.login')->layout('layouts.app', [
-            'title' => 'Entrar — Leilão Radar',
+            'title' => 'Entrar — VerifyRadar',
         ]);
     }
 }

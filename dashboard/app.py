@@ -20,8 +20,8 @@ setup_logging()
 
 logger = logging.getLogger("dashboard.app")
 
-st.set_page_config(page_title="Leilão Radar", layout="wide")
-st.title("Leilão Radar")
+st.set_page_config(page_title="VerifyRadar", layout="wide")
+st.title("VerifyRadar")
 st.caption("Ranking por relevância: proximidade do leilão + desconto vs FIPE")
 
 
