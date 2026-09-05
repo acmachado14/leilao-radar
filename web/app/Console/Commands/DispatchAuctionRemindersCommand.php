@@ -9,7 +9,7 @@ class DispatchAuctionRemindersCommand extends Command
 {
     protected $signature = 'radar:dispatch-auction-reminders';
 
-    protected $description = 'Email subscribers 1 hour before a matching auction, or on the auction day when the clock time is unknown.';
+    protected $description = 'Email 1 hour before auction start (or on the day if no clock time) only for lots the user marked as interested.';
 
     public function handle(AuctionReminderDispatcher $dispatcher): int
     {

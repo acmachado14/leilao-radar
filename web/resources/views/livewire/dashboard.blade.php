@@ -23,7 +23,27 @@
 
     <section>
         <div class="mb-4 flex items-center justify-between gap-3">
-            <h2 class="text-lg font-semibold">Lotes que casam agora</h2>
+            <h2 class="text-lg font-semibold">Carros com interesse</h2>
+            <a href="{{ route('catalog') }}" class="text-sm text-emerald-400 hover:underline">Ver ofertas</a>
+        </div>
+        @if ($interested->isEmpty())
+            <p class="text-slate-400">Nenhum carro marcado ainda. Abra um lote e clique em “Tenho interesse” para receber o aviso de 1 hora antes.</p>
+        @else
+            <div class="grid gap-3 sm:grid-cols-2">
+                @foreach ($interested as $lot)
+                    <a href="{{ $lot->shareUrl() }}" class="rounded-2xl border border-emerald-500/30 bg-slate-900 p-4 hover:border-emerald-500">
+                        <p class="font-semibold">{{ $lot->titulo }}</p>
+                        <p class="mt-1 text-sm text-slate-400">{{ $lot->marca }} · {{ $lot->modelo }} · {{ $lot->fonte }}</p>
+                        <p class="mt-2 text-sm text-emerald-400">{{ $lot->auctionWhenLabel() }}</p>
+                    </a>
+                @endforeach
+            </div>
+        @endif
+    </section>
+
+    <section>
+        <div class="mb-4 flex items-center justify-between gap-3">
+            <h2 class="text-lg font-semibold">Lotes da sua faixa</h2>
             <a href="{{ route('alertas') }}" class="text-sm text-emerald-400 hover:underline">Editar filtros</a>
         </div>
         @if ($matches->isEmpty())

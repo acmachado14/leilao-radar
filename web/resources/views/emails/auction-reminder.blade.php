@@ -1,7 +1,7 @@
 <x-mail::message>
 # Leilão perto de começar
 
-Olá, **{{ $user->name }}**. Os lotes abaixo batem com as suas preferências e estão prestes a ir a leilão.
+Olá, **{{ $user->name }}**. Os carros em que você marcou interesse estão prestes a ir a leilão.
 
 @foreach ($lots as $lot)
 - **{{ $lot->titulo }}** — {{ $lot->marca }} {{ $lot->modelo }} · {{ $lot->fonte === 'palacio' ? 'Palácio' : 'Sodré' }} · {{ $lot->auctionWhenLabel() }} · {{ $lot->desconto_label ?: 'FIPE N/A' }} · [abrir]({{ $lot->shareUrl() }})

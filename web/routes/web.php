@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LotInterestController;
 use App\Http\Controllers\UnsubscribeAlertsController;
 use App\Livewire\Account;
 use App\Livewire\Admin\Logs as AdminLogs;
@@ -26,6 +27,9 @@ Route::get('/alertas/unsubscribe/{user}', UnsubscribeAlertsController::class)
 
 Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/aguardando', WaitingApproval::class)->name('aguardando');
+    Route::get('/interesses', [LotInterestController::class, 'index'])->name('interesses.index');
+    Route::post('/interesses/{lote}', [LotInterestController::class, 'store'])->name('interesses.store');
+    Route::delete('/interesses/{lote}', [LotInterestController::class, 'destroy'])->name('interesses.destroy');
 });
 
 Route::middleware(['auth', 'active', 'approved'])->group(function () {

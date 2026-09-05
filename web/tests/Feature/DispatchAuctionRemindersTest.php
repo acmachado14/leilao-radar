@@ -43,6 +43,7 @@ class DispatchAuctionRemindersTest extends TestCase
             'leilao_em' => '2026-09-05 09:30:00',
             'leilao_fim' => '2026-09-05 09:45:00',
         ]);
+        $user->lotInterests()->create(['lote_id' => 'soon-1']);
 
         $result = app(AuctionReminderDispatcher::class)->dispatch();
 
@@ -70,6 +71,7 @@ class DispatchAuctionRemindersTest extends TestCase
             'leilao_em' => '2026-09-05 09:30:00',
             'leilao_fim' => '2026-09-05 09:45:00',
         ]);
+        $user->lotInterests()->create(['lote_id' => 'later-1']);
 
         Carbon::setTestNow(Carbon::parse('2026-09-05 07:20:00', 'America/Sao_Paulo'));
         $this->assertSame(0, app(AuctionReminderDispatcher::class)->dispatch()['emails']);
@@ -91,6 +93,7 @@ class DispatchAuctionRemindersTest extends TestCase
             'leilao_em' => '2026-09-05',
             'leilao_fim' => '2026-09-05',
         ]);
+        $user->lotInterests()->create(['lote_id' => 'day-1']);
 
         Carbon::setTestNow(Carbon::parse('2026-09-04 11:10:00', 'America/Sao_Paulo'));
         $this->assertSame(0, app(AuctionReminderDispatcher::class)->dispatch()['emails']);
@@ -113,6 +116,7 @@ class DispatchAuctionRemindersTest extends TestCase
             'leilao_em' => '2026-09-05 09:30:00',
             'leilao_fim' => '2026-09-05 09:45:00',
         ]);
+        $user->lotInterests()->create(['lote_id' => 'both-1']);
 
         app(AlertDispatcher::class)->dispatch();
         app(AuctionReminderDispatcher::class)->dispatch();
@@ -132,6 +136,7 @@ class DispatchAuctionRemindersTest extends TestCase
             'leilao_em' => '2026-09-05 09:30:00',
             'leilao_fim' => '2026-09-05 09:45:00',
         ]);
+        $user->lotInterests()->create(['lote_id' => 'once-1']);
 
         app(AuctionReminderDispatcher::class)->dispatch();
         app(AuctionReminderDispatcher::class)->dispatch();
@@ -139,19 +144,14 @@ class DispatchAuctionRemindersTest extends TestCase
         Mail::assertQueued(AuctionReminderMail::class, 1);
     }
 
-    public function test_skips_lots_outside_saved_search(): void
+    public function test_does_not_remind_faixa_matches_without_interest(): void
     {
         Mail::fake();
 
         $user = User::factory()->create();
-        $user->alertPreferences()->create(array_merge(AlertPreference::defaults(), [
-            'search' => 'Amarok',
-        ]));
+        $user->alertPreference()->create(AlertPreference::defaults());
         Lot::factory()->create([
-            'lote_id' => 'jetta-soon',
-            'marca' => 'Volkswagen',
-            'modelo' => 'Jetta GLI',
-            'titulo' => 'Jetta GLI',
+            'lote_id' => 'faixa-1',
             'leilao_em' => '2026-09-05 09:30:00',
             'leilao_fim' => '2026-09-05 09:45:00',
         ]);

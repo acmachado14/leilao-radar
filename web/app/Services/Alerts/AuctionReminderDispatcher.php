@@ -13,10 +13,6 @@ use Illuminate\Support\Facades\Mail;
 
 class AuctionReminderDispatcher
 {
-    public function __construct(
-        private AlertDispatcher $alerts,
-    ) {}
-
     /**
      * @return array{users: int, emails: int, skipped: int}
      */
@@ -36,9 +32,9 @@ class AuctionReminderDispatcher
         }
 
         User::query()
-            ->with('alertPreferences')
+            ->with(['alertPreferences', 'lotInterests'])
             ->where('active', true)
-            ->each(function (User $user) use ($lots, $now, &$emails, &$users, &$skipped): void {
+            ->each(function (User $user) use ($lots, &$emails, &$users, &$skipped): void {
                 if (! $user->canReceiveAlerts()) {
                     $skipped++;
 
@@ -58,8 +54,9 @@ class AuctionReminderDispatcher
                     return;
                 }
 
-                $matched = $this->alerts->matchLots($lots, $preferences)
-                    ->filter(fn (Lot $lot) => $lot->isAuctionReminderDue($now))
+                $interestedIds = $user->lotInterests->pluck('lote_id')->map(fn ($id) => (string) $id);
+                $matched = $lots
+                    ->filter(fn (Lot $lot) => $interestedIds->contains((string) $lot->lote_id))
                     ->values();
 
                 if ($matched->isEmpty()) {
