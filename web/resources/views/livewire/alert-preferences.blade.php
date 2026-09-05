@@ -4,6 +4,7 @@
         <h1 class="mt-2 text-2xl font-bold sm:text-3xl">Preferências</h1>
         <p class="mt-1 text-sm text-slate-400">
             Cadastre um recorte por modelo (ex.: Jetta GLI e Amarok). O digest (~05:30 BRT) junta os lotes de todas elas.
+            No e-mail, também avisamos 1 hora antes do leilão — ou no dia, se o horário do lote não vier na fonte.
             {{ $preferences->count() }}/{{ $maxPreferences }} salvas.
         </p>
     </div>

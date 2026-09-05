@@ -188,7 +188,7 @@ make web-test
 ```
 
 - Trial de 7 dias no cadastro. Depois disso, ative em `/admin/assinantes` (e-mails em `APP_ADMIN_EMAILS`).
-- Cron: `radar:sync-lots` 05:20 BRT e `radar:dispatch-alerts --skip-sync` 05:30 BRT (`web/routes/console.php`).
+- Cron: `radar:sync-lots` 05:20 BRT, `radar:dispatch-alerts --skip-sync` 05:30 BRT e `radar:dispatch-auction-reminders` a cada 10 min (`web/routes/console.php`).
 - WhatsApp: campo + opt-in no cadastro; envio só com `RADAR_WHATSAPP_ENABLED=true` e credenciais Meta Cloud API.
 
 ### Production (Oracle, mesmo host da VerifyCar)

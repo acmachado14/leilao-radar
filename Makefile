@@ -1,6 +1,6 @@
 .PHONY: local-up local-down local-init local-status local-collect local-collect-palacio \
 	local-dashboard aws-build aws-deploy aws-invoke aws-invoke-palacio aws-logs aws-logs-palacio \
-	aws-status export-docs web-setup web-install web-test web-sync web-alerts web-serve
+	aws-status export-docs web-setup web-install web-test web-sync web-alerts web-reminders web-serve
 
 local-up:
 	docker compose up -d
@@ -125,6 +125,9 @@ web-sync:
 
 web-alerts:
 	cd web && php artisan radar:dispatch-alerts --skip-sync
+
+web-reminders:
+	cd web && php artisan radar:dispatch-auction-reminders
 
 web-serve:
 	cd web && php artisan serve

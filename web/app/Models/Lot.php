@@ -60,6 +60,71 @@ class Lot extends Model
         return AuctionDate::parseEnd($this->leilao_fim ?: $this->leilao_em);
     }
 
+    public function auctionStartsAt(): ?Carbon
+    {
+        $value = $this->scheduledStartValue();
+        if ($value === null) {
+            return null;
+        }
+
+        return AuctionDate::parse($value);
+    }
+
+    public function hasScheduledClockTime(): bool
+    {
+        return AuctionDate::hasClockTime($this->scheduledStartValue());
+    }
+
+    public function isAuctionReminderDue(?Carbon $now = null): bool
+    {
+        $reference = $now?->copy()->timezone('America/Sao_Paulo') ?? now('America/Sao_Paulo');
+        if (! $this->isUpcoming($reference)) {
+            return false;
+        }
+
+        $startValue = $this->scheduledStartValue();
+        $start = AuctionDate::parse($startValue);
+        if ($start === null) {
+            return false;
+        }
+
+        if (AuctionDate::hasClockTime($startValue)) {
+            $leadMinutes = max(1, (int) config('radar.reminder_lead_minutes', 60));
+            $windowStart = $start->copy()->subMinutes($leadMinutes);
+
+            return $reference->gte($windowStart) && $reference->lt($start);
+        }
+
+        return $reference->isSameDay($start);
+    }
+
+    public function auctionWhenLabel(): string
+    {
+        $startValue = $this->scheduledStartValue();
+        $start = AuctionDate::parse($startValue);
+        if ($start === null) {
+            return 'data indefinida';
+        }
+
+        $start = $start->timezone('America/Sao_Paulo');
+        if (AuctionDate::hasClockTime($startValue)) {
+            return $start->format('d/m/Y H:i');
+        }
+
+        return $start->format('d/m/Y').' (horário não informado)';
+    }
+
+    private function scheduledStartValue(): ?string
+    {
+        foreach ([$this->leilao_em, $this->leilao_fim] as $value) {
+            if (is_string($value) && trim($value) !== '') {
+                return trim($value);
+            }
+        }
+
+        return null;
+    }
+
     public function daysUntilAuction(?Carbon $now = null): ?float
     {
         $end = $this->auctionEndsAt();

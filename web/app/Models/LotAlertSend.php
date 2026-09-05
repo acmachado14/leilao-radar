@@ -6,9 +6,13 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['user_id', 'lote_id', 'channel', 'sent_at'])]
+#[Fillable(['user_id', 'lote_id', 'channel', 'kind', 'sent_at'])]
 class LotAlertSend extends Model
 {
+    protected $attributes = [
+        'kind' => 'match',
+    ];
+
     protected function casts(): array
     {
         return [
