@@ -13,4 +13,9 @@ return [
         'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
         'template' => env('WHATSAPP_TEMPLATE', 'radar_lote_alert'),
     ],
+    'gemini' => [
+        'api_key' => env('RADAR_GEMINI_API_KEY'),
+        'model' => env('RADAR_GEMINI_MODEL', 'gemini-2.5-flash'),
+        'max_images' => (int) env('RADAR_GEMINI_MAX_IMAGES', 4),
+    ],
 ];

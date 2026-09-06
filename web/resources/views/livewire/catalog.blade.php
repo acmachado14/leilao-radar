@@ -2,8 +2,10 @@
         id="catalog-root"
         data-lots-url="{{ file_exists(public_path('data/lotes.json')) ? asset('data/lotes.json') : config('radar.lots_url') }}"
         data-auth="{{ auth()->check() ? '1' : '0' }}"
+        data-approved="{{ auth()->check() && auth()->user()->isApproved() && ! auth()->user()->isPending() ? '1' : '0' }}"
         data-login-url="{{ route('login') }}"
         data-interests-url="{{ url('/interesses') }}"
+        data-evaluations-url="{{ url('/avaliacoes') }}"
     >
     <section class="hero-stage mx-auto max-w-6xl px-4 py-8 sm:py-12">
         <p class="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-400">VerifyRadar</p>
@@ -129,9 +131,11 @@
                 <h3 id="lightbox-title"></h3>
                 <p id="lightbox-subtitle" class="lightbox-subtitle"></p>
                 <dl id="lightbox-details" class="lightbox-details"></dl>
+                <div id="lightbox-evaluation" class="lightbox-evaluation hidden" aria-live="polite"></div>
                 <div class="lightbox-actions">
                     <a id="lightbox-link" href="#" target="_blank" rel="noopener" class="lightbox-cta">Ver no leilão</a>
                     <button type="button" id="lightbox-interest" class="lightbox-interest">Tenho interesse</button>
+                    <button type="button" id="lightbox-evaluate" class="lightbox-evaluate hidden">Pedir avaliação</button>
                     <button type="button" id="lightbox-share" class="lightbox-share">Copiar link</button>
                 </div>
             </div>

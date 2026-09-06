@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LotEvaluationController;
 use App\Http\Controllers\LotInterestController;
 use App\Http\Controllers\UnsubscribeAlertsController;
 use App\Livewire\Account;
@@ -36,6 +37,8 @@ Route::middleware(['auth', 'active', 'approved'])->group(function () {
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
     Route::get('/conta', Account::class)->name('conta');
     Route::get('/alertas', AlertPreferencesForm::class)->name('alertas');
+    Route::get('/avaliacoes/{lote}', [LotEvaluationController::class, 'show'])->name('avaliacoes.show');
+    Route::post('/avaliacoes/{lote}', [LotEvaluationController::class, 'store'])->name('avaliacoes.store');
 });
 
 Route::middleware(['auth', 'active', 'admin'])->prefix('admin')->group(function () {

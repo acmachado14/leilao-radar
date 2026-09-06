@@ -13,6 +13,7 @@ const state = {
     index: 0,
   },
   interests: new Set(),
+  evaluationPollTimer: null,
 };
 
 let scrollObserver = null;
@@ -89,8 +90,10 @@ function catalogConfig() {
   const root = document.getElementById("catalog-root");
   return {
     isAuth: root?.dataset.auth === "1",
+    isApproved: root?.dataset.approved === "1",
     loginUrl: root?.dataset.loginUrl || "/login",
     interestsUrl: (root?.dataset.interestsUrl || "/interesses").replace(/\/$/, ""),
+    evaluationsUrl: (root?.dataset.evaluationsUrl || "/avaliacoes").replace(/\/$/, ""),
     csrf: document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "",
   };
 }
@@ -189,6 +192,184 @@ async function toggleInterest(loteId) {
     state.interests.delete(String(loteId));
   }
   syncInterestUi(loteId);
+}
+
+function goToLoginForEvaluation() {
+  const cfg = catalogConfig();
+  const next = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  window.location.href = `${cfg.loginUrl}?redirect=${encodeURIComponent(next)}`;
+}
+
+function stopEvaluationPolling() {
+  if (state.evaluationPollTimer) {
+    window.clearInterval(state.evaluationPollTimer);
+    state.evaluationPollTimer = null;
+  }
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function renderEvaluationPanel(payload) {
+  const panel = document.getElementById("lightbox-evaluation");
+  const evaluateBtn = document.getElementById("lightbox-evaluate");
+  if (!panel) return;
+
+  panel.classList.remove("hidden");
+
+  if (payload?.status === "pending") {
+    if (evaluateBtn) evaluateBtn.classList.add("hidden");
+    panel.innerHTML = `
+      <p class="lightbox-evaluation-title">Avaliação em andamento</p>
+      <p class="lightbox-evaluation-copy">Analisando fotos e ficha do lote. Isso leva alguns segundos.</p>
+    `;
+    return;
+  }
+
+  if (payload?.status === "failed") {
+    if (evaluateBtn) {
+      evaluateBtn.classList.remove("hidden");
+      evaluateBtn.textContent = "Tentar de novo";
+    }
+    panel.innerHTML = `
+      <p class="lightbox-evaluation-title">Não foi possível avaliar</p>
+      <p class="lightbox-evaluation-copy">${escapeHtml(payload.error || "Tente novamente em instantes.")}</p>
+    `;
+    return;
+  }
+
+  if (payload?.status === "ready" && payload.evaluation) {
+    if (evaluateBtn) evaluateBtn.classList.add("hidden");
+    const ev = payload.evaluation;
+    const flags = (ev.flags || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+    const checks = (ev.patio_checks || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+    panel.innerHTML = `
+      <p class="lightbox-evaluation-title">Parecer automático · risco ${escapeHtml(ev.risk_score)}/10</p>
+      <p class="lightbox-evaluation-copy">${escapeHtml(ev.summary)}</p>
+      ${flags ? `<ul class="lightbox-evaluation-list">${flags}</ul>` : ""}
+      ${checks ? `<p class="lightbox-evaluation-subtitle">No pátio, conferir:</p><ul class="lightbox-evaluation-list">${checks}</ul>` : ""}
+      <p class="lightbox-evaluation-disclaimer">Parecer gerado por IA. Não substitui vistoria presencial.</p>
+    `;
+    return;
+  }
+
+  panel.classList.add("hidden");
+  panel.innerHTML = "";
+  if (evaluateBtn) {
+    evaluateBtn.classList.remove("hidden");
+    evaluateBtn.textContent = "Pedir avaliação";
+  }
+}
+
+function resetEvaluationUi() {
+  stopEvaluationPolling();
+  const panel = document.getElementById("lightbox-evaluation");
+  const evaluateBtn = document.getElementById("lightbox-evaluate");
+  if (panel) {
+    panel.classList.add("hidden");
+    panel.innerHTML = "";
+  }
+  if (evaluateBtn) {
+    evaluateBtn.classList.add("hidden");
+    evaluateBtn.textContent = "Pedir avaliação";
+    evaluateBtn.disabled = false;
+  }
+}
+
+async function fetchEvaluation(loteId) {
+  const cfg = catalogConfig();
+  const response = await fetch(`${cfg.evaluationsUrl}/${encodeURIComponent(loteId)}`, {
+    headers: { Accept: "application/json" },
+    credentials: "same-origin",
+  });
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+
+async function refreshEvaluationUi(loteId) {
+  const cfg = catalogConfig();
+  const evaluateBtn = document.getElementById("lightbox-evaluate");
+  if (!cfg.isApproved) {
+    resetEvaluationUi();
+    return;
+  }
+
+  if (evaluateBtn) evaluateBtn.classList.remove("hidden");
+
+  try {
+    const payload = await fetchEvaluation(loteId);
+    if (payload === null) {
+      renderEvaluationPanel(null);
+      return;
+    }
+    renderEvaluationPanel(payload);
+    if (payload.status === "pending") {
+      stopEvaluationPolling();
+      state.evaluationPollTimer = window.setInterval(() => {
+        fetchEvaluation(loteId)
+          .then((next) => {
+            if (!next || state.lightbox.row?.lote_id !== loteId) return;
+            renderEvaluationPanel(next);
+            if (next.status !== "pending") stopEvaluationPolling();
+          })
+          .catch(() => {});
+      }, 2500);
+    }
+  } catch (_err) {
+    renderEvaluationPanel(null);
+  }
+}
+
+async function requestEvaluation() {
+  const row = state.lightbox.row;
+  if (!row) return;
+
+  const cfg = catalogConfig();
+  if (!cfg.isAuth) {
+    goToLoginForEvaluation();
+    return;
+  }
+  if (!cfg.isApproved) {
+    return;
+  }
+
+  const evaluateBtn = document.getElementById("lightbox-evaluate");
+  if (evaluateBtn) evaluateBtn.disabled = true;
+
+  try {
+    const response = await fetch(`${cfg.evaluationsUrl}/${encodeURIComponent(row.lote_id)}`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "X-CSRF-TOKEN": cfg.csrf,
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      credentials: "same-origin",
+    });
+
+    if (response.status === 401 || response.status === 419) {
+      goToLoginForEvaluation();
+      return;
+    }
+    if (!response.ok) {
+      renderEvaluationPanel({ status: "failed", error: "Não foi possível iniciar a avaliação." });
+      return;
+    }
+
+    const payload = await response.json();
+    renderEvaluationPanel(payload);
+    if (payload.status === "pending") {
+      await refreshEvaluationUi(row.lote_id);
+    }
+  } finally {
+    if (evaluateBtn) evaluateBtn.disabled = false;
+  }
 }
 
 function matchTypeLabel(value) {
@@ -567,6 +748,7 @@ function closeLightbox({ syncHash = true } = {}) {
   lightbox.setAttribute("aria-hidden", "true");
   document.body.classList.remove("lightbox-open");
   state.lightbox = { row: null, photos: [], index: 0 };
+  resetEvaluationUi();
   if (syncHash) setLoteHash(null);
   resetShareButton();
 }
@@ -726,6 +908,7 @@ function updateLightbox() {
   link.style.display = row.url ? "inline-flex" : "none";
   resetShareButton();
   setInterestButtonState(document.getElementById("lightbox-interest"), row.lote_id);
+  refreshEvaluationUi(row.lote_id);
 
   const showNav = photos.length > 1;
   prevBtn.style.display = showNav ? "flex" : "none";
@@ -865,6 +1048,9 @@ function bindEvents() {
   document.getElementById("lightbox-interest").addEventListener("click", () => {
     const row = state.lightbox.row;
     if (row) toggleInterest(row.lote_id);
+  });
+  document.getElementById("lightbox-evaluate").addEventListener("click", () => {
+    requestEvaluation();
   });
 
   window.addEventListener("hashchange", openLotFromHash);

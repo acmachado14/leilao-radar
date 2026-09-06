@@ -157,4 +157,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(LotInterest::class);
     }
+
+    public function lotEvaluationRequests(): HasMany
+    {
+        return $this->hasMany(LotEvaluationRequest::class);
+    }
 }
