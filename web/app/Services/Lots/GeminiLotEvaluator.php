@@ -39,7 +39,8 @@ class GeminiLotEvaluator
             ['text' => $this->buildPrompt($lot)],
         ];
 
-        foreach ($this->imageParts($lot) as $imagePart) {
+        $imageParts = $this->imageParts($lot);
+        foreach ($imageParts as $imagePart) {
             $parts[] = $imagePart;
         }
 
@@ -75,7 +76,10 @@ class GeminiLotEvaluator
             throw new RuntimeException('Gemini returned invalid JSON.');
         }
 
-        return $this->normalizeResult($decoded);
+        $normalized = $this->normalizeResult($decoded);
+        $normalized['image_count'] = count($imageParts);
+
+        return $normalized;
     }
 
     private function friendlyApiError(int $status, mixed $message): string

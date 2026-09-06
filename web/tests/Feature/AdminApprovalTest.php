@@ -72,6 +72,7 @@ class AdminApprovalTest extends TestCase
 
         $pending->refresh();
         $this->assertSame(SubscriptionStatus::ACTIVE, $pending->subscription_status);
+        $this->assertSame('radar', $pending->plan);
         $this->assertNotNull($pending->approved_at);
         $this->assertTrue($pending->canReceiveAlerts());
         $this->assertDatabaseHas('admin_activity_logs', [
@@ -94,6 +95,7 @@ class AdminApprovalTest extends TestCase
 
         $pending->refresh();
         $this->assertSame(SubscriptionStatus::TRIAL, $pending->subscription_status);
+        $this->assertSame('trial', $pending->plan);
         $this->assertTrue($pending->canReceiveAlerts());
     }
 

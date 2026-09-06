@@ -1,6 +1,6 @@
 <div class="mx-auto max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 sm:p-8">
     <h1 class="text-2xl font-bold">Criar conta</h1>
-    <p class="mt-1 text-sm text-slate-400">Cadastro gratuito. Depois do PIX, a equipe aprova a conta e os alertas passam a chegar no e-mail.</p>
+    <p class="mt-1 text-sm text-slate-400">Cadastro gratuito com 3 análises de IA. Depois fale com o atendente no WhatsApp para ativar o plano com mais alertas e avaliações.</p>
     <form wire:submit="register" class="mt-6 space-y-4">
         <div>
             <label class="mb-1 block text-sm text-slate-300">Nome</label>

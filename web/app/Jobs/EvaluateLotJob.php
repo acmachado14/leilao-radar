@@ -3,8 +3,10 @@
 namespace App\Jobs;
 
 use App\Constants\LotEvaluationStatus;
+use App\Models\AiUsageLog;
 use App\Models\Lot;
 use App\Models\LotEvaluation;
+use App\Services\Billing\PlanQuota;
 use App\Services\Lots\GeminiLotEvaluator;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -19,9 +21,9 @@ class EvaluateLotJob implements ShouldQueue
 
     public int $timeout = 180;
 
-    public function __construct(public string $loteId) {}
+    public function __construct(public string $loteId, public ?string $userId = null) {}
 
-    public function handle(GeminiLotEvaluator $evaluator): void
+    public function handle(GeminiLotEvaluator $evaluator, PlanQuota $quota): void
     {
         $lot = Lot::query()->find($this->loteId);
         if ($lot === null) {
@@ -55,6 +57,17 @@ class EvaluateLotJob implements ShouldQueue
                 'model' => (string) config('radar.gemini.model', 'gemini-3.6-flash'),
                 'error_message' => null,
             ]);
+
+            if ($this->userId) {
+                $log = AiUsageLog::query()
+                    ->where('user_id', $this->userId)
+                    ->where('lote_id', $this->loteId)
+                    ->latest('id')
+                    ->first();
+                if ($log !== null) {
+                    $quota->markApiCost($log, (int) ($result['image_count'] ?? 0));
+                }
+            }
         } catch (Throwable $e) {
             Log::error('Lot evaluation job failed', [
                 'lote_id' => $this->loteId,

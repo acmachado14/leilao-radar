@@ -34,6 +34,24 @@ class AlertPreferencesTest extends TestCase
         $this->assertTrue($user->alertPreferences()->where('search', 'Amarok')->exists());
     }
 
+    public function test_trial_plan_blocks_extra_alert_preferences(): void
+    {
+        $user = User::factory()->create(['plan' => 'trial']);
+        $user->alertPreferences()->create(AlertPreference::defaults());
+        $user->alertPreferences()->create([...AlertPreference::defaults(), 'name' => 'Dois', 'search' => 'Jetta']);
+
+        Livewire::actingAs($user)
+            ->test(AlertPreferencesForm::class)
+            ->call('createNew')
+            ->set('name', 'Tres')
+            ->set('search', 'Civic')
+            ->set('fipe_matches', ['exact', 'closest', 'failed'])
+            ->call('save')
+            ->assertHasErrors(['search']);
+
+        $this->assertSame(2, $user->alertPreferences()->count());
+    }
+
     public function test_send_test_email_does_not_mark_lots_as_sent(): void
     {
         Mail::fake();

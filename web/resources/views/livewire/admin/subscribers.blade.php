@@ -22,6 +22,8 @@
             <thead class="bg-slate-900 text-slate-400">
                 <tr>
                     <th class="px-3 py-2">Usuário</th>
+                    <th class="px-3 py-2">Plano</th>
+                    <th class="px-3 py-2">IA</th>
                     <th class="px-3 py-2">Status</th>
                     <th class="px-3 py-2">Até</th>
                     <th class="px-3 py-2">Login</th>
@@ -38,6 +40,18 @@
                                 {{ $item->alert_preferences_count }} recortes
                                 · cadastro {{ $item->created_at->timezone('America/Sao_Paulo')->format('d/m/Y') }}
                             </p>
+                        </td>
+                        <td class="px-3 py-3">
+                            <p>{{ $item->planLabel() }}</p>
+                            <div class="mt-2 flex flex-wrap gap-1">
+                                <button type="button" wire:click="setPlan('{{ $item->id }}', 'trial')" class="rounded border border-slate-700 px-1.5 py-0.5 text-xs">Trial</button>
+                                <button type="button" wire:click="setPlan('{{ $item->id }}', 'radar')" class="rounded border border-slate-700 px-1.5 py-0.5 text-xs">Radar</button>
+                                <button type="button" wire:click="setPlan('{{ $item->id }}', 'radar_pro')" class="rounded border border-slate-700 px-1.5 py-0.5 text-xs">Pro</button>
+                            </div>
+                        </td>
+                        <td class="px-3 py-3 text-slate-300">
+                            <p>{{ $item->ai_month_count }} no mês</p>
+                            <p class="text-xs text-slate-500">{{ $item->ai_usage_logs_count }} total · R$ {{ number_format((float) $item->ai_month_cost, 2, ',', '.') }} / R$ {{ number_format((float) $item->ai_usage_logs_sum_estimated_cost_brl, 2, ',', '.') }}</p>
                         </td>
                         <td class="px-3 py-3">
                             {{ $item->subscriptionLabel() }}
@@ -66,7 +80,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="px-3 py-6 text-slate-500">Nenhum usuário neste filtro.</td></tr>
+                    <tr><td colspan="7" class="px-3 py-6 text-slate-500">Nenhum usuário neste filtro.</td></tr>
                 @endforelse
             </tbody>
         </table>

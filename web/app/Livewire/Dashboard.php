@@ -4,12 +4,14 @@ namespace App\Livewire;
 
 use App\Models\Lot;
 use App\Services\Alerts\AlertDispatcher;
+use App\Services\Billing\PlanQuota;
+use App\Support\SalesWhatsApp;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class Dashboard extends Component
 {
-    public function render(AlertDispatcher $dispatcher)
+    public function render(AlertDispatcher $dispatcher, PlanQuota $quota)
     {
         $user = Auth::user();
         $matches = $dispatcher->previewForUser($user, 8);
@@ -27,6 +29,8 @@ class Dashboard extends Component
             'interested' => $interested,
             'lotCount' => Lot::query()->count(),
             'whatsappReady' => (bool) config('radar.whatsapp.enabled'),
+            'quota' => $quota->snapshot($user),
+            'checkoutUrl' => SalesWhatsApp::checkoutUrl($quota->suggestedUpgrade($user->plan), $user),
         ])->layout('layouts.app', [
             'title' => 'Painel — VerifyRadar',
         ]);

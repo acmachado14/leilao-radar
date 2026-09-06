@@ -2,6 +2,8 @@
 
 namespace App\Livewire;
 
+use App\Services\Billing\PlanQuota;
+use App\Support\SalesWhatsApp;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
@@ -66,10 +68,15 @@ class Account extends Component
         session()->flash('success', 'Senha alterada.');
     }
 
-    public function render()
+    public function render(PlanQuota $quota)
     {
+        $user = Auth::user();
+
         return view('livewire.account', [
-            'user' => Auth::user(),
+            'user' => $user,
+            'quota' => $quota->snapshot($user),
+            'checkoutUrl' => SalesWhatsApp::checkoutUrl($quota->suggestedUpgrade($user->plan), $user),
+            'plans' => $quota->publicPlans(),
         ])->layout('layouts.app', [
             'title' => 'Minha conta — VerifyRadar',
         ]);

@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Mail;
     'type',
     'active',
     'subscription_status',
+    'plan',
     'subscription_until',
     'approved_at',
     'rejected_at',
@@ -161,5 +162,17 @@ class User extends Authenticatable
     public function lotEvaluationRequests(): HasMany
     {
         return $this->hasMany(LotEvaluationRequest::class);
+    }
+
+    public function aiUsageLogs(): HasMany
+    {
+        return $this->hasMany(AiUsageLog::class);
+    }
+
+    public function planLabel(): string
+    {
+        $plans = config('radar.plans', []);
+
+        return (string) data_get($plans, $this->plan.'.name', $this->plan ?: 'Trial');
     }
 }

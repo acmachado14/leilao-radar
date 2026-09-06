@@ -88,14 +88,30 @@ function isUpcomingAuction(row) {
 
 function catalogConfig() {
   const root = document.getElementById("catalog-root");
+  let quota = null;
+  try {
+    quota = root?.dataset.quota ? JSON.parse(root.dataset.quota) : null;
+  } catch (_err) {
+    quota = null;
+  }
   return {
     isAuth: root?.dataset.auth === "1",
     isApproved: root?.dataset.approved === "1",
     loginUrl: root?.dataset.loginUrl || "/login",
+    registerUrl: root?.dataset.registerUrl || "/register",
     interestsUrl: (root?.dataset.interestsUrl || "/interesses").replace(/\/$/, ""),
     evaluationsUrl: (root?.dataset.evaluationsUrl || "/avaliacoes").replace(/\/$/, ""),
+    plansUrl: root?.dataset.plansUrl || "#planos",
+    checkoutUrl: root?.dataset.checkoutUrl || "",
+    quota,
     csrf: document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "",
   };
+}
+
+function updateQuota(quota) {
+  if (!quota) return;
+  const root = document.getElementById("catalog-root");
+  if (root) root.dataset.quota = JSON.stringify(quota);
 }
 
 function isInterested(loteId) {
@@ -215,19 +231,86 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;");
 }
 
+function evaluationLoadingMarkup() {
+  return `
+    <div class="ai-loading">
+      <div class="ai-radar" aria-hidden="true">
+        <span class="ai-radar-sweep"></span>
+        <span class="ai-radar-ping"></span>
+      </div>
+      <p class="lightbox-evaluation-title">IA analisando o lote</p>
+      <p class="lightbox-evaluation-copy">Lendo fotos, cruzando com a FIPE e calculando o teto de lance.</p>
+      <ol class="ai-loading-steps">
+        <li class="is-active">Lendo as fotos do pátio</li>
+        <li>Cruzando monta, sinistro e tabela</li>
+        <li>Fechando limite de lance com lucro</li>
+      </ol>
+    </div>
+  `;
+}
+
+function quotaPitchMarkup(payload) {
+  const cfg = catalogConfig();
+  const quota = payload?.quota || cfg.quota || {};
+  const checkout = quota.checkout_url || cfg.checkoutUrl;
+  const used = quota.used ?? 0;
+  const limit = quota.limit ?? 0;
+  return `
+    <p class="lightbox-evaluation-title">Análises de IA esgotadas</p>
+    <p class="lightbox-evaluation-copy">Você já usou ${escapeHtml(used)}/${escapeHtml(limit)} análises deste mês. No plano maior a IA continua dizendo até quanto pagar em cada lote.</p>
+    <div class="lightbox-evaluation-actions">
+      <a class="btn-emerald px-4 py-2" href="${escapeHtml(checkout)}" target="_blank" rel="noopener">Falar com atendente</a>
+      <a class="lightbox-share" href="${escapeHtml(cfg.plansUrl)}">Ver planos</a>
+    </div>
+  `;
+}
+
+function guestPitchMarkup() {
+  const cfg = catalogConfig();
+  return `
+    <p class="lightbox-evaluation-title">IA calcula o teto de lance</p>
+    <p class="lightbox-evaluation-copy">Fotos + FIPE + custos de leilão. Você vê risco, o que conferir no pátio e até quanto pagar para ainda ter lucro. Trial com 3 análises grátis.</p>
+    <div class="lightbox-evaluation-actions">
+      <a class="btn-emerald px-4 py-2" href="${escapeHtml(cfg.registerUrl)}">Testar 3 análises grátis</a>
+      <a class="lightbox-share" href="${escapeHtml(cfg.checkoutUrl)}" target="_blank" rel="noopener">Falar com atendente</a>
+    </div>
+  `;
+}
+
 function renderEvaluationPanel(payload) {
   const panel = document.getElementById("lightbox-evaluation");
   const evaluateBtn = document.getElementById("lightbox-evaluate");
   if (!panel) return;
 
+  if (payload?.quota) updateQuota(payload.quota);
+  syncEvaluateButton();
+
   panel.classList.remove("hidden");
 
   if (payload?.status === "pending") {
     if (evaluateBtn) evaluateBtn.classList.add("hidden");
-    panel.innerHTML = `
-      <p class="lightbox-evaluation-title">Avaliação em andamento</p>
-      <p class="lightbox-evaluation-copy">Analisando fotos e ficha do lote. Isso leva alguns segundos.</p>
-    `;
+    panel.innerHTML = evaluationLoadingMarkup();
+    window.requestAnimationFrame(() => {
+      const steps = panel.querySelectorAll(".ai-loading-steps li");
+      steps.forEach((step, index) => {
+        window.setTimeout(() => {
+          steps.forEach((item) => item.classList.remove("is-active"));
+          step.classList.add("is-active");
+          if (index > 0) steps[index - 1].classList.add("is-done");
+        }, 1800 * index);
+      });
+    });
+    return;
+  }
+
+  if (payload?.status === "quota_exceeded") {
+    if (evaluateBtn) evaluateBtn.classList.remove("hidden");
+    panel.innerHTML = quotaPitchMarkup(payload);
+    return;
+  }
+
+  if (payload?.status === "guest") {
+    panel.innerHTML = guestPitchMarkup();
     return;
   }
 
@@ -275,10 +358,27 @@ function renderEvaluationPanel(payload) {
 
   panel.classList.add("hidden");
   panel.innerHTML = "";
-  if (evaluateBtn) {
-    evaluateBtn.classList.remove("hidden");
-    evaluateBtn.textContent = "Pedir avaliação";
+  if (evaluateBtn) evaluateBtn.classList.remove("hidden");
+}
+
+function syncEvaluateButton() {
+  const evaluateBtn = document.getElementById("lightbox-evaluate");
+  if (!evaluateBtn) return;
+  const cfg = catalogConfig();
+  evaluateBtn.classList.remove("hidden");
+  evaluateBtn.disabled = false;
+  if (!cfg.isAuth || !cfg.isApproved) {
+    evaluateBtn.textContent = "Avaliar com IA";
+    return;
   }
+  const quota = cfg.quota;
+  if (quota && !quota.unlimited && typeof quota.remaining === "number") {
+    evaluateBtn.textContent = quota.remaining > 0
+      ? `Avaliar com IA (${quota.remaining} restantes)`
+      : "Subir plano de IA";
+    return;
+  }
+  evaluateBtn.textContent = "Avaliar com IA";
 }
 
 function resetEvaluationUi() {
@@ -290,9 +390,9 @@ function resetEvaluationUi() {
     panel.innerHTML = "";
   }
   if (evaluateBtn) {
-    evaluateBtn.classList.add("hidden");
-    evaluateBtn.textContent = "Pedir avaliação";
+    evaluateBtn.classList.remove("hidden");
     evaluateBtn.disabled = false;
+    syncEvaluateButton();
   }
 }
 
@@ -309,13 +409,11 @@ async function fetchEvaluation(loteId) {
 
 async function refreshEvaluationUi(loteId) {
   const cfg = catalogConfig();
-  const evaluateBtn = document.getElementById("lightbox-evaluate");
+  syncEvaluateButton();
+
   if (!cfg.isApproved) {
-    resetEvaluationUi();
     return;
   }
-
-  if (evaluateBtn) evaluateBtn.classList.remove("hidden");
 
   try {
     const payload = await fetchEvaluation(loteId);
@@ -346,16 +444,14 @@ async function requestEvaluation() {
   if (!row) return;
 
   const cfg = catalogConfig();
-  if (!cfg.isAuth) {
-    goToLoginForEvaluation();
-    return;
-  }
-  if (!cfg.isApproved) {
+  if (!cfg.isAuth || !cfg.isApproved) {
+    renderEvaluationPanel({ status: "guest" });
     return;
   }
 
   const evaluateBtn = document.getElementById("lightbox-evaluate");
   if (evaluateBtn) evaluateBtn.disabled = true;
+  renderEvaluationPanel({ status: "pending" });
 
   try {
     const response = await fetch(`${cfg.evaluationsUrl}/${encodeURIComponent(row.lote_id)}`, {
@@ -372,18 +468,24 @@ async function requestEvaluation() {
       goToLoginForEvaluation();
       return;
     }
+
+    const payload = await response.json().catch(() => ({}));
+    if (response.status === 402 || payload.status === "quota_exceeded") {
+      renderEvaluationPanel({ ...payload, status: "quota_exceeded" });
+      return;
+    }
     if (!response.ok) {
-      renderEvaluationPanel({ status: "failed", error: "Não foi possível iniciar a avaliação." });
+      renderEvaluationPanel({ status: "failed", error: payload.error || "Não foi possível iniciar a avaliação." });
       return;
     }
 
-    const payload = await response.json();
     renderEvaluationPanel(payload);
     if (payload.status === "pending") {
       await refreshEvaluationUi(row.lote_id);
     }
   } finally {
     if (evaluateBtn) evaluateBtn.disabled = false;
+    syncEvaluateButton();
   }
 }
 

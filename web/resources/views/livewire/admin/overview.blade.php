@@ -30,6 +30,11 @@
             <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">Lotes no snapshot</p>
             <p class="mt-2 text-3xl font-bold">{{ $stats['lots'] }}</p>
         </div>
+        <div class="rounded-2xl border border-violet-500/30 bg-slate-900 p-4">
+            <p class="text-xs font-semibold uppercase tracking-widest text-violet-300">IA no mês</p>
+            <p class="mt-2 text-3xl font-bold">{{ $stats['ai_month'] }}</p>
+            <p class="mt-1 text-xs text-slate-500">R$ {{ number_format($stats['ai_cost_month'], 2, ',', '.') }} estimado</p>
+        </div>
     </div>
 
     <div class="flex flex-wrap gap-3">

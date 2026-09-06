@@ -7,6 +7,7 @@ use App\Jobs\EvaluateLotJob;
 use App\Models\Lot;
 use App\Models\LotEvaluation;
 use App\Models\User;
+use App\Services\Billing\PlanQuota;
 use App\Services\Lots\GeminiLotEvaluator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -185,7 +186,7 @@ class LotEvaluationTest extends TestCase
             ]),
         ]);
 
-        (new EvaluateLotJob('job-1'))->handle(app(GeminiLotEvaluator::class));
+        (new EvaluateLotJob('job-1'))->handle(app(GeminiLotEvaluator::class), app(PlanQuota::class));
 
         $evaluation->refresh();
         $this->assertSame(LotEvaluationStatus::READY, $evaluation->status);
@@ -195,5 +196,67 @@ class LotEvaluationTest extends TestCase
         $this->assertSame(56000.0, $evaluation->estimated_resale);
         $this->assertSame(15000.0, $evaluation->estimated_costs);
         $this->assertSame(9000.0, $evaluation->target_profit);
+    }
+
+    public function test_trial_user_is_blocked_after_monthly_quota(): void
+    {
+        Queue::fake();
+
+        $user = User::factory()->create(['plan' => 'trial']);
+        Lot::factory()->create(['lote_id' => 'q1']);
+        Lot::factory()->create(['lote_id' => 'q2']);
+        Lot::factory()->create(['lote_id' => 'q3']);
+        Lot::factory()->create(['lote_id' => 'q4']);
+
+        foreach (['q1', 'q2', 'q3'] as $loteId) {
+            $this->actingAs($user)
+                ->postJson(route('avaliacoes.store', ['lote' => $loteId]))
+                ->assertOk();
+        }
+
+        $this->actingAs($user)
+            ->postJson(route('avaliacoes.store', ['lote' => 'q4']))
+            ->assertStatus(402)
+            ->assertJsonPath('status', 'quota_exceeded')
+            ->assertJsonPath('quota.used', 3);
+
+        $this->assertStringContainsString('wa.me/5531986268630', (string) data_get(
+            $this->actingAs($user)->postJson(route('avaliacoes.store', ['lote' => 'q4']))->json(),
+            'quota.checkout_url',
+        ));
+    }
+
+    public function test_repeat_request_for_same_lot_does_not_consume_extra_quota(): void
+    {
+        Queue::fake();
+
+        $user = User::factory()->create(['plan' => 'trial']);
+        $lot = Lot::factory()->create(['lote_id' => 'same-1']);
+        LotEvaluation::query()->create([
+            'lote_id' => 'same-1',
+            'status' => LotEvaluationStatus::READY,
+            'source_hash' => LotEvaluation::sourceHashFor($lot),
+            'risk_score' => 2,
+            'summary' => 'ok',
+            'flags' => [],
+            'patio_checks' => [],
+        ]);
+
+        $this->actingAs($user)
+            ->postJson(route('avaliacoes.store', ['lote' => 'same-1']))
+            ->assertOk();
+        $this->actingAs($user)
+            ->postJson(route('avaliacoes.store', ['lote' => 'same-1']))
+            ->assertOk()
+            ->assertJsonPath('quota.used', 1);
+    }
+
+    public function test_catalog_sales_page_promotes_ai_and_whatsapp_checkout(): void
+    {
+        $this->get(route('catalog'))
+            ->assertOk()
+            ->assertSee('A IA diz até quanto pagar')
+            ->assertSee('wa.me/5531986268630', false)
+            ->assertSee('Radar Pro');
     }
 }

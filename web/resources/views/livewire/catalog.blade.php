@@ -1,32 +1,84 @@
-    <div
+<div
         id="catalog-root"
         data-lots-url="{{ file_exists(public_path('data/lotes.json')) ? asset('data/lotes.json') : config('radar.lots_url') }}"
         data-auth="{{ auth()->check() ? '1' : '0' }}"
         data-approved="{{ auth()->check() && auth()->user()->isApproved() && ! auth()->user()->isPending() ? '1' : '0' }}"
         data-login-url="{{ route('login') }}"
+        data-register-url="{{ route('register') }}"
         data-interests-url="{{ url('/interesses') }}"
         data-evaluations-url="{{ url('/avaliacoes') }}"
+        data-plans-url="#planos"
+        data-checkout-url="{{ $checkoutUrl }}"
+        data-quota='@json($quota)'
     >
     <section class="hero-stage mx-auto max-w-6xl px-4 py-8 sm:py-12">
-        <p class="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-400">VerifyRadar</p>
-        <h1 class="mt-3 max-w-3xl text-3xl font-bold sm:text-5xl">Ofertas próximas com desconto vs FIPE.</h1>
-        <p class="mt-4 max-w-2xl text-slate-400">Sodré Santoro e Palácio dos Leilões, atualizado todo dia. O digest avisa a faixa que você cadastrou. O e-mail de 1 hora antes vai só para os carros em que você marcar interesse.</p>
+        <p class="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-400">IA · VerifyRadar</p>
+        <h1 class="mt-3 max-w-3xl text-3xl font-bold sm:text-5xl">A IA diz até quanto pagar no leilão — antes do lance.</h1>
+        <p class="mt-4 max-w-2xl text-slate-400">Fotos, FIPE, monta e sinistro entram no parecer. Você recebe risco, checklist de pátio e o teto de lance para ainda ter lucro. Alertas avisam a faixa. A IA evita o lance emocional.</p>
         <div class="mt-6 flex flex-wrap gap-3">
             @guest
-                <a href="{{ route('register') }}" class="btn-emerald px-5 py-3">Receber alertas</a>
-                <a href="{{ route('login') }}" class="rounded-lg border border-slate-700 px-5 py-3 text-slate-100 hover:border-emerald-500">Já tenho conta</a>
+                <a href="{{ route('register') }}" class="btn-emerald px-5 py-3">Testar 3 análises grátis</a>
+                <a href="#planos" class="rounded-lg border border-violet-400/50 px-5 py-3 text-violet-200 hover:border-violet-300">Ver planos com IA</a>
             @else
+                <a href="#planos" class="rounded-lg border border-violet-400/50 px-5 py-3 text-violet-200 hover:border-violet-300">Meu plano de IA</a>
                 <a href="{{ route('alertas') }}" class="btn-emerald px-5 py-3">Ajustar meus alertas</a>
             @endguest
+        </div>
+        <div class="ai-hero-grid mt-8">
+            <article class="ai-hero-card">
+                <p class="ai-hero-kicker">Parecer em segundos</p>
+                <p class="ai-hero-value">Risco 6/10</p>
+                <p class="ai-hero-copy">A IA lê as fotos do pátio e cruza com a tabela. Você vê o que a ficha esconde.</p>
+            </article>
+            <article class="ai-hero-card ai-hero-card-accent">
+                <p class="ai-hero-kicker">Limite sugerido de lance</p>
+                <p class="ai-hero-value">R$ 32.000</p>
+                <p class="ai-hero-copy">Revenda estimada − custos − lucro alvo. O teto para não comprar no vermelho.</p>
+            </article>
+            <article class="ai-hero-card">
+                <p class="ai-hero-kicker">Alertas no ponto</p>
+                <p class="ai-hero-value">Digest + 1h</p>
+                <p class="ai-hero-copy">E-mail da faixa todo dia. Lembrete só nos carros em que você marcar interesse.</p>
+            </article>
         </div>
         <div class="meta mt-6 text-sm text-slate-400" id="meta"></div>
     </section>
 
     <section class="metrics mx-auto max-w-6xl px-4" id="metrics"></section>
 
+    <section id="planos" class="mx-auto max-w-6xl px-4 py-6">
+        <div class="mb-5">
+            <p class="text-sm font-semibold uppercase tracking-[0.18em] text-violet-300">Planos</p>
+            <h2 class="mt-2 text-2xl font-bold">IA e alertas no mesmo plano.</h2>
+            <p class="mt-2 max-w-2xl text-slate-400">O catálogo é público. A avaliação com IA e os recortes de alerta entram no plano. A compra é com um atendente no WhatsApp — sem cartão no site.</p>
+        </div>
+        <div class="plan-grid">
+            @foreach ($plans as $plan)
+                <article @class(['plan-card', 'plan-card-featured' => $plan['highlight']])>
+                    @if ($plan['highlight'])
+                        <p class="plan-badge">Mais escolhido</p>
+                    @endif
+                    <h3 class="plan-name">{{ $plan['name'] }}</h3>
+                    <p class="plan-price">{{ $plan['price'] }}</p>
+                    <p class="plan-tagline">{{ $plan['tagline'] }}</p>
+                    <ul class="plan-features">
+                        @foreach ($plan['features'] as $feature)
+                            <li>{{ $feature }}</li>
+                        @endforeach
+                    </ul>
+                    <a href="{{ $plan['checkout_url'] }}" target="_blank" rel="noopener" class="{{ $plan['highlight'] ? 'btn-emerald' : 'plan-cta' }} w-full px-4 py-3">
+                        {{ $plan['cta'] }}
+                    </a>
+                    <p class="plan-note">{{ $plan['price_note'] }}</p>
+                </article>
+            @endforeach
+        </div>
+    </section>
+
     <section class="mx-auto max-w-6xl px-4 py-6">
         <div class="rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
             <h2 class="text-lg font-semibold">Filtros</h2>
+            <p class="mt-1 text-sm text-slate-500">Abra um lote e peça a avaliação. A IA só gasta cota quando você solicita aquele carro.</p>
 
             <label class="mt-4 block">
                 <span class="mb-1.5 block text-sm text-slate-300">Buscar marca ou modelo</span>
@@ -135,7 +187,7 @@
                 <div class="lightbox-actions">
                     <a id="lightbox-link" href="#" target="_blank" rel="noopener" class="lightbox-cta">Ver no leilão</a>
                     <button type="button" id="lightbox-interest" class="lightbox-interest">Tenho interesse</button>
-                    <button type="button" id="lightbox-evaluate" class="lightbox-evaluate hidden">Pedir avaliação</button>
+                    <button type="button" id="lightbox-evaluate" class="lightbox-evaluate">Avaliar com IA</button>
                     <button type="button" id="lightbox-share" class="lightbox-share">Copiar link</button>
                 </div>
             </div>

@@ -5,6 +5,8 @@ namespace App\Livewire;
 use App\Models\AlertPreference;
 use App\Models\Lot;
 use App\Services\Alerts\AlertDispatcher;
+use App\Services\Billing\PlanQuota;
+use App\Support\SalesWhatsApp;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -136,9 +138,9 @@ class AlertPreferencesForm extends Component
             return;
         }
 
-        $max = (int) config('radar.max_preferences', 12);
+        $max = $this->quota()->alertsLimit($user);
         if ($user->alertPreferences()->count() >= $max) {
-            $this->addError('search', "Limite de {$max} preferências por conta.");
+            $this->addError('search', "Limite de {$max} recortes neste plano. Fale com um atendente para subir.");
 
             return;
         }
@@ -170,10 +172,16 @@ class AlertPreferencesForm extends Component
             'preview' => $preview,
             'marcasDisponiveis' => $marcasDisponiveis,
             'whatsappReady' => (bool) config('radar.whatsapp.enabled'),
-            'maxPreferences' => (int) config('radar.max_preferences', 12),
+            'maxPreferences' => $this->quota()->alertsLimit($user),
+            'checkoutUrl' => SalesWhatsApp::checkoutUrl($this->quota()->suggestedUpgrade($user->plan), $user),
         ])->layout('layouts.app', [
             'title' => 'Alertas — VerifyRadar',
         ]);
+    }
+
+    private function quota(): PlanQuota
+    {
+        return app(PlanQuota::class);
     }
 
     private function fillFromPreference(AlertPreference $preference): void

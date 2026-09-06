@@ -2,8 +2,42 @@
     <div>
         <p class="text-sm font-semibold uppercase tracking-widest text-emerald-400">Conta</p>
         <h1 class="mt-2 text-2xl font-bold sm:text-3xl">Minha conta</h1>
-        <p class="mt-1 text-sm text-slate-400">Assinatura {{ $user->subscriptionLabel() }}@if($user->subscription_until) até {{ $user->subscription_until->timezone('America/Sao_Paulo')->format('d/m/Y') }}@endif.</p>
+        <p class="mt-1 text-sm text-slate-400">Plano {{ $user->planLabel() }} · assinatura {{ $user->subscriptionLabel() }}@if($user->subscription_until) até {{ $user->subscription_until->timezone('America/Sao_Paulo')->format('d/m/Y') }}@endif.</p>
     </div>
+
+    <section class="rounded-2xl border border-violet-500/30 bg-slate-900 p-4 sm:p-6">
+        <h2 class="text-lg font-semibold">Uso da IA</h2>
+        <p class="mt-2 text-sm text-slate-400">Cada pedido de avaliação conta uma consulta. Cache do mesmo carro no mês não cobra de novo.</p>
+        <dl class="mt-4 grid gap-3 sm:grid-cols-3">
+            <div class="rounded-xl border border-slate-800 bg-slate-950 px-4 py-3">
+                <dt class="text-xs uppercase tracking-widest text-slate-500">Consultas no mês</dt>
+                <dd class="mt-1 text-2xl font-bold">{{ $quota['unlimited'] ? '∞' : $quota['used'].'/'.$quota['limit'] }}</dd>
+            </div>
+            <div class="rounded-xl border border-slate-800 bg-slate-950 px-4 py-3">
+                <dt class="text-xs uppercase tracking-widest text-slate-500">Custo IA no mês</dt>
+                <dd class="mt-1 text-2xl font-bold">R$ {{ number_format($quota['spent_brl_month'], 2, ',', '.') }}</dd>
+            </div>
+            <div class="rounded-xl border border-slate-800 bg-slate-950 px-4 py-3">
+                <dt class="text-xs uppercase tracking-widest text-slate-500">Custo IA total</dt>
+                <dd class="mt-1 text-2xl font-bold">R$ {{ number_format($quota['spent_brl'], 2, ',', '.') }}</dd>
+            </div>
+        </dl>
+        <a href="{{ $checkoutUrl }}" target="_blank" rel="noopener" class="btn-emerald mt-4 inline-flex px-5 py-3">Falar com atendente</a>
+    </section>
+
+    <section class="rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
+        <h2 class="text-lg font-semibold">Trocar de plano</h2>
+        <p class="mt-1 text-sm text-slate-400">O botão abre o WhatsApp com a mensagem pronta. A equipe libera o plano no admin.</p>
+        <div class="mt-4 grid gap-3 sm:grid-cols-3">
+            @foreach ($plans as $plan)
+                <a href="{{ $plan['checkout_url'] }}" target="_blank" rel="noopener" class="rounded-xl border {{ $plan['key'] === $user->plan ? 'border-emerald-500/50' : 'border-slate-800' }} bg-slate-950 p-4 hover:border-emerald-500">
+                    <p class="font-semibold">{{ $plan['name'] }}</p>
+                    <p class="mt-1 text-emerald-400">{{ $plan['price'] }}</p>
+                    <p class="mt-2 text-sm text-slate-400">{{ $plan['analyses_per_month'] }} análises · {{ $plan['alerts'] }} recortes</p>
+                </a>
+            @endforeach
+        </div>
+    </section>
 
     <section class="rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
         <h2 class="text-lg font-semibold">Dados pessoais</h2>

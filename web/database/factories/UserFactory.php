@@ -27,6 +27,7 @@ class UserFactory extends Factory
             'type' => UserType::USER,
             'active' => true,
             'subscription_status' => SubscriptionStatus::TRIAL,
+            'plan' => 'trial',
             'subscription_until' => now()->addDays(7),
             'approved_at' => now(),
             'rejected_at' => null,

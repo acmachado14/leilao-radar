@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Concerns;
 
+use App\Constants\Plan;
 use App\Constants\SubscriptionStatus;
 use App\Models\User;
 use App\Services\Admin\AdminAuditor;
@@ -14,6 +15,7 @@ trait ManagesSubscribers
 
         $user->update([
             'subscription_status' => SubscriptionStatus::ACTIVE,
+            'plan' => $user->plan === Plan::RADAR_PRO ? Plan::RADAR_PRO : Plan::RADAR,
             'subscription_until' => now()->addDays($days),
             'approved_at' => now(),
             'rejected_at' => null,
@@ -31,6 +33,7 @@ trait ManagesSubscribers
 
         $user->update([
             'subscription_status' => SubscriptionStatus::TRIAL,
+            'plan' => Plan::TRIAL,
             'subscription_until' => now()->addDays($days),
             'approved_at' => now(),
             'rejected_at' => null,
@@ -83,6 +86,20 @@ trait ManagesSubscribers
         ]);
         $this->auditor()->record('expired', "Expirou {$user->name}", $user);
         session()->flash('success', "Assinatura de {$user->name} expirada.");
+    }
+
+    public function setPlan(string $userId, string $plan): void
+    {
+        if (! in_array($plan, Plan::all(), true)) {
+            session()->flash('error', 'Plano inválido.');
+
+            return;
+        }
+
+        $user = $this->findManagedUser($userId);
+        $user->update(['plan' => $plan]);
+        $this->auditor()->record('plan_changed', "Definiu plano {$plan} para {$user->name}", $user, ['plan' => $plan]);
+        session()->flash('success', "Plano de {$user->name} atualizado.");
     }
 
     public function toggleActive(string $userId): void

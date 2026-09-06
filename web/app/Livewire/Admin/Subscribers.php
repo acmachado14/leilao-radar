@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use App\Constants\SubscriptionStatus;
 use App\Livewire\Admin\Concerns\ManagesSubscribers;
 use App\Models\User;
+use App\Services\Billing\PlanQuota;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -32,8 +33,17 @@ class Subscribers extends Component
 
     public function render()
     {
+        $monthStart = app(PlanQuota::class)->periodStart();
         $users = User::query()
             ->withCount('alertPreferences')
+            ->withCount('aiUsageLogs')
+            ->withSum('aiUsageLogs', 'estimated_cost_brl')
+            ->withCount(['aiUsageLogs as ai_month_count' => function ($query) use ($monthStart) {
+                $query->where('billed', true)->where('created_at', '>=', $monthStart);
+            }])
+            ->withSum(['aiUsageLogs as ai_month_cost' => function ($query) use ($monthStart) {
+                $query->where('created_at', '>=', $monthStart);
+            }], 'estimated_cost_brl')
             ->when($this->search !== '', function ($query) {
                 $term = '%'.$this->search.'%';
                 $query->where(function ($inner) use ($term) {

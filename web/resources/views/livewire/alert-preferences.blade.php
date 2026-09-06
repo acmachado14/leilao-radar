@@ -5,8 +5,9 @@
         <p class="mt-1 text-sm text-slate-400">
             Cadastre um recorte por modelo (ex.: Jetta GLI e Amarok). O digest (~05:30 BRT) junta os lotes da faixa.
             O aviso de 1 hora antes (ou no dia, sem horário) vai só para carros em que você clicar em “Tenho interesse”.
-            {{ $preferences->count() }}/{{ $maxPreferences }} salvas.
+            {{ $preferences->count() }}/{{ $maxPreferences }} recortes neste plano.
         </p>
+        <a href="{{ $checkoutUrl }}" target="_blank" rel="noopener" class="mt-3 inline-flex text-sm text-violet-300 hover:underline">Falar com atendente para mais recortes</a>
     </div>
 
     <section class="rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
