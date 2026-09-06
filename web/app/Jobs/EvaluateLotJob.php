@@ -47,7 +47,12 @@ class EvaluateLotJob implements ShouldQueue
                 'summary' => $result['summary'],
                 'flags' => $result['flags'],
                 'patio_checks' => $result['patio_checks'],
-                'model' => (string) config('radar.gemini.model', 'gemini-2.5-flash'),
+                'max_bid_amount' => $result['max_bid_amount'],
+                'estimated_resale' => $result['estimated_resale'],
+                'estimated_costs' => $result['estimated_costs'],
+                'target_profit' => $result['target_profit'],
+                'pricing_rationale' => $result['pricing_rationale'],
+                'model' => (string) config('radar.gemini.model', 'gemini-3.6-flash'),
                 'error_message' => null,
             ]);
         } catch (Throwable $e) {

@@ -248,12 +248,27 @@ function renderEvaluationPanel(payload) {
     const ev = payload.evaluation;
     const flags = (ev.flags || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
     const checks = (ev.patio_checks || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+    const pricingBlock = ev.max_bid_amount
+      ? `
+      <div class="lightbox-evaluation-pricing">
+        <p class="lightbox-evaluation-subtitle">Limite sugerido de lance (visando lucro)</p>
+        <p class="lightbox-evaluation-limit">${money(ev.max_bid_amount)}</p>
+        <p class="lightbox-evaluation-metrics">
+          Revenda est.: ${money(ev.estimated_resale)}
+          · Custos est.: ${money(ev.estimated_costs)}
+          · Lucro alvo: ${money(ev.target_profit)}
+        </p>
+        ${ev.pricing_rationale ? `<p class="lightbox-evaluation-copy">${escapeHtml(ev.pricing_rationale)}</p>` : ""}
+      </div>
+    `
+      : "";
     panel.innerHTML = `
       <p class="lightbox-evaluation-title">Parecer automático · risco ${escapeHtml(ev.risk_score)}/10</p>
+      ${pricingBlock}
       <p class="lightbox-evaluation-copy">${escapeHtml(ev.summary)}</p>
       ${flags ? `<ul class="lightbox-evaluation-list">${flags}</ul>` : ""}
       ${checks ? `<p class="lightbox-evaluation-subtitle">No pátio, conferir:</p><ul class="lightbox-evaluation-list">${checks}</ul>` : ""}
-      <p class="lightbox-evaluation-disclaimer">Parecer gerado por IA. Não substitui vistoria presencial.</p>
+      <p class="lightbox-evaluation-disclaimer">Parecer gerado por IA com base na FIPE. Não substitui vistoria nem garante lucro.</p>
     `;
     return;
   }

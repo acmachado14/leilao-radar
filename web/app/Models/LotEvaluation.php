@@ -15,6 +15,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'summary',
     'flags',
     'patio_checks',
+    'max_bid_amount',
+    'estimated_resale',
+    'estimated_costs',
+    'target_profit',
+    'pricing_rationale',
     'model',
     'error_message',
 ])]
@@ -32,6 +37,10 @@ class LotEvaluation extends Model
             'flags' => 'array',
             'patio_checks' => 'array',
             'risk_score' => 'integer',
+            'max_bid_amount' => 'float',
+            'estimated_resale' => 'float',
+            'estimated_costs' => 'float',
+            'target_profit' => 'float',
         ];
     }
 
@@ -52,6 +61,7 @@ class LotEvaluation extends Model
             (string) $lot->sinistro,
             (string) $lot->foto_capa,
             implode(',', array_slice($photos, 0, 6)),
+            'pricing-v1',
         ]);
 
         return hash('sha256', $payload);
@@ -74,6 +84,11 @@ class LotEvaluation extends Model
             'summary' => $this->summary,
             'flags' => $this->flags ?? [],
             'patio_checks' => $this->patio_checks ?? [],
+            'max_bid_amount' => $this->max_bid_amount,
+            'estimated_resale' => $this->estimated_resale,
+            'estimated_costs' => $this->estimated_costs,
+            'target_profit' => $this->target_profit,
+            'pricing_rationale' => $this->pricing_rationale,
             'model' => $this->model,
             'evaluated_at' => $this->updated_at?->toIso8601String(),
         ];

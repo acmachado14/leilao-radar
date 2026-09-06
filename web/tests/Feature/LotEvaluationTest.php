@@ -136,6 +136,14 @@ class LotEvaluationTest extends TestCase
                                 'summary' => 'Carro com sinais de batida lateral.',
                                 'flags' => ['Amassado na porta'],
                                 'patio_checks' => ['Longarina', 'Pintura', 'FIPE no edital'],
+                                'pricing' => [
+                                    'max_bid' => 32000,
+                                    'fipe_reference' => 80000,
+                                    'estimated_resale' => 56000,
+                                    'estimated_costs' => 15000,
+                                    'target_profit' => 9000,
+                                    'rationale' => 'Com FIPE em R$ 80 mil e monta leve, o teto de lance para manter margem é R$ 32 mil.',
+                                ],
                             ], JSON_THROW_ON_ERROR),
                         ]],
                     ],
@@ -149,5 +157,9 @@ class LotEvaluationTest extends TestCase
         $this->assertSame(LotEvaluationStatus::READY, $evaluation->status);
         $this->assertSame(6, $evaluation->risk_score);
         $this->assertSame('Carro com sinais de batida lateral.', $evaluation->summary);
+        $this->assertSame(32000.0, $evaluation->max_bid_amount);
+        $this->assertSame(56000.0, $evaluation->estimated_resale);
+        $this->assertSame(15000.0, $evaluation->estimated_costs);
+        $this->assertSame(9000.0, $evaluation->target_profit);
     }
 }

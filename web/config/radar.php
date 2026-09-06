@@ -17,5 +17,6 @@ return [
         'api_key' => env('RADAR_GEMINI_API_KEY'),
         'model' => env('RADAR_GEMINI_MODEL', 'gemini-3.6-flash'),
         'max_images' => (int) env('RADAR_GEMINI_MAX_IMAGES', 4),
+        'target_profit_margin_pct' => (float) env('RADAR_GEMINI_TARGET_PROFIT_MARGIN_PCT', 15),
     ],
 ];
