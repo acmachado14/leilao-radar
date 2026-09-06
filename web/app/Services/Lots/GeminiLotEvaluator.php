@@ -46,12 +46,13 @@ class GeminiLotEvaluator
             ]);
 
         if (! $response->successful()) {
+            $apiMessage = data_get($response->json(), 'error.message');
             Log::warning('Gemini evaluation failed', [
                 'lote_id' => $lot->lote_id,
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);
-            throw new RuntimeException('Gemini request failed.');
+            throw new RuntimeException($this->friendlyApiError($response->status(), $apiMessage));
         }
 
         $text = data_get($response->json(), 'candidates.0.content.parts.0.text');
@@ -65,6 +66,25 @@ class GeminiLotEvaluator
         }
 
         return $this->normalizeResult($decoded);
+    }
+
+    private function friendlyApiError(int $status, mixed $message): string
+    {
+        $message = is_string($message) ? trim($message) : '';
+
+        if ($status === 429) {
+            return 'Créditos da API Gemini esgotados. Adicione saldo em ai.google.dev.';
+        }
+
+        if ($status === 404 && str_contains($message, 'no longer available')) {
+            return 'Modelo de IA indisponível para esta conta. Atualize RADAR_GEMINI_MODEL.';
+        }
+
+        if ($message !== '') {
+            return 'Gemini: '.$message;
+        }
+
+        return 'Gemini request failed.';
     }
 
     private function buildPrompt(Lot $lot): string
