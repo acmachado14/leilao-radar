@@ -43,7 +43,7 @@ class GeminiLotEvaluator
             $parts[] = $imagePart;
         }
 
-        $response = Http::timeout(90)
+        $response = Http::timeout(120)
             ->withQueryParameters(['key' => $apiKey])
             ->post($url, [
                 'contents' => [
@@ -105,8 +105,12 @@ class GeminiLotEvaluator
             ? number_format($lot->custo_estimado_5pct, 2, ',', '.')
             : 'N/A';
 
+        $imageCount = count(self::imageUrlsFor($lot));
+
         return <<<PROMPT
 You are an expert in Brazilian auction vehicles (leilão de salvados). Analyze the photos and lot data. This is NOT a formal inspection — a quick triage for a buyer.
+
+You will receive {$imageCount} photo(s) attached — review every angle provided before assessing risk and pricing.
 
 Return JSON only with this shape:
 {
@@ -155,9 +159,9 @@ PROMPT;
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<string>
      */
-    private function imageParts(Lot $lot): array
+    public static function imageUrlsFor(Lot $lot): array
     {
         $urls = [];
         if (is_string($lot->foto_capa) && $lot->foto_capa !== '') {
@@ -171,13 +175,35 @@ PROMPT;
             }
         }
 
-        $urls = array_slice($urls, 0, (int) config('radar.gemini.max_images', 4));
-        $parts = [];
+        $maxImages = (int) config('radar.gemini.max_images', 0);
+        if ($maxImages > 0) {
+            $urls = array_slice($urls, 0, $maxImages);
+        }
 
-        foreach ($urls as $url) {
+        return $urls;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function imageParts(Lot $lot): array
+    {
+        $urls = self::imageUrlsFor($lot);
+        if ($urls === []) {
+            return [];
+        }
+
+        $responses = Http::pool(function ($pool) use ($urls) {
+            foreach ($urls as $index => $url) {
+                $pool->as((string) $index)->timeout(25)->get($url);
+            }
+        });
+
+        $parts = [];
+        foreach ($urls as $index => $url) {
             try {
-                $image = Http::timeout(20)->get($url);
-                if (! $image->successful()) {
+                $image = $responses[(string) $index] ?? null;
+                if ($image === null || ! $image->successful()) {
                     continue;
                 }
                 $mime = $image->header('Content-Type') ?: 'image/jpeg';
@@ -198,6 +224,12 @@ PROMPT;
                 ]);
             }
         }
+
+        Log::info('Gemini lot images prepared', [
+            'lote_id' => $lot->lote_id,
+            'requested' => count($urls),
+            'attached' => count($parts),
+        ]);
 
         return $parts;
     }

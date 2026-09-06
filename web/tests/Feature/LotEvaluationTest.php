@@ -107,6 +107,40 @@ class LotEvaluationTest extends TestCase
         Queue::assertNothingPushed();
     }
 
+    public function test_image_urls_include_all_photos_when_max_images_is_zero(): void
+    {
+        config(['radar.gemini.max_images' => 0]);
+
+        $photos = array_map(
+            fn (int $index) => "https://example.test/car-{$index}.jpg",
+            range(1, 8),
+        );
+
+        $lot = Lot::factory()->create([
+            'foto_capa' => $photos[0],
+            'fotos' => $photos,
+        ]);
+
+        $this->assertSame($photos, GeminiLotEvaluator::imageUrlsFor($lot));
+    }
+
+    public function test_image_urls_respect_max_images_cap_when_configured(): void
+    {
+        config(['radar.gemini.max_images' => 3]);
+
+        $photos = array_map(
+            fn (int $index) => "https://example.test/car-{$index}.jpg",
+            range(1, 8),
+        );
+
+        $lot = Lot::factory()->create([
+            'foto_capa' => $photos[0],
+            'fotos' => $photos,
+        ]);
+
+        $this->assertCount(3, GeminiLotEvaluator::imageUrlsFor($lot));
+    }
+
     public function test_job_marks_evaluation_ready_using_gemini_response(): void
     {
         config([

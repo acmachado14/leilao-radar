@@ -62,6 +62,8 @@ class LotEvaluation extends Model
             (string) $lot->foto_capa,
             implode(',', array_slice($photos, 0, 6)),
             'pricing-v1',
+            'photos-all-v2',
+            (string) config('radar.gemini.max_images', 0),
         ]);
 
         return hash('sha256', $payload);
