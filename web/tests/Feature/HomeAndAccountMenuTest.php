@@ -37,6 +37,7 @@ class HomeAndAccountMenuTest extends TestCase
         $this->actingAs($user)
             ->get(route('home'))
             ->assertOk()
+            ->assertSee('Abrir menu')
             ->assertSee('Meus lotes')
             ->assertSee('Meu plano')
             ->assertSee('Minha conta')

@@ -13,23 +13,51 @@
 </head>
 <body class="min-h-screen bg-slate-950 text-slate-100 pb-[env(safe-area-inset-bottom)]" x-data="{ sidebar: false }" @keydown.escape.window="sidebar = false">
     @auth
-        <aside class="fixed inset-y-0 left-0 z-40 hidden w-72 overflow-y-auto border-r border-slate-800 bg-slate-950 md:flex md:flex-col">
-            @include('layouts.partials.sidebar')
-        </aside>
+        <header class="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur">
+            <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:py-4">
+                <div class="flex items-center gap-3">
+                    <button
+                        type="button"
+                        class="inline-flex items-center justify-center rounded-lg border border-slate-700 p-2 text-slate-300 hover:border-emerald-500 hover:text-emerald-400"
+                        @click="sidebar = true"
+                        :aria-expanded="sidebar"
+                        aria-controls="account-sidebar"
+                        aria-label="Abrir menu"
+                    >
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                    <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-3">
+                        <img src="{{ asset('images/logo.png') }}" alt="VerifyRadar" class="h-8 w-8 rounded-lg">
+                        <span>
+                            <span class="block text-sm font-semibold text-white">Verify<span class="text-emerald-400">Radar</span></span>
+                            <span class="block text-[11px] uppercase tracking-[0.16em] text-emerald-400">grupo VerifyCar</span>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </header>
 
         <div
             x-show="sidebar"
             x-cloak
             x-transition.opacity
-            class="fixed inset-0 z-40 bg-black/60 md:hidden"
+            class="fixed inset-0 z-40 bg-black/60"
             @click="sidebar = false"
         ></div>
 
         <aside
+            id="account-sidebar"
             x-show="sidebar"
             x-cloak
-            x-transition
-            class="fixed inset-y-0 left-0 z-50 w-72 overflow-y-auto border-r border-slate-800 bg-slate-950 md:hidden"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="-translate-x-full"
+            x-transition:enter-end="translate-x-0"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="translate-x-0"
+            x-transition:leave-end="-translate-x-full"
+            class="fixed inset-y-0 left-0 z-50 flex w-72 flex-col overflow-y-auto border-r border-slate-800 bg-slate-950"
         >
             @include('layouts.partials.sidebar')
         </aside>
@@ -81,48 +109,27 @@
         </nav>
     @endguest
 
-    <div @class(['md:pl-72' => auth()->check()])>
-        @auth
-            <header class="sticky top-0 z-30 flex items-center justify-between border-b border-slate-800 bg-slate-950/90 px-4 py-3 backdrop-blur md:hidden">
-                <a href="{{ route('home') }}" class="flex items-center gap-2">
-                    <img src="{{ asset('images/logo.png') }}" alt="" class="h-7 w-7 rounded-lg">
-                    <span class="text-sm font-semibold">Verify<span class="text-emerald-400">Radar</span></span>
-                </a>
-                <button
-                    type="button"
-                    class="inline-flex items-center justify-center rounded-lg border border-slate-700 p-2 text-slate-300"
-                    @click="sidebar = !sidebar"
-                    aria-label="Abrir menu da conta"
-                >
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                    </svg>
-                </button>
-            </header>
-        @endauth
-
-        <main @class(['mx-auto max-w-6xl px-4 py-6 sm:py-8' => empty($fullBleed)])>
-            @if (session('success'))
-                <div class="mx-auto mb-4 max-w-6xl rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-emerald-300">
-                    {{ session('success') }}
-                </div>
-            @endif
-            @if (session('error'))
-                <div class="mx-auto mb-4 max-w-6xl rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-red-300">
-                    {{ session('error') }}
-                </div>
-            @endif
-
-            {{ $slot }}
-        </main>
-
-        <footer class="border-t border-slate-800 bg-slate-950">
-            <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-                <p>VerifyRadar — do grupo VerifyCar. Ofertas vs tabela FIPE.</p>
-                <p>radar.verifycar.com.br</p>
+    <main @class(['mx-auto max-w-6xl px-4 py-6 sm:py-8' => empty($fullBleed)])>
+        @if (session('success'))
+            <div class="mx-auto mb-4 max-w-6xl rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-emerald-300">
+                {{ session('success') }}
             </div>
-        </footer>
-    </div>
+        @endif
+        @if (session('error'))
+            <div class="mx-auto mb-4 max-w-6xl rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-red-300">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        {{ $slot }}
+    </main>
+
+    <footer class="border-t border-slate-800 bg-slate-950">
+        <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+            <p>VerifyRadar — do grupo VerifyCar. Ofertas vs tabela FIPE.</p>
+            <p>radar.verifycar.com.br</p>
+        </div>
+    </footer>
 
     @livewireScripts
 </body>

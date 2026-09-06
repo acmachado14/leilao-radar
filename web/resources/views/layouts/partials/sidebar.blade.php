@@ -7,14 +7,26 @@
     };
 @endphp
 
-<div class="flex h-full flex-col">
-    <a href="{{ route('home') }}" class="flex items-center gap-3 px-4 py-5" @click="sidebar = false">
-        <img src="{{ asset('images/logo.png') }}" alt="VerifyRadar" class="h-8 w-8 rounded-lg">
-        <span>
-            <span class="block text-sm font-semibold text-white">Verify<span class="text-emerald-400">Radar</span></span>
-            <span class="block text-[11px] uppercase tracking-[0.16em] text-emerald-400">grupo VerifyCar</span>
-        </span>
-    </a>
+<div class="flex h-full min-h-full flex-col">
+    <div class="flex items-center justify-between px-3 py-4">
+        <a href="{{ route('home') }}" class="flex items-center gap-3" @click="sidebar = false">
+            <img src="{{ asset('images/logo.png') }}" alt="VerifyRadar" class="h-8 w-8 rounded-lg">
+            <span>
+                <span class="block text-sm font-semibold text-white">Verify<span class="text-emerald-400">Radar</span></span>
+                <span class="block text-[11px] uppercase tracking-[0.16em] text-emerald-400">grupo VerifyCar</span>
+            </span>
+        </a>
+        <button
+            type="button"
+            class="inline-flex items-center justify-center rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white"
+            @click="sidebar = false"
+            aria-label="Fechar menu"
+        >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    </div>
 
     <div class="mx-4 rounded-xl border border-slate-800 bg-slate-900/80 px-3 py-3">
         <p class="truncate text-sm font-semibold text-white">{{ $user->name }}</p>
