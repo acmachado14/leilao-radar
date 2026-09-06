@@ -1,10 +1,13 @@
 <x-mail::message>
 # Leilão perto de começar
 
-Olá, **{{ $user->name }}**. Os carros em que você marcou interesse estão prestes a ir a leilão.
+@include('emails.partials.intro', [
+    'user' => $user,
+    'intro' => 'Os carros em que você marcou interesse estão prestes a ir a leilão.',
+])
 
 @foreach ($lots as $lot)
-- **{{ $lot->titulo }}** — {{ $lot->marca }} {{ $lot->modelo }} · {{ $lot->fonte === 'palacio' ? 'Palácio' : 'Sodré' }} · {{ $lot->auctionWhenLabel() }} · {{ $lot->desconto_label ?: 'FIPE N/A' }} · [abrir]({{ $lot->shareUrl() }})
+@include('emails.partials.lot-card', ['lot' => $lot, 'showAuctionWhen' => true])
 @endforeach
 
 <x-mail::button :url="$catalogUrl">

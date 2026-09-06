@@ -1,10 +1,15 @@
 <x-mail::message>
 # {{ $isTest ? 'Teste de alerta' : 'Novos lotes no VerifyRadar' }}
 
-Olá, **{{ $user->name }}**. {{ $isTest ? 'Este é um e-mail de teste — o formato é o mesmo do resumo que chega todo dia de manhã.' : 'Encontramos ofertas que batem com as suas preferências.' }}
+@include('emails.partials.intro', [
+    'user' => $user,
+    'intro' => $isTest
+        ? 'Este é um e-mail de teste — o formato é o mesmo do resumo que chega todo dia de manhã.'
+        : 'Encontramos ofertas que batem com as suas preferências.',
+])
 
 @foreach ($lots as $lot)
-- **{{ $lot->titulo }}** — {{ $lot->marca }} {{ $lot->modelo }} · {{ $lot->fonte === 'palacio' ? 'Palácio' : 'Sodré' }} · {{ $lot->desconto_label ?: 'FIPE N/A' }} · [abrir]({{ $lot->shareUrl() }})
+@include('emails.partials.lot-card', ['lot' => $lot])
 @endforeach
 
 <x-mail::button :url="$catalogUrl">

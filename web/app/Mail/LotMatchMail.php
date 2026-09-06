@@ -47,7 +47,7 @@ class LotMatchMail extends Mailable implements ShouldQueue
             with: [
                 'user' => $this->user,
                 'lots' => $this->lots,
-                'catalogUrl' => url('/'),
+                'catalogUrl' => route('catalog'),
                 'alertsUrl' => route('alertas'),
                 'unsubscribeUrl' => URL::signedRoute('alertas.unsubscribe', ['user' => $this->user->id]),
                 'isTest' => $this->isTest,

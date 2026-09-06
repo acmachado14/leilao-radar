@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\AuctionDate;
+use App\Support\EmailBranding;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -147,5 +148,27 @@ class Lot extends Model
     public function shareUrl(): string
     {
         return route('catalog').'#lote='.rawurlencode((string) $this->lote_id);
+    }
+
+    public function coverPhotoUrl(): ?string
+    {
+        if (is_string($this->foto_capa) && $this->foto_capa !== '') {
+            return $this->foto_capa;
+        }
+
+        if (is_array($this->fotos)) {
+            foreach ($this->fotos as $url) {
+                if (is_string($url) && $url !== '') {
+                    return $url;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public function emailPhotoUrl(): string
+    {
+        return $this->coverPhotoUrl() ?? EmailBranding::logoUrl();
     }
 }
