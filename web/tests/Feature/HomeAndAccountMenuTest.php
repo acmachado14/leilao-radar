@@ -20,6 +20,10 @@ class HomeAndAccountMenuTest extends TestCase
             ->assertOk()
             ->assertSee('A IA diz até quanto pagar')
             ->assertSee('Radar Pro')
+            ->assertSee('Entrar')
+            ->assertSee('Todo dia de manhã')
+            ->assertSee('E-mail todo dia de manhã com os carros da sua busca')
+            ->assertDontSee('Digest')
             ->assertSee('wa.me/5531986268630', false)
             ->assertDontSee('Meus lotes');
     }

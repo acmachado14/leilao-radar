@@ -133,7 +133,7 @@ class AlertPreferencesForm extends Component
 
         if ($this->editingId) {
             $this->ownedPreference($this->editingId)->update($payload);
-            session()->flash('success', 'Preferência atualizada. O próximo digest usa esses filtros.');
+            session()->flash('success', 'Preferência atualizada. O próximo e-mail da manhã já usa esses filtros.');
 
             return;
         }

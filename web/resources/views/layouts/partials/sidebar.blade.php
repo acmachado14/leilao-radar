@@ -9,11 +9,11 @@
 
 <div class="flex h-full min-h-full flex-col">
     <div class="flex items-center justify-between px-3 py-4">
-        <a href="{{ route('home') }}" class="flex items-center gap-3" @click="sidebar = false">
-            <img src="{{ asset('images/logo.png') }}" alt="VerifyRadar" class="h-8 w-8 rounded-lg">
-            <span>
-                <span class="block text-sm font-semibold text-white">Verify<span class="text-emerald-400">Radar</span></span>
-                <span class="block text-[11px] uppercase tracking-[0.16em] text-emerald-400">grupo VerifyCar</span>
+        <a href="{{ route('home') }}" class="flex min-w-0 items-center gap-2.5" @click="sidebar = false">
+            <img src="{{ asset('images/logo.png') }}" alt="VerifyRadar" class="h-9 w-9 rounded-xl">
+            <span class="min-w-0">
+                <span class="block text-sm font-semibold leading-tight text-white">Verify<span class="text-emerald-400">Radar</span></span>
+                <img src="{{ asset('images/brand/horizontal_branco0.png') }}" alt="VerifyCar" class="mt-0.5 h-3 w-auto">
             </span>
         </a>
         <button

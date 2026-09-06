@@ -8,6 +8,7 @@
     <meta name="description" content="{{ $metaDescription ?? 'Ofertas de leilão vs tabela FIPE. Alertas por e-mail com base nas suas preferências.' }}">
     <title>{{ $title ?? config('app.name', 'VerifyRadar') }}</title>
     <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
+    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
     @vite(['resources/css/app.css', 'resources/css/catalog.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
@@ -28,13 +29,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
                     </button>
-                    <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-3">
-                        <img src="{{ asset('images/logo.png') }}" alt="VerifyRadar" class="h-8 w-8 rounded-lg">
-                        <span>
-                            <span class="block text-sm font-semibold text-white">Verify<span class="text-emerald-400">Radar</span></span>
-                            <span class="block text-[11px] uppercase tracking-[0.16em] text-emerald-400">grupo VerifyCar</span>
-                        </span>
-                    </a>
+                    @include('layouts.partials.brand')
                 </div>
             </div>
         </header>
@@ -66,13 +61,7 @@
     @guest
         <nav class="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur" x-data="{ open: false }" @keydown.escape.window="open = false">
             <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:py-4">
-                <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-3">
-                    <img src="{{ asset('images/logo.png') }}" alt="VerifyRadar" class="h-8 w-8 rounded-lg">
-                    <span>
-                        <span class="block text-sm font-semibold text-white">Verify<span class="text-emerald-400">Radar</span></span>
-                        <span class="block text-[11px] uppercase tracking-[0.16em] text-emerald-400">grupo VerifyCar</span>
-                    </span>
-                </a>
+                @include('layouts.partials.brand')
 
                 <button
                     type="button"
@@ -125,8 +114,11 @@
     </main>
 
     <footer class="border-t border-slate-800 bg-slate-950">
-        <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-            <p>VerifyRadar — do grupo VerifyCar. Ofertas vs tabela FIPE.</p>
+        <div class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex flex-col gap-2">
+                <img src="{{ asset('images/brand/horizontal_branco0.png') }}" alt="VerifyCar" class="h-5 w-auto self-start">
+                <p>VerifyRadar — ofertas de leilão vs tabela FIPE.</p>
+            </div>
             <p>radar.verifycar.com.br</p>
         </div>
     </footer>

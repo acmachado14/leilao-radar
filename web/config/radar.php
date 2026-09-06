@@ -37,7 +37,7 @@ return [
                 '3 análises de IA por mês',
                 'Teto de lance com base na FIPE',
                 '2 recortes de alerta por e-mail',
-                'Digest diário das ofertas da sua faixa',
+                'E-mail todo dia de manhã com os carros da sua busca',
             ],
         ],
         'radar' => [
@@ -53,7 +53,7 @@ return [
                 '20 análises de IA por mês',
                 'Limite de lance visando lucro',
                 '6 recortes de alerta (um por modelo)',
-                'Aviso 1 hora antes nos carros com interesse',
+                'E-mail todo dia de manhã e aviso 1 hora antes do leilão',
             ],
         ],
         'radar_pro' => [
@@ -69,7 +69,7 @@ return [
                 '80 análises de IA por mês',
                 'Parecer com fotos, risco e checklist de pátio',
                 '12 recortes de alerta',
-                'Digest + lembrete de leilão + suporte direto',
+                'E-mail todo dia, aviso 1 hora antes do leilão e suporte direto',
             ],
         ],
     ],

@@ -5,9 +5,12 @@
     <p class="mt-4 max-w-2xl text-slate-400">Fotos, FIPE, monta e sinistro entram no parecer. Você recebe risco, checklist de pátio e o teto de lance para ainda ter lucro. Alertas avisam a faixa. A IA evita o lance emocional.</p>
     <div class="mt-6 flex flex-wrap gap-3">
         <a href="{{ route('register') }}" class="btn-emerald px-5 py-3">Testar 3 análises grátis</a>
+        <a href="{{ route('login') }}" class="rounded-lg border border-slate-500 px-5 py-3 font-semibold text-white hover:border-emerald-500">Entrar</a>
         <a href="{{ route('catalog') }}" class="rounded-lg border border-slate-700 px-5 py-3 text-slate-100 hover:border-emerald-500">Ver ofertas</a>
-        <a href="{{ $checkoutUrl }}" target="_blank" rel="noopener" class="rounded-lg border border-violet-400/50 px-5 py-3 text-violet-200 hover:border-violet-300">Falar com atendente</a>
     </div>
+    <p class="mt-3 text-sm text-slate-500">
+        <a href="{{ $checkoutUrl }}" target="_blank" rel="noopener" class="text-violet-300 hover:text-violet-200">Falar com atendente no WhatsApp</a>
+    </p>
     <div class="ai-hero-grid mt-8">
         <article class="ai-hero-card">
             <p class="ai-hero-kicker">Parecer em segundos</p>
@@ -20,9 +23,9 @@
             <p class="ai-hero-copy">Revenda estimada − custos − lucro alvo. O teto para não comprar no vermelho.</p>
         </article>
         <article class="ai-hero-card">
-            <p class="ai-hero-kicker">Alertas no ponto</p>
-            <p class="ai-hero-value">Digest + 1h</p>
-            <p class="ai-hero-copy">E-mail da faixa todo dia. Lembrete só nos carros em que você marcar interesse.</p>
+            <p class="ai-hero-kicker">Aviso no e-mail</p>
+            <p class="ai-hero-value">Todo dia de manhã</p>
+            <p class="ai-hero-copy">Você recebe os carros da sua busca. Se marcar interesse, avisamos 1 hora antes do leilão.</p>
         </article>
     </div>
 </section>
@@ -41,7 +44,7 @@
         </li>
         <li class="rounded-2xl border border-slate-800 bg-slate-900 p-5">
             <p class="text-sm font-semibold text-emerald-400">3. Receba o alerta</p>
-            <p class="mt-2 text-sm text-slate-400">Digest da sua faixa e aviso 1 hora antes nos carros com interesse.</p>
+            <p class="mt-2 text-sm text-slate-400">Todo dia de manhã chega um e-mail com os carros da sua busca. Se você marcar interesse, avisamos 1 hora antes do leilão.</p>
         </li>
     </ol>
 </section>

@@ -3,8 +3,8 @@
         <p class="text-sm font-semibold uppercase tracking-widest text-emerald-400">Alertas</p>
         <h1 class="mt-2 text-2xl font-bold sm:text-3xl">Preferências</h1>
         <p class="mt-1 text-sm text-slate-400">
-            Cadastre um recorte por modelo (ex.: Jetta GLI e Amarok). O digest (~05:30 BRT) junta os lotes da faixa.
-            O aviso de 1 hora antes (ou no dia, sem horário) vai só para carros em que você clicar em “Tenho interesse”.
+            Cadastre um recorte por modelo (ex.: Jetta GLI e Amarok). Todo dia de manhã (~05:30) chega um e-mail com os lotes que combinam.
+            O aviso 1 hora antes (ou no dia, se o leilão não tiver horário) vai só para carros em que você clicar em “Tenho interesse”.
             {{ $preferences->count() }}/{{ $maxPreferences }} recortes neste plano.
         </p>
         <a href="{{ $checkoutUrl }}" target="_blank" rel="noopener" class="mt-3 inline-flex text-sm text-violet-300 hover:underline">Falar com atendente para mais recortes</a>
