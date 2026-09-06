@@ -46,15 +46,29 @@ input[type='radio'] {
 .filter-chip {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
     border: 1px solid #334155;
     border-radius: 0.5rem;
     background: #020617;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
+    padding: 0.45rem 0.7rem;
+    font-size: 0.8125rem;
     font-weight: 500;
+    line-height: 1.2;
+    text-align: center;
     color: #cbd5e1;
     cursor: pointer;
     transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.filter-chips .filter-chip {
+    flex: 1 1 6.5rem;
 }
 
 .filter-chip:hover {

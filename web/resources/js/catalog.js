@@ -1069,7 +1069,7 @@ function populateMarcas() {
   }
   for (const marca of marcas) {
     const label = document.createElement("label");
-    label.className = "flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 text-sm text-slate-300 hover:bg-slate-800";
+    label.className = "flex min-w-0 cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-slate-300 hover:bg-slate-800";
     const input = document.createElement("input");
     input.type = "checkbox";
     input.value = marca;
@@ -1121,6 +1121,21 @@ function bindEvents() {
   });
 
   document.getElementById("marca-filter").addEventListener("change", applyFilters);
+
+  document.getElementById("reset-filters").addEventListener("click", () => {
+    document.getElementById("search-filter").value = "";
+    document.getElementById("min-desconto").value = "0";
+    document.getElementById("min-desconto-label").textContent = "0%";
+    document.getElementById("row-limit").value = "100";
+    document.getElementById("exclude-grande").checked = true;
+    document.querySelectorAll("[data-filter-chip]").forEach((btn) => {
+      btn.setAttribute("aria-pressed", btn.dataset.defaultPressed === "true" ? "true" : "false");
+    });
+    document.querySelectorAll("#marca-filter input[type='checkbox']").forEach((el) => {
+      el.checked = false;
+    });
+    applyFilters();
+  });
 
   ["row-limit", "exclude-grande"].forEach((id) => {
     const el = document.getElementById(id);
