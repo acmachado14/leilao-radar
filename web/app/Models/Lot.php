@@ -146,6 +146,6 @@ class Lot extends Model
 
     public function shareUrl(): string
     {
-        return url('/').'#lote='.rawurlencode((string) $this->lote_id);
+        return route('catalog').'#lote='.rawurlencode((string) $this->lote_id);
     }
 }

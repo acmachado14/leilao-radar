@@ -12,9 +12,9 @@
     @livewireStyles
 </head>
 <body class="min-h-screen bg-slate-950 text-slate-100 pb-[env(safe-area-inset-bottom)]">
-    <nav class="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur" x-data="{ open: false }" @keydown.escape.window="open = false">
+    <nav class="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur" x-data="{ open: false, account: false }" @keydown.escape.window="open = false; account = false">
         <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:py-4">
-            <a href="{{ route('catalog') }}" class="flex shrink-0 items-center gap-3">
+            <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-3">
                 <img src="{{ asset('images/logo.png') }}" alt="VerifyRadar" class="h-8 w-8 rounded-lg">
                 <span>
                     <span class="block text-sm font-semibold text-white">Verify<span class="text-emerald-400">Radar</span></span>
@@ -25,7 +25,7 @@
             <button
                 type="button"
                 class="inline-flex items-center justify-center rounded-lg border border-slate-700 p-2 text-slate-300 hover:border-emerald-500 hover:text-emerald-400 md:hidden"
-                @click="open = !open"
+                @click="open = !open; account = false"
                 :aria-expanded="open"
                 aria-controls="mobile-nav"
                 aria-label="Abrir menu"
@@ -40,6 +40,29 @@
 
             <div class="hidden items-center gap-5 text-sm md:flex">
                 @include('layouts.partials.nav-links', ['mobile' => false])
+                @auth
+                    <div class="relative" @click.outside="account = false">
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-slate-100 hover:border-emerald-500"
+                            @click="account = !account"
+                            :aria-expanded="account"
+                        >
+                            <span>{{ explode(' ', auth()->user()->name)[0] }}</span>
+                            <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div
+                            x-show="account"
+                            x-cloak
+                            x-transition
+                            class="absolute right-0 mt-2 w-52 rounded-xl border border-slate-800 bg-slate-950 p-2 shadow-xl"
+                        >
+                            @include('layouts.partials.nav-account', ['mobile' => false])
+                        </div>
+                    </div>
+                @endauth
             </div>
         </div>
 

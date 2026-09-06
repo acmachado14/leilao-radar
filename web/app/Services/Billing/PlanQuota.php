@@ -168,6 +168,6 @@ class PlanQuota
 
     public function suggestedUpgrade(string $plan): string
     {
-        return $plan === Plan::RADAR_PRO ? Plan::RADAR_PRO : ($plan === Plan::RADAR ? Plan::RADAR_PRO : Plan::RADAR);
+        return Plan::RADAR_PRO;
     }
 }

@@ -101,7 +101,7 @@ function catalogConfig() {
     registerUrl: root?.dataset.registerUrl || "/register",
     interestsUrl: (root?.dataset.interestsUrl || "/interesses").replace(/\/$/, ""),
     evaluationsUrl: (root?.dataset.evaluationsUrl || "/avaliacoes").replace(/\/$/, ""),
-    plansUrl: root?.dataset.plansUrl || "#planos",
+    plansUrl: root?.dataset.plansUrl || "/#planos",
     checkoutUrl: root?.dataset.checkoutUrl || "",
     quota,
     csrf: document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "",

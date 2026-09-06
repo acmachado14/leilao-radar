@@ -81,7 +81,7 @@ class AdminApprovalTest extends TestCase
             'subject_user_id' => $pending->id,
         ]);
 
-        $this->actingAs($pending)->get(route('dashboard'))->assertOk();
+        $this->actingAs($pending)->get(route('meus-lotes'))->assertOk();
     }
 
     public function test_admin_can_approve_trial_from_overview(): void

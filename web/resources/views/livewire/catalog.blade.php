@@ -7,73 +7,30 @@
         data-register-url="{{ route('register') }}"
         data-interests-url="{{ url('/interesses') }}"
         data-evaluations-url="{{ url('/avaliacoes') }}"
-        data-plans-url="#planos"
+        data-plans-url="{{ route('home') }}#planos"
         data-checkout-url="{{ $checkoutUrl }}"
         data-quota='@json($quota)'
     >
-    <section class="hero-stage mx-auto max-w-6xl px-4 py-8 sm:py-12">
-        <p class="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-400">IA · VerifyRadar</p>
-        <h1 class="mt-3 max-w-3xl text-3xl font-bold sm:text-5xl">A IA diz até quanto pagar no leilão — antes do lance.</h1>
-        <p class="mt-4 max-w-2xl text-slate-400">Fotos, FIPE, monta e sinistro entram no parecer. Você recebe risco, checklist de pátio e o teto de lance para ainda ter lucro. Alertas avisam a faixa. A IA evita o lance emocional.</p>
-        <div class="mt-6 flex flex-wrap gap-3">
-            @guest
-                <a href="{{ route('register') }}" class="btn-emerald px-5 py-3">Testar 3 análises grátis</a>
-                <a href="#planos" class="rounded-lg border border-violet-400/50 px-5 py-3 text-violet-200 hover:border-violet-300">Ver planos com IA</a>
-            @else
-                <a href="#planos" class="rounded-lg border border-violet-400/50 px-5 py-3 text-violet-200 hover:border-violet-300">Meu plano de IA</a>
-                <a href="{{ route('alertas') }}" class="btn-emerald px-5 py-3">Ajustar meus alertas</a>
-            @endguest
+    <section class="mx-auto max-w-6xl px-4 pt-8">
+        <div class="rounded-2xl border border-violet-500/30 bg-slate-900 px-4 py-5 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:px-6">
+            <div>
+                <p class="text-sm font-semibold uppercase tracking-[0.16em] text-violet-300">IA do VerifyRadar</p>
+                <p class="mt-2 text-lg font-semibold">A IA calcula o teto de lance com base na FIPE e nas fotos.</p>
+                <p class="mt-1 text-sm text-slate-400">Abra um lote e peça a avaliação. A cota só gasta quando você solicita aquele carro.</p>
+            </div>
+            <div class="mt-4 flex shrink-0 flex-wrap gap-3 sm:mt-0">
+                <a href="{{ route('home') }}#planos" class="rounded-lg border border-violet-400/40 px-4 py-2 text-sm text-violet-200 hover:border-violet-300">Ver planos</a>
+                @auth
+                    <a href="{{ route('plano') }}" class="btn-emerald px-4 py-2 text-sm">Meu plano</a>
+                @else
+                    <a href="{{ route('register') }}" class="btn-emerald px-4 py-2 text-sm">Testar IA</a>
+                @endauth
+            </div>
         </div>
-        <div class="ai-hero-grid mt-8">
-            <article class="ai-hero-card">
-                <p class="ai-hero-kicker">Parecer em segundos</p>
-                <p class="ai-hero-value">Risco 6/10</p>
-                <p class="ai-hero-copy">A IA lê as fotos do pátio e cruza com a tabela. Você vê o que a ficha esconde.</p>
-            </article>
-            <article class="ai-hero-card ai-hero-card-accent">
-                <p class="ai-hero-kicker">Limite sugerido de lance</p>
-                <p class="ai-hero-value">R$ 32.000</p>
-                <p class="ai-hero-copy">Revenda estimada − custos − lucro alvo. O teto para não comprar no vermelho.</p>
-            </article>
-            <article class="ai-hero-card">
-                <p class="ai-hero-kicker">Alertas no ponto</p>
-                <p class="ai-hero-value">Digest + 1h</p>
-                <p class="ai-hero-copy">E-mail da faixa todo dia. Lembrete só nos carros em que você marcar interesse.</p>
-            </article>
-        </div>
-        <div class="meta mt-6 text-sm text-slate-400" id="meta"></div>
+        <div class="meta mt-4 text-sm text-slate-400" id="meta"></div>
     </section>
 
     <section class="metrics mx-auto max-w-6xl px-4" id="metrics"></section>
-
-    <section id="planos" class="mx-auto max-w-6xl px-4 py-6">
-        <div class="mb-5">
-            <p class="text-sm font-semibold uppercase tracking-[0.18em] text-violet-300">Planos</p>
-            <h2 class="mt-2 text-2xl font-bold">IA e alertas no mesmo plano.</h2>
-            <p class="mt-2 max-w-2xl text-slate-400">O catálogo é público. A avaliação com IA e os recortes de alerta entram no plano. A compra é com um atendente no WhatsApp — sem cartão no site.</p>
-        </div>
-        <div class="plan-grid">
-            @foreach ($plans as $plan)
-                <article @class(['plan-card', 'plan-card-featured' => $plan['highlight']])>
-                    @if ($plan['highlight'])
-                        <p class="plan-badge">Mais escolhido</p>
-                    @endif
-                    <h3 class="plan-name">{{ $plan['name'] }}</h3>
-                    <p class="plan-price">{{ $plan['price'] }}</p>
-                    <p class="plan-tagline">{{ $plan['tagline'] }}</p>
-                    <ul class="plan-features">
-                        @foreach ($plan['features'] as $feature)
-                            <li>{{ $feature }}</li>
-                        @endforeach
-                    </ul>
-                    <a href="{{ $plan['checkout_url'] }}" target="_blank" rel="noopener" class="{{ $plan['highlight'] ? 'btn-emerald' : 'plan-cta' }} w-full px-4 py-3">
-                        {{ $plan['cta'] }}
-                    </a>
-                    <p class="plan-note">{{ $plan['price_note'] }}</p>
-                </article>
-            @endforeach
-        </div>
-    </section>
 
     <section class="mx-auto max-w-6xl px-4 py-6">
         <div class="rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-6">

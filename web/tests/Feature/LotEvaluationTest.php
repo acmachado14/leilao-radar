@@ -251,12 +251,19 @@ class LotEvaluationTest extends TestCase
             ->assertJsonPath('quota.used', 1);
     }
 
-    public function test_catalog_sales_page_promotes_ai_and_whatsapp_checkout(): void
+    public function test_home_promotes_ai_and_whatsapp_checkout(): void
     {
-        $this->get(route('catalog'))
+        $this->get(route('home'))
             ->assertOk()
             ->assertSee('A IA diz até quanto pagar')
             ->assertSee('wa.me/5531986268630', false)
             ->assertSee('Radar Pro');
+    }
+
+    public function test_catalog_page_is_on_ofertas(): void
+    {
+        $this->get(route('catalog'))
+            ->assertOk()
+            ->assertSee('IA calcula o teto de lance');
     }
 }

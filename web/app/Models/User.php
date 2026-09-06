@@ -101,7 +101,7 @@ class User extends Authenticatable
             return 'aguardando';
         }
 
-        return 'dashboard';
+        return 'home';
     }
 
     public function canReceiveAlerts(): bool

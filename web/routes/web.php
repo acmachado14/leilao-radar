@@ -9,15 +9,18 @@ use App\Livewire\Admin\Overview as AdminOverview;
 use App\Livewire\Admin\Subscribers;
 use App\Livewire\AlertPreferencesForm;
 use App\Livewire\Catalog;
-use App\Livewire\Dashboard;
 use App\Livewire\ForgotPassword;
+use App\Livewire\Home;
 use App\Livewire\Login;
+use App\Livewire\MyLots;
+use App\Livewire\PlanPage;
 use App\Livewire\Register;
 use App\Livewire\ResetPassword;
 use App\Livewire\WaitingApproval;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', Catalog::class)->name('catalog');
+Route::get('/', Home::class)->name('home');
+Route::get('/ofertas', Catalog::class)->name('catalog');
 Route::get('/register', Register::class)->name('register');
 Route::get('/login', Login::class)->name('login');
 Route::get('/logout', [Login::class, 'logout'])->name('logout');
@@ -34,7 +37,9 @@ Route::middleware(['auth', 'active'])->group(function () {
 });
 
 Route::middleware(['auth', 'active', 'approved'])->group(function () {
-    Route::get('/dashboard', Dashboard::class)->name('dashboard');
+    Route::get('/dashboard', fn () => redirect()->route('meus-lotes'))->name('dashboard');
+    Route::get('/lotes', MyLots::class)->name('meus-lotes');
+    Route::get('/plano', PlanPage::class)->name('plano');
     Route::get('/conta', Account::class)->name('conta');
     Route::get('/alertas', AlertPreferencesForm::class)->name('alertas');
     Route::get('/avaliacoes/{lote}', [LotEvaluationController::class, 'show'])->name('avaliacoes.show');

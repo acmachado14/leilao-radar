@@ -8,19 +8,22 @@ use App\Support\SalesWhatsApp;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
-class Catalog extends Component
+class PlanPage extends Component
 {
     public function render(PlanQuota $quota)
     {
         $user = Auth::user();
+        $plans = $quota->publicPlans();
+        $pro = collect($plans)->firstWhere('key', Plan::RADAR_PRO) ?? $quota->definition(Plan::RADAR_PRO);
 
-        return view('livewire.catalog', [
-            'quota' => $user ? $quota->snapshot($user) : null,
+        return view('livewire.plan', [
+            'user' => $user,
+            'quota' => $quota->snapshot($user),
+            'plans' => $plans,
+            'pro' => $pro,
             'checkoutUrl' => SalesWhatsApp::checkoutUrl(Plan::RADAR_PRO, $user),
         ])->layout('layouts.app', [
-            'title' => 'Ofertas — VerifyRadar',
-            'fullBleed' => true,
-            'metaDescription' => 'Ofertas de leilão Sodré e Palácio vs tabela FIPE. Peça a IA para ver até quanto pagar.',
+            'title' => 'Meu plano — VerifyRadar',
         ]);
     }
 }
