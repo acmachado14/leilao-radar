@@ -39,7 +39,9 @@ class HomeAndAccountMenuTest extends TestCase
             ->assertOk()
             ->assertSee('Meus lotes')
             ->assertSee('Meu plano')
-            ->assertSee('Minha conta');
+            ->assertSee('Minha conta')
+            ->assertSee('Meus alertas')
+            ->assertSee('Sair');
 
         $this->actingAs($user)
             ->get(route('meus-lotes'))
