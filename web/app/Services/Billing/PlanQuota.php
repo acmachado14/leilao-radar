@@ -31,15 +31,20 @@ class PlanQuota
     /**
      * @return list<array<string, mixed>>
      */
-    public function publicPlans(): array
+    public function publicPlans(?User $user = null): array
     {
+        $user ??= auth()->user();
         $plans = [];
         foreach (Plan::all() as $key) {
+            if ($key === Plan::TRIAL && $user !== null) {
+                continue;
+            }
+
             $definition = $this->definition($key);
             $plans[] = [
                 'key' => $key,
                 ...$definition,
-                'checkout_url' => SalesWhatsApp::checkoutUrl($key),
+                'checkout_url' => SalesWhatsApp::checkoutUrl($key, $user),
             ];
         }
 

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\LotEvaluationController;
 use App\Http\Controllers\LotInterestController;
+use App\Http\Controllers\SessionController;
 use App\Http\Controllers\UnsubscribeAlertsController;
 use App\Livewire\Account;
 use App\Livewire\Admin\Logs as AdminLogs;
@@ -23,7 +24,8 @@ Route::get('/', Home::class)->name('home');
 Route::get('/ofertas', Catalog::class)->name('catalog');
 Route::get('/register', Register::class)->name('register');
 Route::get('/login', Login::class)->name('login');
-Route::get('/logout', [Login::class, 'logout'])->name('logout');
+Route::post('/login', [SessionController::class, 'store'])->name('login.store');
+Route::match(['get', 'post'], '/logout', [SessionController::class, 'destroy'])->name('logout');
 Route::get('/esqueci-senha', ForgotPassword::class)->name('password.request');
 Route::get('/redefinir-senha/{token}', ResetPassword::class)->name('password.reset');
 Route::get('/alertas/unsubscribe/{user}', UnsubscribeAlertsController::class)

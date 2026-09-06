@@ -25,6 +25,8 @@ class HomeAndAccountMenuTest extends TestCase
             ->assertSee('E-mail todo dia de manhã com os carros da sua busca')
             ->assertDontSee('Digest')
             ->assertSee('wa.me/5531986268630', false)
+            ->assertSee('Começar grátis')
+            ->assertSee('Grátis por 7 dias')
             ->assertDontSee('Meus lotes');
     }
 
@@ -46,7 +48,9 @@ class HomeAndAccountMenuTest extends TestCase
             ->assertSee('Meu plano')
             ->assertSee('Minha conta')
             ->assertSee('Meus alertas')
-            ->assertSee('Sair');
+            ->assertSee('Sair')
+            ->assertDontSee('Começar grátis')
+            ->assertDontSee('Grátis por 7 dias');
 
         $this->actingAs($user)
             ->get(route('meus-lotes'))
@@ -58,7 +62,9 @@ class HomeAndAccountMenuTest extends TestCase
             ->assertOk()
             ->assertSee('Radar Pro é o plano')
             ->assertSee('wa.me/5531986268630', false)
-            ->assertSee('Quero o Pro');
+            ->assertSee('Quero o Pro')
+            ->assertDontSee('Começar grátis')
+            ->assertDontSee('Grátis por 7 dias');
     }
 
     public function test_guest_cannot_open_account_area(): void

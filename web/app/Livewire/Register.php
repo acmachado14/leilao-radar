@@ -8,7 +8,6 @@ use App\Models\AlertPreference;
 use App\Models\User;
 use App\Services\Admin\AdminAuditor;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
 
 class Register extends Component
@@ -48,6 +47,7 @@ class Register extends Component
 
     public function register(AdminAuditor $auditor): void
     {
+        $this->email = strtolower(trim($this->email));
         $this->validate();
 
         if ($this->notify_whatsapp && trim($this->phone) === '') {
@@ -60,7 +60,7 @@ class Register extends Component
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone !== '' ? $this->phone : null,
-            'password' => Hash::make($this->password),
+            'password' => $this->password,
             'active' => true,
             'subscription_status' => SubscriptionStatus::TRIAL,
             'plan' => Plan::TRIAL,

@@ -59,4 +59,29 @@ class RegisterTest extends TestCase
             ->postJson(route('avaliacoes.store', ['lote' => 'trial-eval-1']))
             ->assertOk();
     }
+
+    public function test_trial_user_can_login_again_after_logout(): void
+    {
+        Livewire::test(Register::class)
+            ->set('name', 'Ana Radar')
+            ->set('email', 'ana@example.com')
+            ->set('password', 'password123')
+            ->set('password_confirmation', 'password123')
+            ->set('terms_accepted', true)
+            ->call('register')
+            ->assertHasNoErrors();
+
+        $user = User::query()->where('email', 'ana@example.com')->first();
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('password123', $user->password));
+
+        $this->get(route('logout'))->assertRedirect(route('login'));
+        $this->assertGuest();
+
+        $this->post(route('login.store'), [
+            'email' => 'Ana@example.com',
+            'password' => 'password123',
+        ])->assertRedirect(route('home'));
+
+        $this->assertAuthenticatedAs($user);
+    }
 }
