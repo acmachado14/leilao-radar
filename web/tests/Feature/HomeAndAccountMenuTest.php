@@ -53,6 +53,18 @@ class HomeAndAccountMenuTest extends TestCase
             ->assertDontSee('Grátis por 7 dias');
 
         $this->actingAs($user)
+            ->get(route('conta'))
+            ->assertOk()
+            ->assertSee('Consultas neste mês')
+            ->assertDontSee('Custo IA');
+
+        $this->actingAs($user)
+            ->get(route('catalog'))
+            ->assertOk()
+            ->assertDontSee('sa-east-1')
+            ->assertDontSee('Atualizado');
+
+        $this->actingAs($user)
             ->get(route('meus-lotes'))
             ->assertOk()
             ->assertSee('Carros que você está acompanhando');
@@ -64,7 +76,8 @@ class HomeAndAccountMenuTest extends TestCase
             ->assertSee('wa.me/5531986268630', false)
             ->assertSee('Quero o Pro')
             ->assertDontSee('Começar grátis')
-            ->assertDontSee('Grátis por 7 dias');
+            ->assertDontSee('Grátis por 7 dias')
+            ->assertDontSee('Custo estimado da IA');
     }
 
     public function test_guest_cannot_open_account_area(): void
@@ -97,6 +110,8 @@ class HomeAndAccountMenuTest extends TestCase
 
         $this->assertSame(Plan::RADAR_PRO, $quota->suggestedUpgrade(Plan::TRIAL));
         $this->assertSame(Plan::RADAR_PRO, $quota->suggestedUpgrade(Plan::RADAR));
+        $this->assertArrayNotHasKey('spent_brl', $quota->snapshot($user));
+        $this->assertArrayNotHasKey('spent_brl_month', $quota->snapshot($user));
         $this->assertStringContainsString('Radar Pro', urldecode(SalesWhatsApp::checkoutUrl($quota->suggestedUpgrade($user->plan), $user)));
     }
 }

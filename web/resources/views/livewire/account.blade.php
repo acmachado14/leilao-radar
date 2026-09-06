@@ -7,19 +7,14 @@
 
     <section class="rounded-2xl border border-violet-500/30 bg-slate-900 p-4 sm:p-6">
         <h2 class="text-lg font-semibold">Uso da IA</h2>
-        <p class="mt-2 text-sm text-slate-400">Cada pedido de avaliação conta uma consulta. Cache do mesmo carro no mês não cobra de novo.</p>
-        <dl class="mt-4 grid gap-3 sm:grid-cols-3">
+        <p class="mt-2 text-sm text-slate-400">Cada pedido de avaliação conta uma consulta. Pedir de novo o mesmo carro no mês não gasta outra.</p>
+        <dl class="mt-4">
             <div class="rounded-xl border border-slate-800 bg-slate-950 px-4 py-3">
-                <dt class="text-xs uppercase tracking-widest text-slate-500">Consultas no mês</dt>
-                <dd class="mt-1 text-2xl font-bold">{{ $quota['unlimited'] ? '∞' : $quota['used'].'/'.$quota['limit'] }}</dd>
-            </div>
-            <div class="rounded-xl border border-slate-800 bg-slate-950 px-4 py-3">
-                <dt class="text-xs uppercase tracking-widest text-slate-500">Custo IA no mês</dt>
-                <dd class="mt-1 text-2xl font-bold">R$ {{ number_format($quota['spent_brl_month'], 2, ',', '.') }}</dd>
-            </div>
-            <div class="rounded-xl border border-slate-800 bg-slate-950 px-4 py-3">
-                <dt class="text-xs uppercase tracking-widest text-slate-500">Custo IA total</dt>
-                <dd class="mt-1 text-2xl font-bold">R$ {{ number_format($quota['spent_brl'], 2, ',', '.') }}</dd>
+                <dt class="text-xs uppercase tracking-widest text-slate-500">Consultas neste mês</dt>
+                <dd class="mt-1 text-2xl font-bold">{{ $quota['unlimited'] ? 'Ilimitado' : $quota['used'].'/'.$quota['limit'] }}</dd>
+                @unless ($quota['unlimited'])
+                    <p class="mt-1 text-sm text-slate-500">{{ $quota['remaining'] }} restantes no seu plano.</p>
+                @endunless
             </div>
         </dl>
         <a href="{{ $checkoutUrl }}" target="_blank" rel="noopener" class="btn-emerald mt-4 inline-flex px-5 py-3">Falar com atendente</a>

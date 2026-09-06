@@ -27,7 +27,6 @@
                 @endauth
             </div>
         </div>
-        <div class="meta mt-4 text-sm text-slate-400" id="meta"></div>
     </section>
 
     <section class="metrics mx-auto max-w-6xl px-4" id="metrics"></section>

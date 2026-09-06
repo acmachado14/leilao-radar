@@ -627,11 +627,8 @@ function applyFilters() {
 
 function renderMeta() {
   const meta = document.getElementById("meta");
-  const exported = state.payload.exported_at || "aguardando primeira exportação";
-  meta.innerHTML = `
-    <div class="meta-row">Atualizado <strong>${exported}</strong></div>
-    <div class="meta-row">${state.payload.region || "sa-east-1"} · <strong>${state.payload.count || 0}</strong> lotes</div>
-  `;
+  if (!meta) return;
+  meta.replaceChildren();
 }
 
 function renderMetrics(rows) {

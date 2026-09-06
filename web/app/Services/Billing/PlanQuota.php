@@ -136,20 +136,25 @@ class PlanQuota
         $plan = $this->normalizePlan($user->plan);
         $definition = $this->definition($plan);
 
-        return [
+        $snapshot = [
             'plan' => $plan,
             'plan_name' => $definition['name'] ?? $plan,
             'used' => $used,
             'limit' => $limit,
             'remaining' => $remaining,
             'unlimited' => $limit === null,
-            'spent_brl' => $this->spentBrl($user),
-            'spent_brl_month' => $this->spentBrlThisMonth($user, $now),
             'alerts_used' => $user->alertPreferences()->count(),
             'alerts_limit' => $this->alertsLimit($user),
             'checkout_url' => SalesWhatsApp::checkoutUrl($this->suggestedUpgrade($plan), $user),
             'upgrade_plan' => $this->suggestedUpgrade($plan),
         ];
+
+        if ($user->isAdmin()) {
+            $snapshot['spent_brl'] = $this->spentBrl($user);
+            $snapshot['spent_brl_month'] = $this->spentBrlThisMonth($user, $now);
+        }
+
+        return $snapshot;
     }
 
     public function record(User $user, string $loteId, string $source, bool $apiCall): AiUsageLog

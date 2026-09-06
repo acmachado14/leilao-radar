@@ -21,14 +21,9 @@
                 {{ $quota['used'] }}/{{ $quota['limit'] }}
             @endif
         </p>
-        <p class="mt-1 text-sm text-slate-400">
-            @if (! $quota['unlimited'])
-                {{ $quota['remaining'] }} restantes
-                ·
-            @endif
-            custo estimado da IA: R$ {{ number_format($quota['spent_brl_month'], 2, ',', '.') }} neste mês
-            (R$ {{ number_format($quota['spent_brl'], 2, ',', '.') }} no total).
-        </p>
+        @unless ($quota['unlimited'])
+            <p class="mt-1 text-sm text-slate-400">{{ $quota['remaining'] }} restantes neste mês.</p>
+        @endunless
         <div class="mt-4 flex flex-wrap gap-3">
             <a href="{{ route('catalog') }}" class="btn-emerald px-4 py-2 text-sm">Avaliar um lote</a>
             <a href="{{ $checkoutUrl }}" target="_blank" rel="noopener" class="rounded-lg border border-violet-400/40 px-4 py-2 text-sm text-violet-200 hover:border-violet-300">Falar com atendente</a>

@@ -14,10 +14,9 @@
                 {{ $quota['used'] }}/{{ $quota['limit'] }} análises
             @endif
         </p>
-        <p class="mt-1 text-sm text-slate-400">
-            Custo estimado da IA: R$ {{ number_format($quota['spent_brl_month'], 2, ',', '.') }} neste mês
-            (R$ {{ number_format($quota['spent_brl'], 2, ',', '.') }} no total).
-        </p>
+        @unless ($quota['unlimited'])
+            <p class="mt-1 text-sm text-slate-400">{{ $quota['remaining'] }} restantes neste mês.</p>
+        @endunless
         <a href="{{ $checkoutUrl }}" target="_blank" rel="noopener" class="btn-emerald mt-4 inline-flex px-5 py-3">Falar com atendente</a>
     </section>
 
