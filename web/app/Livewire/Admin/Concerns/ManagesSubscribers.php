@@ -28,17 +28,9 @@ trait ManagesSubscribers
 
     public function approveTrial(string $userId): void
     {
-        $days = (int) config('radar.trial_days', 7);
         $user = $this->findManagedUser($userId);
-
-        $user->update([
-            'subscription_status' => SubscriptionStatus::TRIAL,
-            'plan' => Plan::TRIAL,
-            'subscription_until' => now()->addDays($days),
-            'approved_at' => now(),
-            'rejected_at' => null,
-            'active' => true,
-        ]);
+        $user->startTrial();
+        $days = (int) config('radar.trial_days', 7);
 
         $this->auditor()->record('approved_trial', "Liberou trial de {$user->name} ({$days} dias)", $user, ['days' => $days]);
         session()->flash('success', "Trial de {$user->name} liberado por {$days} dias.");

@@ -33,10 +33,13 @@ class LotEvaluationController extends Controller
         $user = $request->user();
         if (! $this->quota->canConsult($user, $lot->lote_id)) {
             $snapshot = $this->quota->snapshot($user);
+            $expired = ! $user->isAdmin() && ! $user->hasLiveSubscription();
 
             return response()->json([
                 'status' => 'quota_exceeded',
-                'error' => 'Você usou as análises de IA deste mês. Fale com um atendente para subir de plano.',
+                'error' => $expired
+                    ? 'Seu período de teste acabou. Fale com um atendente para continuar usando a IA.'
+                    : 'Você usou as análises de IA deste mês. Fale com um atendente para subir de plano.',
                 'quota' => $snapshot,
             ], 402);
         }

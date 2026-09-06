@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Constants\Plan;
 use App\Constants\SubscriptionStatus;
 use App\Constants\UserType;
 use App\Mail\ResetPasswordMail;
@@ -77,6 +78,45 @@ class User extends Authenticatable
         );
     }
 
+    public function startTrial(): void
+    {
+        $days = (int) config('radar.trial_days', 7);
+
+        $this->forceFill([
+            'subscription_status' => SubscriptionStatus::TRIAL,
+            'plan' => Plan::TRIAL,
+            'subscription_until' => now()->addDays($days),
+            'approved_at' => now(),
+            'rejected_at' => null,
+            'active' => true,
+        ])->save();
+    }
+
+    public function hasLiveSubscription(): bool
+    {
+        if ($this->active === false) {
+            return false;
+        }
+
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        if (! $this->isApproved()) {
+            return false;
+        }
+
+        if (! in_array($this->subscription_status, [SubscriptionStatus::TRIAL, SubscriptionStatus::ACTIVE], true)) {
+            return false;
+        }
+
+        if ($this->subscription_until === null) {
+            return true;
+        }
+
+        return $this->subscription_until->isFuture();
+    }
+
     public function isApproved(): bool
     {
         return $this->approved_at !== null;
@@ -106,19 +146,7 @@ class User extends Authenticatable
 
     public function canReceiveAlerts(): bool
     {
-        if ($this->active === false || ! $this->isApproved()) {
-            return false;
-        }
-
-        if (! in_array($this->subscription_status, [SubscriptionStatus::TRIAL, SubscriptionStatus::ACTIVE], true)) {
-            return false;
-        }
-
-        if ($this->subscription_until === null) {
-            return true;
-        }
-
-        return $this->subscription_until->isFuture();
+        return $this->hasLiveSubscription();
     }
 
     public function subscriptionLabel(): string

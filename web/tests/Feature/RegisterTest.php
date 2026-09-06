@@ -5,8 +5,10 @@ namespace Tests\Feature;
 use App\Constants\SubscriptionStatus;
 use App\Livewire\Register;
 use App\Models\AdminActivityLog;
+use App\Models\Lot;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -21,7 +23,7 @@ class RegisterTest extends TestCase
         $this->get(route('catalog'))->assertOk();
     }
 
-    public function test_register_creates_pending_user_and_preferences(): void
+    public function test_register_starts_trial_without_waiting_for_approval(): void
     {
         Livewire::test(Register::class)
             ->set('name', 'Ana Radar')
@@ -31,14 +33,16 @@ class RegisterTest extends TestCase
             ->set('terms_accepted', true)
             ->call('register')
             ->assertHasNoErrors()
-            ->assertRedirect(route('aguardando'));
+            ->assertRedirect(route('catalog'));
 
         $user = User::query()->where('email', 'ana@example.com')->first();
         $this->assertNotNull($user);
-        $this->assertSame(SubscriptionStatus::PENDING, $user->subscription_status);
-        $this->assertNull($user->approved_at);
-        $this->assertTrue($user->isPending());
-        $this->assertFalse($user->canReceiveAlerts());
+        $this->assertSame(SubscriptionStatus::TRIAL, $user->subscription_status);
+        $this->assertSame('trial', $user->plan);
+        $this->assertNotNull($user->approved_at);
+        $this->assertFalse($user->isPending());
+        $this->assertTrue($user->canReceiveAlerts());
+        $this->assertTrue($user->subscription_until->greaterThan(now()->addDays(6)));
         $this->assertNotNull($user->alertPreference);
         $this->assertSame(1, $user->alertPreferences()->count());
         $this->assertTrue($user->alertPreference->notify_email);
@@ -48,5 +52,11 @@ class RegisterTest extends TestCase
             'subject_user_id' => $user->id,
         ]);
         $this->assertSame(1, AdminActivityLog::query()->count());
+
+        Queue::fake();
+        Lot::factory()->create(['lote_id' => 'trial-eval-1']);
+        $this->actingAs($user)
+            ->postJson(route('avaliacoes.store', ['lote' => 'trial-eval-1']))
+            ->assertOk();
     }
 }

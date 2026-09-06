@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Constants\Plan;
 use App\Constants\SubscriptionStatus;
 use App\Models\AlertPreference;
 use App\Models\User;
@@ -61,9 +62,10 @@ class Register extends Component
             'phone' => $this->phone !== '' ? $this->phone : null,
             'password' => Hash::make($this->password),
             'active' => true,
-            'subscription_status' => SubscriptionStatus::PENDING,
-            'subscription_until' => null,
-            'approved_at' => null,
+            'subscription_status' => SubscriptionStatus::TRIAL,
+            'plan' => Plan::TRIAL,
+            'subscription_until' => now()->addDays((int) config('radar.trial_days', 7)),
+            'approved_at' => now(),
             'last_login_at' => now(),
         ]);
 
@@ -72,9 +74,11 @@ class Register extends Component
         $user->alertPreference()->create($defaults);
 
         Auth::login($user);
-        $auditor->record('registered', "Novo cadastro: {$user->name} ({$user->email})", $user);
+        $auditor->record('registered', "Novo cadastro em trial: {$user->name} ({$user->email})", $user);
 
-        $this->redirectRoute('aguardando', navigate: true);
+        session()->flash('success', 'Seu teste de '.(int) config('radar.trial_days', 7).' dias começou. Você tem 3 análises de IA.');
+
+        $this->redirectRoute('catalog', navigate: true);
     }
 
     public function render()

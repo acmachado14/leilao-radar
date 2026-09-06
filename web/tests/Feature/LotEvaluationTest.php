@@ -251,6 +251,22 @@ class LotEvaluationTest extends TestCase
             ->assertJsonPath('quota.used', 1);
     }
 
+    public function test_expired_trial_cannot_request_new_evaluation(): void
+    {
+        $user = User::factory()->create([
+            'plan' => 'trial',
+            'subscription_status' => 'trial',
+            'subscription_until' => now()->subDay(),
+        ]);
+        Lot::factory()->create(['lote_id' => 'expired-1']);
+
+        $this->actingAs($user)
+            ->postJson(route('avaliacoes.store', ['lote' => 'expired-1']))
+            ->assertStatus(402)
+            ->assertJsonPath('status', 'quota_exceeded')
+            ->assertJsonFragment(['error' => 'Seu período de teste acabou. Fale com um atendente para continuar usando a IA.']);
+    }
+
     public function test_home_promotes_ai_and_whatsapp_checkout(): void
     {
         $this->get(route('home'))

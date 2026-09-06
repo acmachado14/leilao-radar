@@ -104,6 +104,10 @@ class PlanQuota
 
     public function canConsult(User $user, string $loteId, ?Carbon $now = null): bool
     {
+        if (! $user->isAdmin() && ! $user->hasLiveSubscription()) {
+            return false;
+        }
+
         if ($this->alreadyBilledThisPeriod($user, $loteId, $now)) {
             return true;
         }
