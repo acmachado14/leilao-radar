@@ -39,6 +39,21 @@ class LotMatcherTest extends TestCase
         $this->assertTrue((new LotMatcher)->matches($lot, $preference));
     }
 
+    public function test_filters_by_vehicle_year(): void
+    {
+        $lot = Lot::factory()->create(['ano_mod' => 2018]);
+        $preference = new AlertPreference(array_merge(AlertPreference::defaults(), [
+            'ano_min' => 2020,
+            'ano_max' => 2022,
+        ]));
+
+        $this->assertFalse((new LotMatcher)->matches($lot, $preference));
+
+        $preference->ano_min = 2016;
+        $preference->ano_max = 2018;
+        $this->assertTrue((new LotMatcher)->matches($lot, $preference));
+    }
+
     public function test_skips_ended_auctions(): void
     {
         $lot = Lot::factory()->create([

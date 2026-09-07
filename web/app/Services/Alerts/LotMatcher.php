@@ -57,6 +57,34 @@ class LotMatcher
             return false;
         }
 
+        if (! $this->matchesYear($lot, $preference->ano_min, $preference->ano_max)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function matchesYear(Lot $lot, mixed $anoMin, mixed $anoMax): bool
+    {
+        $min = is_numeric($anoMin) ? (int) $anoMin : null;
+        $max = is_numeric($anoMax) ? (int) $anoMax : null;
+        if ($min === null && $max === null) {
+            return true;
+        }
+
+        $year = $lot->ano_mod;
+        if ($year === null) {
+            return false;
+        }
+
+        if ($min !== null && $year < $min) {
+            return false;
+        }
+
+        if ($max !== null && $year > $max) {
+            return false;
+        }
+
         return true;
     }
 

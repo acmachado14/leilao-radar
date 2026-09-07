@@ -7,6 +7,7 @@ use App\Models\Lot;
 use App\Services\Alerts\AlertDispatcher;
 use App\Services\Billing\PlanQuota;
 use App\Support\SalesWhatsApp;
+use App\Support\SearchYearExtractor;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -17,6 +18,10 @@ class AlertPreferencesForm extends Component
     public string $name = '';
 
     public string $search = '';
+
+    public ?int $ano_min = null;
+
+    public ?int $ano_max = null;
 
     /** @var list<string> */
     public array $marcas = [];
@@ -104,9 +109,19 @@ class AlertPreferencesForm extends Component
 
     public function save(): void
     {
+        $this->ano_min = $this->normalizeYear($this->ano_min);
+        $this->ano_max = $this->normalizeYear($this->ano_max);
+
+        $extracted = SearchYearExtractor::extract(trim($this->search));
+        $this->search = $extracted['search'];
+        $this->ano_min ??= $extracted['ano_min'];
+        $this->ano_max ??= $extracted['ano_max'];
+
         $this->validate([
             'name' => 'nullable|string|max:80',
             'search' => 'nullable|string|max:120',
+            'ano_min' => 'nullable|integer|min:'.SearchYearExtractor::MIN_YEAR.'|max:'.SearchYearExtractor::MAX_YEAR,
+            'ano_max' => 'nullable|integer|min:'.SearchYearExtractor::MIN_YEAR.'|max:'.SearchYearExtractor::MAX_YEAR,
             'marcas' => 'array',
             'fontes' => 'array',
             'fipe_matches' => 'required|array|min:1',
@@ -116,10 +131,16 @@ class AlertPreferencesForm extends Component
             'max_days_until' => 'nullable|integer|min:1|max:60',
         ]);
 
+        if ($this->ano_min !== null && $this->ano_max !== null && $this->ano_min > $this->ano_max) {
+            [$this->ano_min, $this->ano_max] = [$this->ano_max, $this->ano_min];
+        }
+
         $user = Auth::user();
         $payload = [
             'name' => trim($this->name),
             'search' => trim($this->search),
+            'ano_min' => $this->ano_min,
+            'ano_max' => $this->ano_max,
             'marcas' => $this->marcas,
             'fontes' => $this->fontes,
             'fipe_matches' => $this->fipe_matches,
@@ -189,6 +210,8 @@ class AlertPreferencesForm extends Component
         $this->editingId = $preference->id;
         $this->name = (string) $preference->name;
         $this->search = (string) $preference->search;
+        $this->ano_min = $preference->ano_min;
+        $this->ano_max = $preference->ano_max;
         $this->marcas = $preference->marcas ?? [];
         $this->fontes = $preference->fontes ?? ['sodre', 'palacio'];
         $this->fipe_matches = $preference->fipe_matches ?? ['exact', 'closest', 'failed'];
@@ -206,6 +229,8 @@ class AlertPreferencesForm extends Component
         $this->editingId = null;
         $this->name = '';
         $this->search = '';
+        $this->ano_min = null;
+        $this->ano_max = null;
         $this->marcas = [];
         $this->fontes = $defaults['fontes'];
         $this->fipe_matches = $defaults['fipe_matches'];
@@ -213,6 +238,15 @@ class AlertPreferencesForm extends Component
         $this->min_desconto = 0;
         $this->exclude_grande = true;
         $this->max_days_until = 14;
+    }
+
+    private function normalizeYear(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return is_numeric($value) ? (int) $value : null;
     }
 
     private function ownedPreference(string $id): AlertPreference

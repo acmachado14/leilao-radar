@@ -47,6 +47,9 @@
                         <p class="font-semibold">{{ $preference->label() }}</p>
                         <p class="mt-1 text-sm text-slate-400">
                             {{ $preference->search !== '' ? $preference->search : 'qualquer modelo' }}
+                            @if ($preference->yearLabel())
+                                · {{ $preference->yearLabel() }}
+                            @endif
                             · desconto ≥ {{ (int) round(((float) $preference->min_desconto) * 100) }}%
                         </p>
                         <div class="mt-3 flex gap-2">
@@ -72,6 +75,16 @@
             <label class="mb-1 block text-sm text-slate-300">Busca (marca / modelo)</label>
             <input type="search" wire:model="search" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3" placeholder="Jetta GLI">
             @error('search') <p class="mt-1 text-sm text-red-400">{{ $message }}</p> @enderror
+        </div>
+        <div class="lg:col-span-2">
+            <label class="mb-1 block text-sm text-slate-300">Ano do veículo</label>
+            <div class="grid grid-cols-2 gap-3">
+                <input type="number" wire:model="ano_min" min="1980" max="2032" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3" placeholder="De">
+                <input type="number" wire:model="ano_max" min="1980" max="2032" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3" placeholder="Até">
+            </div>
+            <p class="mt-1 text-xs text-slate-500">Vazio = qualquer ano. Se o ano estiver na busca, ele entra aqui automaticamente.</p>
+            @error('ano_min') <p class="mt-1 text-sm text-red-400">{{ $message }}</p> @enderror
+            @error('ano_max') <p class="mt-1 text-sm text-red-400">{{ $message }}</p> @enderror
         </div>
         <div>
             <label class="mb-1 block text-sm text-slate-300">Fontes</label>

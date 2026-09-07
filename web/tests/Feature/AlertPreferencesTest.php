@@ -34,6 +34,46 @@ class AlertPreferencesTest extends TestCase
         $this->assertTrue($user->alertPreferences()->where('search', 'Amarok')->exists());
     }
 
+    public function test_saves_year_range_and_extracts_year_from_search(): void
+    {
+        $user = User::factory()->create();
+
+        Livewire::actingAs($user)
+            ->test(AlertPreferencesForm::class)
+            ->call('createNew')
+            ->set('name', 'Jetta')
+            ->set('search', 'Jetta GLI 2018')
+            ->set('fipe_matches', ['exact', 'closest', 'failed'])
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $preference = $user->alertPreferences()->first();
+        $this->assertSame('Jetta GLI', $preference->search);
+        $this->assertSame(2018, $preference->ano_min);
+        $this->assertSame(2018, $preference->ano_max);
+    }
+
+    public function test_backfill_moves_year_from_existing_search_into_year_fields(): void
+    {
+        $user = User::factory()->create();
+        $preference = $user->alertPreferences()->create([
+            ...AlertPreference::defaults(),
+            'search' => 'Amarok 2018/2019',
+        ]);
+
+        $extracted = \App\Support\SearchYearExtractor::extract((string) $preference->search);
+        $preference->update([
+            'search' => $extracted['search'],
+            'ano_min' => $extracted['ano_min'],
+            'ano_max' => $extracted['ano_max'],
+        ]);
+
+        $preference->refresh();
+        $this->assertSame('Amarok', $preference->search);
+        $this->assertSame(2018, $preference->ano_min);
+        $this->assertSame(2019, $preference->ano_max);
+    }
+
     public function test_trial_plan_blocks_extra_alert_preferences(): void
     {
         $user = User::factory()->create(['plan' => 'trial']);

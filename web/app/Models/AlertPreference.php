@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'user_id',
     'name',
     'search',
+    'ano_min',
+    'ano_max',
     'marcas',
     'fontes',
     'fipe_matches',
@@ -32,6 +34,8 @@ class AlertPreference extends Model
             'fontes' => 'array',
             'fipe_matches' => 'array',
             'monta' => 'array',
+            'ano_min' => 'integer',
+            'ano_max' => 'integer',
             'min_desconto' => 'float',
             'exclude_grande' => 'boolean',
             'max_days_until' => 'integer',
@@ -45,6 +49,8 @@ class AlertPreference extends Model
         return [
             'name' => '',
             'search' => '',
+            'ano_min' => null,
+            'ano_max' => null,
             'marcas' => [],
             'fontes' => ['sodre', 'palacio'],
             'fipe_matches' => ['exact', 'closest', 'failed'],
@@ -65,11 +71,28 @@ class AlertPreference extends Model
         }
 
         $search = trim((string) $this->search);
-        if ($search !== '') {
-            return $search;
+        $label = $search !== '' ? $search : 'Todas as ofertas';
+        $years = $this->yearLabel();
+        if ($years !== null) {
+            return $label === 'Todas as ofertas' ? $years : $label.' · '.$years;
         }
 
-        return 'Todas as ofertas';
+        return $label;
+    }
+
+    public function yearLabel(): ?string
+    {
+        $min = $this->ano_min;
+        $max = $this->ano_max;
+        if ($min === null && $max === null) {
+            return null;
+        }
+
+        if ($min !== null && $max !== null && $min !== $max) {
+            return $min.'–'.$max;
+        }
+
+        return (string) ($min ?? $max);
     }
 
     public function user(): BelongsTo
