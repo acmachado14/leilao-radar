@@ -143,7 +143,9 @@ class PlanQuota
             'limit' => $limit,
             'remaining' => $remaining,
             'unlimited' => $limit === null,
-            'alerts_used' => $user->alertPreferences()->count(),
+            'alerts_used' => $user->alertPreferences
+                ->filter(fn ($preference) => $preference->isConfigured())
+                ->count(),
             'alerts_limit' => $this->alertsLimit($user),
             'checkout_url' => SalesWhatsApp::checkoutUrl($this->suggestedUpgrade($plan), $user),
             'upgrade_plan' => $this->suggestedUpgrade($plan),

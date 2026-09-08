@@ -41,13 +41,14 @@ class AlertDispatcher
                 }
 
                 $preferences = $user->alertPreferences;
-                if ($preferences->isEmpty()) {
+                $configured = $preferences->filter(fn (AlertPreference $preference) => $preference->isConfigured());
+                if ($configured->isEmpty()) {
                     $skipped++;
 
                     return;
                 }
 
-                $matched = $this->matchLots($lots, $preferences);
+                $matched = $this->matchLots($lots, $configured);
 
                 if ($matched->isEmpty()) {
                     $skipped++;
@@ -105,7 +106,9 @@ class AlertDispatcher
      */
     public function previewForUser(User $user, int $limit = 24): Collection
     {
-        $preferences = $user->alertPreferences;
+        $preferences = $user->alertPreferences->filter(
+            fn (AlertPreference $preference) => $preference->isConfigured(),
+        );
         if ($preferences->isEmpty()) {
             return collect();
         }
@@ -126,7 +129,7 @@ class AlertDispatcher
         return $lots
             ->filter(function (Lot $lot) use ($preferences): bool {
                 foreach ($preferences as $preference) {
-                    if ($this->matcher->matches($lot, $preference)) {
+                    if ($preference->isConfigured() && $this->matcher->matches($lot, $preference)) {
                         return true;
                     }
                 }

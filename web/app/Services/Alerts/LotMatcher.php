@@ -11,6 +11,10 @@ class LotMatcher
 {
     public function matches(Lot $lot, AlertPreference $preference, ?Carbon $now = null): bool
     {
+        if (! $preference->isConfigured()) {
+            return false;
+        }
+
         if (! $lot->isUpcoming($now)) {
             return false;
         }
@@ -103,13 +107,13 @@ class LotMatcher
         $tokens = preg_split('/\s+/', TextNormalizer::fold($query)) ?: [];
         $tokens = array_values(array_filter($tokens));
         if ($tokens === []) {
-            return true;
+            return false;
         }
 
         $haystack = TextNormalizer::fold(trim($lot->marca.' '.$lot->modelo.' '.$lot->titulo));
 
         foreach ($tokens as $token) {
-            if (! str_contains($haystack, $token)) {
+            if (! TextNormalizer::containsToken($haystack, $token)) {
                 return false;
             }
         }

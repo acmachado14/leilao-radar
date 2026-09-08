@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AlertPreference;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,7 +13,14 @@ class UnsubscribeAlertsController extends Controller
     {
         abort_unless($request->hasValidSignature(), 403);
 
-        $user->alertPreferences()->update(['notify_email' => false]);
+        if ($user->alertPreferences()->doesntExist()) {
+            $user->alertPreferences()->create(array_merge(
+                AlertPreference::defaults(),
+                ['notify_email' => false],
+            ));
+        } else {
+            $user->alertPreferences()->update(['notify_email' => false]);
+        }
 
         return redirect()
             ->route('catalog')

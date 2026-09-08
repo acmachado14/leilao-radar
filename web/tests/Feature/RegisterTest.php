@@ -8,6 +8,7 @@ use App\Models\AdminActivityLog;
 use App\Models\Lot;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -43,10 +44,8 @@ class RegisterTest extends TestCase
         $this->assertFalse($user->isPending());
         $this->assertTrue($user->canReceiveAlerts());
         $this->assertTrue($user->subscription_until->greaterThan(now()->addDays(6)));
-        $this->assertNotNull($user->alertPreference);
-        $this->assertSame(1, $user->alertPreferences()->count());
-        $this->assertTrue($user->alertPreference->notify_email);
-        $this->assertFalse($user->alertPreference->notify_whatsapp);
+        $this->assertNull($user->alertPreference);
+        $this->assertSame(0, $user->alertPreferences()->count());
         $this->assertDatabaseHas('admin_activity_logs', [
             'action' => 'registered',
             'subject_user_id' => $user->id,
@@ -72,7 +71,7 @@ class RegisterTest extends TestCase
             ->assertHasNoErrors();
 
         $user = User::query()->where('email', 'ana@example.com')->first();
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('password123', $user->password));
+        $this->assertTrue(Hash::check('password123', $user->password));
 
         $this->get(route('logout'))->assertRedirect(route('login'));
         $this->assertGuest();
@@ -83,5 +82,24 @@ class RegisterTest extends TestCase
         ])->assertRedirect(route('home'));
 
         $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_register_whatsapp_opt_in_does_not_create_a_matching_recorte(): void
+    {
+        Livewire::test(Register::class)
+            ->set('name', 'Ana Radar')
+            ->set('email', 'ana@example.com')
+            ->set('phone', '11999999999')
+            ->set('password', 'password123')
+            ->set('password_confirmation', 'password123')
+            ->set('terms_accepted', true)
+            ->set('notify_whatsapp', true)
+            ->call('register')
+            ->assertHasNoErrors();
+
+        $user = User::query()->where('email', 'ana@example.com')->first();
+        $this->assertSame(1, $user->alertPreferences()->count());
+        $this->assertFalse($user->alertPreference->isConfigured());
+        $this->assertTrue($user->alertPreference->notify_whatsapp);
     }
 }

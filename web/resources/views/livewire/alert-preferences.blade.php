@@ -3,9 +3,9 @@
         <p class="text-sm font-semibold uppercase tracking-widest text-emerald-400">Alertas</p>
         <h1 class="mt-2 text-2xl font-bold sm:text-3xl">Preferências</h1>
         <p class="mt-1 text-sm text-slate-400">
-            Cadastre um recorte por modelo (ex.: Jetta GLI e Amarok). Todo dia de manhã (~05:30) chega um e-mail com os lotes que combinam.
+            Cadastre um recorte por modelo (ex.: Jetta GLI e Amarok). Sem recorte cadastrado, nenhum e-mail de ofertas é enviado. Todo dia de manhã (~05:30) chega um e-mail só com os lotes que combinam.
             O aviso 1 hora antes (ou no dia, se o leilão não tiver horário) vai só para carros em que você clicar em “Tenho interesse”.
-            {{ $preferences->count() }}/{{ $maxPreferences }} recortes neste plano.
+            {{ $preferences->filter(fn ($preference) => $preference->isConfigured())->count() }}/{{ $maxPreferences }} recortes neste plano.
         </p>
         <a href="{{ $checkoutUrl }}" target="_blank" rel="noopener" class="mt-3 inline-flex text-sm text-violet-300 hover:underline">Falar com atendente para mais recortes</a>
     </div>
@@ -46,7 +46,7 @@
                     ])>
                         <p class="font-semibold">{{ $preference->label() }}</p>
                         <p class="mt-1 text-sm text-slate-400">
-                            {{ $preference->search !== '' ? $preference->search : 'qualquer modelo' }}
+                            {{ $preference->isConfigured() ? ($preference->search !== '' ? $preference->search : 'filtro de marca') : 'inativo até informar o modelo' }}
                             @if ($preference->yearLabel())
                                 · {{ $preference->yearLabel() }}
                             @endif
@@ -65,15 +65,15 @@
     <form wire:submit="save" class="grid gap-6 rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-6 lg:grid-cols-2">
         <div class="lg:col-span-2">
             <h2 class="text-lg font-semibold">{{ $editingId ? 'Editar recorte' : 'Novo recorte' }}</h2>
-            <p class="mt-1 text-sm text-slate-500">Cada recorte é um modelo ou busca. Filtros (fonte, FIPE, monta) valem só para este recorte.</p>
+            <p class="mt-1 text-sm text-slate-500">Cada recorte precisa de um modelo ou busca. Filtros (fonte, FIPE, monta) valem só para este recorte.</p>
         </div>
         <div>
             <label class="mb-1 block text-sm text-slate-300">Nome (opcional)</label>
             <input type="text" wire:model="name" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3" placeholder="Jetta GLI">
         </div>
         <div>
-            <label class="mb-1 block text-sm text-slate-300">Busca (marca / modelo)</label>
-            <input type="search" wire:model="search" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3" placeholder="Jetta GLI">
+            <label class="mb-1 block text-sm text-slate-300">Busca (marca / modelo) — obrigatório</label>
+            <input type="search" wire:model="search" required class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3" placeholder="Jetta GLI">
             @error('search') <p class="mt-1 text-sm text-red-400">{{ $message }}</p> @enderror
         </div>
         <div class="lg:col-span-2">

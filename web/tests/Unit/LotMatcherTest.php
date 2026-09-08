@@ -12,10 +12,19 @@ class LotMatcherTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_matches_default_preferences(): void
+    public function test_blank_recorte_does_not_match_any_lot(): void
     {
         $lot = Lot::factory()->create();
         $preference = new AlertPreference(AlertPreference::defaults());
+
+        $this->assertFalse($preference->isConfigured());
+        $this->assertFalse((new LotMatcher)->matches($lot, $preference));
+    }
+
+    public function test_matches_scoped_search(): void
+    {
+        $lot = Lot::factory()->create();
+        $preference = new AlertPreference(AlertPreference::scoped());
 
         $this->assertTrue((new LotMatcher)->matches($lot, $preference));
     }
@@ -39,10 +48,50 @@ class LotMatcherTest extends TestCase
         $this->assertTrue((new LotMatcher)->matches($lot, $preference));
     }
 
+    public function test_does_not_treat_gol_as_golf(): void
+    {
+        $golf = Lot::factory()->create([
+            'marca' => 'Volkswagen',
+            'modelo' => 'Golf GTI',
+            'titulo' => 'Vw Golf GTI',
+        ]);
+        $gol = Lot::factory()->create([
+            'marca' => 'Volkswagen',
+            'modelo' => 'Gol 1.0',
+            'titulo' => 'Vw Gol 1.0',
+        ]);
+        $preference = new AlertPreference(array_merge(AlertPreference::defaults(), [
+            'search' => 'Gol',
+        ]));
+
+        $matcher = new LotMatcher;
+        $this->assertFalse($matcher->matches($golf, $preference));
+        $this->assertTrue($matcher->matches($gol, $preference));
+    }
+
+    public function test_marca_only_recorte_still_matches(): void
+    {
+        $lot = Lot::factory()->create(['marca' => 'Toyota']);
+        $other = Lot::factory()->create([
+            'marca' => 'Volkswagen',
+            'modelo' => 'Gol',
+            'titulo' => 'Vw Gol',
+        ]);
+        $preference = new AlertPreference(array_merge(AlertPreference::defaults(), [
+            'search' => '',
+            'marcas' => ['Toyota'],
+        ]));
+
+        $matcher = new LotMatcher;
+        $this->assertTrue($preference->isConfigured());
+        $this->assertTrue($matcher->matches($lot, $preference));
+        $this->assertFalse($matcher->matches($other, $preference));
+    }
+
     public function test_filters_by_vehicle_year(): void
     {
         $lot = Lot::factory()->create(['ano_mod' => 2018]);
-        $preference = new AlertPreference(array_merge(AlertPreference::defaults(), [
+        $preference = new AlertPreference(array_merge(AlertPreference::scoped(), [
             'ano_min' => 2020,
             'ano_max' => 2022,
         ]));
@@ -59,7 +108,7 @@ class LotMatcherTest extends TestCase
         $lot = Lot::factory()->create([
             'leilao_fim' => now('America/Sao_Paulo')->subDay()->format('Y-m-d H:i:s'),
         ]);
-        $preference = new AlertPreference(AlertPreference::defaults());
+        $preference = new AlertPreference(AlertPreference::scoped());
 
         $this->assertFalse((new LotMatcher)->matches($lot, $preference));
     }
@@ -69,7 +118,7 @@ class LotMatcherTest extends TestCase
         $lot = Lot::factory()->create([
             'leilao_fim' => now('America/Sao_Paulo')->toDateString(),
         ]);
-        $preference = new AlertPreference(AlertPreference::defaults());
+        $preference = new AlertPreference(AlertPreference::scoped());
 
         $this->assertTrue((new LotMatcher)->matches($lot, $preference));
     }
