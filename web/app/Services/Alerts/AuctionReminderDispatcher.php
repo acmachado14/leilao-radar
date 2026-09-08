@@ -8,6 +8,7 @@ use App\Mail\AuctionReminderMail;
 use App\Models\Lot;
 use App\Models\LotAlertSend;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Mail;
 
@@ -16,7 +17,7 @@ class AuctionReminderDispatcher
     /**
      * @return array{users: int, emails: int, skipped: int}
      */
-    public function dispatch(?\Illuminate\Support\Carbon $now = null): array
+    public function dispatch(?Carbon $now = null): array
     {
         $lots = Lot::query()
             ->get()
@@ -42,7 +43,9 @@ class AuctionReminderDispatcher
                 }
 
                 $preferences = $user->alertPreferences;
-                if ($preferences->isEmpty() || ! $preferences->contains(fn ($preference) => $preference->notify_email)) {
+                $emailEnabled = $preferences->isEmpty()
+                    || $preferences->contains(fn ($preference) => $preference->notify_email);
+                if (! $emailEnabled) {
                     $skipped++;
 
                     return;

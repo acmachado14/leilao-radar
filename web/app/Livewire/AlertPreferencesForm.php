@@ -99,10 +99,17 @@ class AlertPreferencesForm extends Component
             return;
         }
 
-        Auth::user()->alertPreferences()->update([
+        $user = Auth::user();
+        $payload = [
             'notify_email' => $this->notify_email,
             'notify_whatsapp' => $this->notify_whatsapp,
-        ]);
+        ];
+
+        if ($user->alertPreferences()->doesntExist()) {
+            $user->alertPreferences()->create(array_merge(AlertPreference::defaults(), $payload));
+        } else {
+            $user->alertPreferences()->update($payload);
+        }
 
         session()->flash('success', 'Canais de alerta atualizados.');
     }
@@ -119,7 +126,7 @@ class AlertPreferencesForm extends Component
 
         $this->validate([
             'name' => 'nullable|string|max:80',
-            'search' => 'nullable|string|max:120',
+            'search' => 'required|string|min:2|max:120',
             'ano_min' => 'nullable|integer|min:'.SearchYearExtractor::MIN_YEAR.'|max:'.SearchYearExtractor::MAX_YEAR,
             'ano_max' => 'nullable|integer|min:'.SearchYearExtractor::MIN_YEAR.'|max:'.SearchYearExtractor::MAX_YEAR,
             'marcas' => 'array',
@@ -129,6 +136,9 @@ class AlertPreferencesForm extends Component
             'min_desconto' => 'integer|min:-50|max:80',
             'exclude_grande' => 'boolean',
             'max_days_until' => 'nullable|integer|min:1|max:60',
+        ], [
+            'search.required' => 'Informe o modelo ou a busca deste recorte.',
+            'search.min' => 'Informe pelo menos 2 caracteres na busca do recorte.',
         ]);
 
         if ($this->ano_min !== null && $this->ano_max !== null && $this->ano_min > $this->ano_max) {
@@ -152,16 +162,21 @@ class AlertPreferencesForm extends Component
             'notify_whatsapp' => $this->notify_whatsapp,
         ];
 
-        if ($this->editingId) {
-            $this->ownedPreference($this->editingId)->update($payload);
-            session()->flash('success', 'Preferência atualizada. O próximo e-mail da manhã já usa esses filtros.');
+        $max = $this->quota()->alertsLimit($user);
+        $configuredCount = $user->alertPreferences
+            ->filter(fn (AlertPreference $preference) => $preference->isConfigured())
+            ->count();
+        $editing = $this->editingId ? $this->ownedPreference($this->editingId) : null;
+        $wouldConsumeSlot = $editing === null || ! $editing->isConfigured();
+        if ($wouldConsumeSlot && $configuredCount >= $max) {
+            $this->addError('search', "Limite de {$max} recortes neste plano. Fale com um atendente para subir.");
 
             return;
         }
 
-        $max = $this->quota()->alertsLimit($user);
-        if ($user->alertPreferences()->count() >= $max) {
-            $this->addError('search', "Limite de {$max} recortes neste plano. Fale com um atendente para subir.");
+        if ($editing) {
+            $editing->update($payload);
+            session()->flash('success', 'Preferência atualizada. O próximo e-mail da manhã já usa esses filtros.');
 
             return;
         }

@@ -36,7 +36,7 @@ class DispatchAuctionRemindersTest extends TestCase
         Mail::fake();
 
         $user = User::factory()->create();
-        $user->alertPreference()->create(AlertPreference::defaults());
+        $user->alertPreference()->create(AlertPreference::scoped());
         Lot::factory()->create([
             'lote_id' => 'soon-1',
             'titulo' => 'Toyota Corolla Xei',
@@ -65,7 +65,7 @@ class DispatchAuctionRemindersTest extends TestCase
         Mail::fake();
 
         $user = User::factory()->create();
-        $user->alertPreference()->create(AlertPreference::defaults());
+        $user->alertPreference()->create(AlertPreference::scoped());
         Lot::factory()->create([
             'lote_id' => 'later-1',
             'leilao_em' => '2026-09-05 09:30:00',
@@ -86,7 +86,7 @@ class DispatchAuctionRemindersTest extends TestCase
         Mail::fake();
 
         $user = User::factory()->create();
-        $user->alertPreference()->create(AlertPreference::defaults());
+        $user->alertPreference()->create(AlertPreference::scoped());
         Lot::factory()->create([
             'lote_id' => 'day-1',
             'titulo' => 'Honda Cg 160',
@@ -110,7 +110,7 @@ class DispatchAuctionRemindersTest extends TestCase
         Mail::fake();
 
         $user = User::factory()->create();
-        $user->alertPreference()->create(AlertPreference::defaults());
+        $user->alertPreference()->create(AlertPreference::scoped());
         Lot::factory()->create([
             'lote_id' => 'both-1',
             'leilao_em' => '2026-09-05 09:30:00',
@@ -130,7 +130,7 @@ class DispatchAuctionRemindersTest extends TestCase
         Mail::fake();
 
         $user = User::factory()->create();
-        $user->alertPreference()->create(AlertPreference::defaults());
+        $user->alertPreference()->create(AlertPreference::scoped());
         Lot::factory()->create([
             'lote_id' => 'once-1',
             'leilao_em' => '2026-09-05 09:30:00',
@@ -149,7 +149,7 @@ class DispatchAuctionRemindersTest extends TestCase
         Mail::fake();
 
         $user = User::factory()->create();
-        $user->alertPreference()->create(AlertPreference::defaults());
+        $user->alertPreference()->create(AlertPreference::scoped());
         Lot::factory()->create([
             'lote_id' => 'faixa-1',
             'leilao_em' => '2026-09-05 09:30:00',

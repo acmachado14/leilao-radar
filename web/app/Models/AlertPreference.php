@@ -63,6 +63,26 @@ class AlertPreference extends Model
         ];
     }
 
+    /**
+     * Preference payload that actually selects lots (empty search is not a recorte).
+     *
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    public static function scoped(array $overrides = []): array
+    {
+        return array_merge(self::defaults(), ['search' => 'Corolla'], $overrides);
+    }
+
+    public function isConfigured(): bool
+    {
+        if (trim((string) $this->search) !== '') {
+            return true;
+        }
+
+        return array_values(array_filter($this->marcas ?? [])) !== [];
+    }
+
     public function label(): string
     {
         $name = trim((string) $this->name);
@@ -71,10 +91,17 @@ class AlertPreference extends Model
         }
 
         $search = trim((string) $this->search);
-        $label = $search !== '' ? $search : 'Todas as ofertas';
+        if ($search !== '') {
+            $label = $search;
+        } elseif (array_values(array_filter($this->marcas ?? [])) !== []) {
+            $label = implode(', ', array_values(array_filter($this->marcas ?? [])));
+        } else {
+            $label = 'Incompleto — defina um modelo';
+        }
+
         $years = $this->yearLabel();
         if ($years !== null) {
-            return $label === 'Todas as ofertas' ? $years : $label.' · '.$years;
+            return str_starts_with($label, 'Incompleto') ? $years : $label.' · '.$years;
         }
 
         return $label;

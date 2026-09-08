@@ -69,9 +69,11 @@ class Register extends Component
             'last_login_at' => now(),
         ]);
 
-        $defaults = AlertPreference::defaults();
-        $defaults['notify_whatsapp'] = $this->notify_whatsapp;
-        $user->alertPreference()->create($defaults);
+        if ($this->notify_whatsapp) {
+            $defaults = AlertPreference::defaults();
+            $defaults['notify_whatsapp'] = true;
+            $user->alertPreference()->create($defaults);
+        }
 
         Auth::login($user);
         $auditor->record('registered', "Novo cadastro em trial: {$user->name} ({$user->email})", $user);

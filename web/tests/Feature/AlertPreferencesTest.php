@@ -7,6 +7,7 @@ use App\Mail\LotMatchMail;
 use App\Models\AlertPreference;
 use App\Models\Lot;
 use App\Models\User;
+use App\Support\SearchYearExtractor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
@@ -19,7 +20,7 @@ class AlertPreferencesTest extends TestCase
     public function test_user_can_save_more_than_one_preference(): void
     {
         $user = User::factory()->create();
-        $user->alertPreferences()->create(AlertPreference::defaults());
+        $user->alertPreferences()->create(AlertPreference::scoped(['name' => 'Um']));
 
         Livewire::actingAs($user)
             ->test(AlertPreferencesForm::class)
@@ -61,7 +62,7 @@ class AlertPreferencesTest extends TestCase
             'search' => 'Amarok 2018/2019',
         ]);
 
-        $extracted = \App\Support\SearchYearExtractor::extract((string) $preference->search);
+        $extracted = SearchYearExtractor::extract((string) $preference->search);
         $preference->update([
             'search' => $extracted['search'],
             'ano_min' => $extracted['ano_min'],
@@ -77,7 +78,7 @@ class AlertPreferencesTest extends TestCase
     public function test_trial_plan_blocks_extra_alert_preferences(): void
     {
         $user = User::factory()->create(['plan' => 'trial']);
-        $user->alertPreferences()->create(AlertPreference::defaults());
+        $user->alertPreferences()->create(AlertPreference::scoped(['name' => 'Um', 'search' => 'Amarok']));
         $user->alertPreferences()->create([...AlertPreference::defaults(), 'name' => 'Dois', 'search' => 'Jetta']);
 
         Livewire::actingAs($user)
@@ -92,12 +93,28 @@ class AlertPreferencesTest extends TestCase
         $this->assertSame(2, $user->alertPreferences()->count());
     }
 
+    public function test_rejects_empty_search(): void
+    {
+        $user = User::factory()->create();
+
+        Livewire::actingAs($user)
+            ->test(AlertPreferencesForm::class)
+            ->call('createNew')
+            ->set('name', 'Tudo')
+            ->set('search', '')
+            ->set('fipe_matches', ['exact', 'closest', 'failed'])
+            ->call('save')
+            ->assertHasErrors(['search']);
+
+        $this->assertSame(0, $user->alertPreferences()->count());
+    }
+
     public function test_send_test_email_does_not_mark_lots_as_sent(): void
     {
         Mail::fake();
 
         $user = User::factory()->create(['email' => 'ana@example.com']);
-        $user->alertPreferences()->create(AlertPreference::defaults());
+        $user->alertPreferences()->create(AlertPreference::scoped());
         Lot::factory()->create(['lote_id' => 'preview-1']);
 
         $this->artisan('radar:send-test-email', ['email' => 'ana@example.com'])
