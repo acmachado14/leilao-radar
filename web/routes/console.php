@@ -9,11 +9,11 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('radar:sync-lots')
-    ->dailyAt('05:20')
+    ->everyFifteenMinutes()
     ->timezone('America/Sao_Paulo');
 
 Schedule::command('radar:dispatch-alerts --skip-sync')
-    ->dailyAt('05:30')
+    ->hourly()
     ->timezone('America/Sao_Paulo');
 
 Schedule::command('radar:dispatch-auction-reminders')

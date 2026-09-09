@@ -34,6 +34,13 @@ class LotRepository:
         self.table_name = table_name or os.environ.get("TABLE_NAME", "leilao-radar-lotes")
         self._table = build_dynamodb_resource(region_name).Table(self.table_name)
 
+    def get_lot(self, lote_id: str) -> dict | None:
+        try:
+            response = self._table.get_item(Key={"lote_id": lote_id})
+        except ClientError:
+            return None
+        return response.get("Item")
+
     def upsert_lot(self, lot: LotRecord) -> None:
         item = lot.to_dynamo_item()
         self._table.put_item(Item=item)

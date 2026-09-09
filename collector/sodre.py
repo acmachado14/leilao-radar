@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 from datetime import datetime, timedelta, timezone
 from typing import Any, Iterator
@@ -9,6 +10,8 @@ import httpx
 
 from shared.dates import parse_datetime
 from shared.models import SodreLotRaw
+
+logger = logging.getLogger("collector.sodre")
 
 BOOTSTRAP_URL = "https://leilao.sodresantoro.com.br/"
 LOT_URL_TEMPLATE = "https://leilao.sodresantoro.com.br/leilao/{auction_id}/lote/{lot_id}/"
@@ -76,13 +79,25 @@ class SodreClient:
             )
             response.raise_for_status()
             data = response.json()
+            if search_after is None:
+                logger.info(
+                    "Elasticsearch open vehicle lots: %s",
+                    data.get("hits", {}).get("total"),
+                )
             hits = data.get("hits", {}).get("hits", [])
             if not hits:
                 break
 
             for hit in hits:
                 source = hit.get("_source", {})
-                yield SodreLotRaw.model_validate(source)
+                try:
+                    yield SodreLotRaw.model_validate(source)
+                except Exception:
+                    logger.exception(
+                        "Skipping invalid Sodré lot payload lot_id=%s auction_id=%s",
+                        source.get("lot_id"),
+                        source.get("auction_id"),
+                    )
 
             search_after = hits[-1].get("sort")
             if len(hits) < page_size:
@@ -93,9 +108,13 @@ class SodreClient:
         payload: dict[str, Any] = {
             "size": page_size,
             "sort": [{"lot_id": "asc"}],
+            "track_total_hits": True,
             "query": {
                 "bool": {
                     "must": [
+                        # Sodré marks upcoming catalog lots as andamento days
+                        # before the live session; do not require the auction
+                        # clock to have started.
                         {"term": {"auction_status": "aberto"}},
                         {"term": {"lot_status": "andamento"}},
                     ]

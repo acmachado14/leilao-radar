@@ -122,6 +122,55 @@ def _tokenize(text: str) -> set[str]:
     return {t for t in re.split(r"[^a-z0-9.]+", _normalize(text)) if t and t not in {"e", "de", "da", "do"}}
 
 
+def _optional_int(value: Any) -> int | None:
+    if value is None or value == "":
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _optional_float(value: Any) -> float | None:
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def stored_fipe_match(
+    previous: dict[str, Any] | None,
+    *,
+    marca: str,
+    modelo: str,
+    ano_mod: int | None,
+) -> FipeMatchResult | None:
+    """Reuse a stored FIPE match when the vehicle identity has not changed.
+
+    Frequent collector runs should update bids/dates without hitting FIPE again.
+    Failed matches are not reused so a later run can recover from API errors.
+    """
+    if not previous:
+        return None
+    match = previous.get("fipe_match")
+    if match not in ("exact", "closest"):
+        return None
+    if _normalize(str(previous.get("marca") or "")) != _normalize(marca):
+        return None
+    if _normalize(str(previous.get("modelo") or "")) != _normalize(modelo):
+        return None
+    if _optional_int(previous.get("ano_mod")) != _optional_int(ano_mod):
+        return None
+    return FipeMatchResult(
+        codigo=previous.get("fipe_codigo") or None,
+        texto=previous.get("fipe_texto") or None,
+        preco=_optional_float(previous.get("fipe_preco")),
+        match=match,
+    )
+
+
 class FipeClient:
     def __init__(self, min_interval_seconds: float = 1.0) -> None:
         self._client = httpx.Client(timeout=30.0)

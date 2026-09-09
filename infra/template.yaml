@@ -74,11 +74,12 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref LotesTable
       Events:
-        DailySchedule:
+        FrequentSchedule:
           Type: Schedule
           Properties:
-            Schedule: cron(0 7 * * ? *)
-            Description: Run Sodre collector daily at 04:00 BRT (07:00 UTC)
+            # Every 3 hours BRT (UTC-3): 01:00, 04:00, 07:00, 10:00, 13:00, 16:00, 19:00, 22:00
+            Schedule: cron(0 1,4,7,10,13,16,19,22 * * ? *)
+            Description: Run Sodre collector every 3 hours so late-added lots are captured before auction day
             Enabled: true
 
   CollectorLogGroup:
@@ -106,11 +107,12 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref LotesTable
       Events:
-        DailySchedule:
+        FrequentSchedule:
           Type: Schedule
           Properties:
-            Schedule: cron(30 7 * * ? *)
-            Description: Run Palacio collector daily at 04:30 BRT (07:30 UTC)
+            # Every 3 hours BRT, 30 minutes after the Sodré collector
+            Schedule: cron(30 1,4,7,10,13,16,19,22 * * ? *)
+            Description: Run Palacio collector every 3 hours so late-added lots are captured before auction day
             Enabled: true
 
   PalacioCollectorLogGroup:

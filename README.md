@@ -1,18 +1,19 @@
 # VerifyRadar
 
-Daily collector for **Sodré Santoro** vehicle auction lots. Enriches each lot with **FIPE** prices and stores results in **DynamoDB** with TTL. Includes a **Streamlit** dashboard to rank the best deals (bid vs FIPE).
+Frequent collector for **Sodré Santoro** and **Palácio** vehicle auction lots. Enriches each lot with **FIPE** prices and stores results in **DynamoDB** with TTL. Includes a **Streamlit** dashboard to rank the best deals (bid vs FIPE).
 
 ## Architecture
 
 ```
-EventBridge (04:00 BRT) → Lambda Sodré collector
-EventBridge (04:30 BRT) → Lambda Palácio collector
+EventBridge (every 3h BRT) → Lambda Sodré collector
+EventBridge (every 3h + 30min) → Lambda Palácio collector
                               ↓
                     DynamoDB (TTL = auction end + 1 day)
                               ↓
-GitHub Actions (05:00 BRT) → docs/data/lotes.json → Pages
+GitHub Actions (hourly) → docs/data/lotes.json → Pages
                               ↓
-                    Laravel app (`web/`) 05:30 BRT → e-mail digest
+                    Laravel app (`web/`) every 15 min → catalog
+                    Laravel hourly → e-mail digest of new matches
 ```
 
 The collectors do **not** use Cursor or browser automation. Sodré reads the public Elasticsearch index; Palácio uses the site AJAX endpoints (`listar_lote` / `exibir_lote_m`).
@@ -143,8 +144,8 @@ make aws-logs-palacio
 Stack creates:
 
 - DynamoDB table `leilao-radar-lotes` (on-demand, TTL, GSI `gsi_relevancia` + `gsi_desconto`)
-- Lambda `leilao-radar-collector` (Sodré, 04:00 BRT)
-- Lambda `leilao-radar-collector-palacio` (Palácio, 04:30 BRT)
+- Lambda `leilao-radar-collector` (Sodré, every 3 hours BRT)
+- Lambda `leilao-radar-collector-palacio` (Palácio, every 3 hours BRT, 30 min later)
 - CloudWatch Logs with 14-day retention
 
 Each lot stores `fonte` (`sodre` | `palacio`). Palácio IDs are namespaced as `palacio:{id}` to avoid PK collisions.
@@ -159,7 +160,7 @@ Public dashboard at GitHub Pages — no Streamlit server. Data is exported from 
 3. In **Settings → Secrets and variables → Actions**, add:
    - `AWS_ACCESS_KEY_ID`
    - `AWS_SECRET_ACCESS_KEY`
-4. Run the workflow **Export and GitHub Pages** manually (Actions tab) or wait for the daily schedule (05:00 BRT).
+4. Run the workflow **Export and GitHub Pages** manually (Actions tab) or wait for the hourly schedule.
 
 ### GitHub Pages snapshot
 
@@ -188,7 +189,7 @@ make web-test
 ```
 
 - Trial de 7 dias no cadastro. Depois disso, ative em `/admin/assinantes` (e-mails em `APP_ADMIN_EMAILS`).
-- Cron: `radar:sync-lots` 05:20 BRT, `radar:dispatch-alerts --skip-sync` 05:30 BRT e `radar:dispatch-auction-reminders` a cada 10 min (`web/routes/console.php`).
+- Cron: `radar:sync-lots` every 15 min, `radar:dispatch-alerts --skip-sync` hourly e `radar:dispatch-auction-reminders` a cada 10 min (`web/routes/console.php`).
 - Dois e-mails distintos: digest da **faixa** (preferências) e lembrete de **1 hora** só para lotes com “Tenho interesse”.
 - WhatsApp: campo + opt-in no cadastro; envio só com `RADAR_WHATSAPP_ENABLED=true` e credenciais Meta Cloud API.
 

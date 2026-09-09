@@ -7,9 +7,9 @@ from typing import Any
 from collector.dynamo import LotRepository, get_dynamodb_target
 from collector.palacio import PalacioClient, compute_ttl
 from shared.brands import normalize_marca
-from shared.fipe import FipeClient
+from shared.fipe import FipeClient, stored_fipe_match
 from shared.logging_config import setup_logging
-from shared.models import LotRecord, PalacioLotRaw
+from shared.models import FipeMatchResult, LotRecord, PalacioLotRaw
 from shared.photos import PALACIO_HOST, normalize_lot_pictures
 from shared.scoring import compute_relevance
 
@@ -17,16 +17,47 @@ setup_logging()
 logger = logging.getLogger("collector.palacio_handler")
 
 
-def build_lot_record(raw: PalacioLotRaw, fipe_client: FipeClient) -> LotRecord:
+def _resolve_fipe(
+    fipe_client: FipeClient,
+    previous: dict[str, Any] | None,
+    *,
+    marca: str,
+    modelo: str,
+    ano_mod: int | None,
+    combustivel: str | None,
+    categoria: str | None,
+) -> tuple[FipeMatchResult, bool]:
+    reused = stored_fipe_match(previous, marca=marca, modelo=modelo, ano_mod=ano_mod)
+    if reused:
+        return reused, True
+    return (
+        fipe_client.match_vehicle(
+            marca=marca,
+            modelo=modelo,
+            ano_mod=ano_mod,
+            combustivel=combustivel,
+            categoria=categoria,
+        ),
+        False,
+    )
+
+
+def build_lot_record(
+    raw: PalacioLotRaw,
+    fipe_client: FipeClient,
+    previous: dict[str, Any] | None = None,
+) -> tuple[LotRecord, bool]:
     lance_atual = float(raw.bid_actual or 0.0)
     lance_inicial = float(raw.bid_initial) if raw.bid_initial is not None else None
     titulo = raw.lot_title or f"{raw.lot_brand or ''} {raw.lot_model or ''}".strip()
     marca = normalize_marca(marca=raw.lot_brand, titulo=titulo)
     modelo = (raw.lot_model or "desconhecido").strip()
 
-    fipe = fipe_client.match_vehicle(
+    fipe, reused = _resolve_fipe(
+        fipe_client,
+        previous,
         marca=marca,
-        modelo=modelo or titulo,
+        modelo=modelo,
         ano_mod=raw.lot_year_model,
         combustivel=raw.lot_fuel,
         categoria=raw.lot_category,
@@ -75,7 +106,7 @@ def build_lot_record(raw: PalacioLotRaw, fipe_client: FipeClient) -> LotRecord:
         fotos=fotos,
         gsi_pk="EXCLUDED" if excluded else "LIVE",
         ttl=compute_ttl(raw.auction_date),
-    )
+    ), reused
 
 
 def run_collector() -> dict[str, Any]:
@@ -92,12 +123,22 @@ def run_collector() -> dict[str, Any]:
     matched = 0
     closest = 0
     failed = 0
+    errors = 0
+    fipe_reused = 0
 
     with PalacioClient() as palacio, FipeClient() as fipe:
         logger.info("Coletando Automovel no Palácio dos Leilões...")
         for raw in palacio.iter_open_vehicle_lots():
-            lot = build_lot_record(raw, fipe)
-            repo.upsert_lot(lot)
+            try:
+                previous = repo.get_lot(f"palacio:{raw.lot_id}")
+                lot, reused = build_lot_record(raw, fipe, previous=previous)
+                if reused:
+                    fipe_reused += 1
+                repo.upsert_lot(lot)
+            except Exception:
+                errors += 1
+                logger.exception("Failed to process Palácio lot %s", getattr(raw, "lot_id", "?"))
+                continue
             processed += 1
             if lot.fipe_match == "exact":
                 matched += 1
@@ -134,6 +175,8 @@ def run_collector() -> dict[str, Any]:
         "fipe_exact": matched,
         "fipe_closest": closest,
         "fipe_failed": failed,
+        "fipe_reused": fipe_reused,
+        "errors": errors,
         "table_name": table_name,
     }
     logger.info("Collector Palácio finished: %s", summary)
