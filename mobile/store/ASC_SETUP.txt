@@ -1,0 +1,83 @@
+# App Store Connect + RevenueCat (Fase 0)
+
+Apps are isolated. Never reuse FIPE IDs on Radar.
+
+| | VerifyCar FIPE | VerifyRadar |
+|---|---|---|
+| Expo slug | verifycar-fipe | verifyradar |
+| EAS project | 4bb8f297-cc54-4a32-86d1-ed2d564c483d | 3c3e1091-b565-447e-b89a-ccb95d34a9c1 |
+| Bundle ID | br.com.verifycar.fipe (JLSRJ3453U) | br.com.verifycar.radar (XK52WSZA9X) |
+| ASC app | 6812583568 | 6813936072 |
+| Provisioning profile | UA47BJP249 | VPJ946UD38 |
+| Apple team | 4PVU8R7DX2 | 4PVU8R7DX2 (same team, different profiles) |
+
+Shared on purpose (team-level, not app-level): distribution cert J3LK6VGDB9 and ASC API key U376HGSLHN.
+
+## Done
+
+- Bundle ID `br.com.verifycar.radar` + In-App Purchase capability
+- EAS project https://expo.dev/accounts/acmachado14/projects/verifyradar
+- iOS App Store credentials on EAS for Radar only (FIPE profile UA47BJP249 left untouched)
+- Production `REVENUECAT_WEBHOOK_AUTH` + product IDs written on `/home/ubuntu/leilao-radar/.env` and app/queue/scheduler recreated
+- iOS production build (with RC key): https://expo.dev/accounts/acmachado14/projects/verifyradar/builds/00a6cda6-ff2c-41e2-b584-d391c6173933
+- P8 copied to `mobile/credentials/` (gitignored)
+- ASC app `6813936072` in `eas.json` submit (not FIPE `6812583568`)
+- RevenueCat iOS public key in Radar EAS production env only (`EXPO_PUBLIC_RC_IOS_KEY`)
+
+## Still needs a logged-in Apple / RevenueCat browser
+
+The team API key U376HGSLHN can GET/UPDATE apps, not CREATE. The stored Apple ID session for cupertinoangelo@yahoo.com.br is expired. There is no RevenueCat secret in VerifyCar or Radar production.
+
+### 1. New App in App Store Connect (~1 min)
+
+https://appstoreconnect.apple.com/apps → + → New App
+
+- Platform: iOS
+- Name: VerifyRadar
+- Primary language: Portuguese (Brazil)
+- Bundle ID: br.com.verifycar.radar (already registered)
+- SKU: verifyradar
+- User access: Full Access
+
+Then paste the numeric Apple ID into `mobile/eas.json` as `submit.production.ios.ascAppId`. Do **not** use 6812583568 (FIPE).
+
+Privacy policy URL: `https://radar.verifycar.com.br/privacidade`
+
+### 2. Paid Apps Agreement
+
+Agreements, Tax, and Banking → Paid Apps → Active (required before IAP review).
+
+### 3. Subscriptions
+
+Subscriptions → group `VerifyRadar`:
+
+| Product ID | Reference name | Duration | Intro offer |
+|---|---|---|---|
+| `radar_monthly` | Radar Mensal | 1 month | 7 days free |
+| `radar_pro_monthly` | Radar Pro Mensal | 1 month | 7 days free |
+
+Localization pt-BR. Price: Radar Mensal R$ 34,90 / Radar Pro Mensal R$ 49,90.
+
+### 4. RevenueCat project VerifyRadar (new, not FIPE)
+
+1. https://app.revenuecat.com → new project VerifyRadar (do not add this bundle to any existing app)
+2. Add iOS app, bundle `br.com.verifycar.radar`
+   In-App Purchase key: **not** `AuthKey_U376HGSLHN.p8`. Generate a Subscription Key:
+   App Store Connect → Users and Access → Integrations → In-App Purchase → Generate
+   Download `SubscriptionKey_XXXXXXXXXX.p8` (team-level; reuse on Radar, never on a FIPE RevenueCat project).
+   Issuer ID is the same as the ASC API key: `d8ba6ebc-be60-4027-a8d2-0939b3109353`
+3. Entitlements `radar` and `radar_pro` linked to the product IDs above
+4. Offering `default` with both packages
+5. Webhook URL `https://radar.verifycar.com.br/api/webhooks/revenuecat`
+   Authorization header = `REVENUECAT_WEBHOOK_AUTH` already on the server `.env`
+6. Public SDK key iOS → `EXPO_PUBLIC_RC_IOS_KEY` in EAS production env and `eas.json` build.production.env
+
+### 5. After the ASC app exists
+
+```bash
+cd mobile
+npx eas-cli submit -p ios --latest
+```
+
+Sandbox tester: App Store Connect → Users and Access → Sandbox.
+Review notes: `store/APP_REVIEW_NOTES.txt`.

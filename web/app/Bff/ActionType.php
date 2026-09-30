@@ -17,4 +17,6 @@ class ActionType
     public const LOGOUT = 'logout';
 
     public const OPEN_URL = 'open_url';
+
+    public const SHARE = 'share';
 }

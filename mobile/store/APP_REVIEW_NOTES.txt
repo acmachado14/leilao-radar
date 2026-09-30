@@ -1,0 +1,41 @@
+Reply to Guideline 2.1 (paste in App Store Connect)
+
+Thank you. Answers to the requested items:
+
+1. Screen recording
+A recording captured on a physical iPhone, starting from a cold launch, is attached to this reply. It shows: launch, account registration, login, the catalog, a lot, an AI bid-cap result, the subscription screen (title, monthly length, price, terms, and privacy), and account deletion (Conta → Apagar conta).
+The app has no public user-generated content, so there is no reporting or blocking flow. Saved searches and AI results stay private to the signed-in account.
+
+2. Purpose and audience
+VerifyRadar helps people in Brazil who buy cars at auction decide a maximum bid. It lists upcoming vehicle lots, compares the current bid with the FIPE reference price, and can produce an AI bid cap (risk, estimated resale, costs, and a suggested maximum bid). The free account includes the full catalog and 3 AI analyses per month. A paid subscription is optional.
+
+3. How to access the main features
+Demo account (already in Sign-In Information):
+Email: review@verifycar.com.br
+Password: RadarReview#2026k7
+
+- Ofertas: catalog. Tap a lot for photos, current bid, FIPE, and the official auction link.
+- Pedir parecer da IA: AI bid cap for that lot.
+- Meus: lots marked “Tenho interesse”.
+- Recortes: private email alert filters.
+- Planos: optional subscriptions.
+- Conta → Apagar conta: permanent account deletion.
+No sample file is required.
+
+4. External services
+- Public vehicle-auction listings (Sodré Santoro and Palácio dos Leilões) and the Brazilian FIPE reference table, loaded by our server.
+- Google Gemini, used only to write the AI bid-cap analysis.
+- Apple In-App Purchase (StoreKit). Subscription status is confirmed with our server after purchase. There is no web, WhatsApp, or third-party checkout in the app.
+
+5. Regions
+The same features are available in every App Store region. The catalog content is Brazilian auction lots, and the interface is Portuguese (Brazil). Subscription price follows the local App Store price tier.
+
+6. Regulated industry and third-party material
+The app is not an auction house, lender, insurer, or broker, and it does not sell vehicles. Listings are publicly published by the auction houses; the lot screen links to the official auction page. FIPE figures and AI bid caps are informational estimates, not a purchase offer. No additional license credential is required to review the app.
+
+7. In-App Purchases
+Two auto-renewable monthly subscriptions, both with a 7-day introductory offer:
+- radar_monthly — Radar — R$ 34,90/month — 20 AI analyses/month and alert filters.
+- radar_pro_monthly — Radar Pro — R$ 49,90/month — 80 AI analyses/month, a more detailed report, and more alert filters.
+Open the Planos tab (also shown after sign-up, with “Continuar grátis” to skip). Each plan shows the title, “Mensal”, the price, the 7-day intro, auto-renewal terms, Restore Purchases, Terms of Use, Privacy Policy, and the Apple Standard EULA.
+Users who already paid on our website see an active plan and no buy button. The iOS app never links to an external purchase.

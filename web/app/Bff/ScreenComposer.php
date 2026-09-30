@@ -322,6 +322,13 @@ class ScreenComposer
                 'action' => 'toggle_interest',
                 'params' => ['id' => $lot->lote_id],
             ]),
+            Node::make(ComponentType::BUTTON, [
+                'label' => 'Compartilhar',
+                'style' => 'secondary',
+            ], onPress: [
+                'type' => ActionType::SHARE,
+                'url' => $lot->shareUrl(),
+            ]),
         ];
 
         if (is_string($lot->url) && $lot->url !== '') {

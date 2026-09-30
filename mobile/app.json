@@ -1,0 +1,66 @@
+{
+  "expo": {
+    "name": "VerifyRadar",
+    "slug": "verifyradar",
+    "version": "1.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "verifyradar",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#f2f2f7"
+    },
+    "ios": {
+      "icon": "./assets/icon.png",
+      "supportsTablet": false,
+      "bundleIdentifier": "br.com.verifycar.radar",
+      "appleTeamId": "4PVU8R7DX2",
+      "buildNumber": "12",
+      "infoPlist": {
+        "CFBundleDisplayName": "VerifyRadar",
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIUserInterfaceStyle": "Light"
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "CA92.1"
+            ]
+          }
+        ]
+      }
+    },
+    "android": {
+      "package": "br.com.verifycar.radar",
+      "versionCode": 1
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-web-browser",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#f2f2f7"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3c3e1091-b565-447e-b89a-ccb95d34a9c1"
+      }
+    },
+    "owner": "acmachado14"
+  }
+}

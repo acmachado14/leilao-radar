@@ -208,10 +208,17 @@ class BffScreenTest extends TestCase
         $this->assertStringContainsString('Lance atual', $response->getContent());
         $this->assertStringContainsString('Tabela FIPE', $response->getContent());
         $this->assertStringContainsString('Guarulhos', $response->getContent());
-        $openUrl = collect($response->json('components'))->first(
-            fn ($node) => ($node['onPress']['type'] ?? null) === 'open_url'
+        $share = collect($response->json('components'))->first(
+            fn ($node) => ($node['props']['label'] ?? '') === 'Compartilhar'
         );
-        $this->assertNotNull($openUrl);
+        $this->assertSame('share', $share['onPress']['type'] ?? null);
+        $this->assertStringContainsString('/ofertas#lote=', $share['onPress']['url'] ?? '');
+        $this->assertStringContainsString('link-1', $share['onPress']['url'] ?? '');
+
+        $openUrl = collect($response->json('components'))->first(
+            fn ($node) => ($node['props']['label'] ?? '') === 'Ver no Palácio'
+        );
+        $this->assertSame('open_url', $openUrl['onPress']['type'] ?? null);
         $this->assertSame('https://www.leilaopalacio.com.br/lote/link-1', $openUrl['onPress']['url'] ?? null);
     }
 

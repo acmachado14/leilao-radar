@@ -1,0 +1,41 @@
+App Store Connect assets
+========================
+
+## App icon (1024) — header of App Store Connect
+
+The icon on the iPhone comes from the IPA. The empty rounded square next to “VerifyRadar” in App Store Connect is a *different* slot: it only fills after a processed build is selected on version 1.0, or when you upload the 1024 file.
+
+Upload this file (1024×1024 PNG, RGB, no alpha):
+
+    mobile/store/app-icon-1024.png
+
+Same file as `mobile/assets/icon.png`.
+
+## IAP review screenshot (required to submit subscriptions)
+
+This is NOT the App Store listing screenshot. It lives on each subscription:
+
+Subscriptions → VerifyRadar → radar_monthly (and again radar_pro_monthly)
+→ Review Information → App Review Screenshot
+
+Apple rejects the wrong *size*, not the paywall content. Use a 6.7" iPhone size:
+
+    1290 × 2796 PNG, RGB, no transparency
+
+Ready-to-upload file (same image for both products):
+
+    mobile/store/iap-review-screenshot.png
+
+It shows Radar R$ 34,90, Radar Pro R$ 49,90, monthly auto-renew, 7-day intro, Assinar, Continuar grátis.
+
+Do **not** upload the 1024 app icon into this field (that slot is the promotional image, next to it).
+
+Optional: a real TestFlight capture of the Planos tab also works if the pixel size is exactly 1290×2796, 1284×2778, or 1320×2868. A raw screenshot from a 6.1" iPhone (1179×2556) is rejected.
+
+Review notes (paste on each product, ≤4000 chars):
+
+Free account first (catalog + 3 AI analyses). Open the Planos tab to buy.
+radar_monthly = Radar, monthly, R$ 34,90, 7-day intro.
+radar_pro_monthly = Radar Pro, monthly, R$ 49,90, 7-day intro.
+Restore Purchases is on the same screen. No WhatsApp or web checkout in iOS.
+Demo: review@verifycar.com.br (password in app review notes).

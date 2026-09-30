@@ -1,0 +1,33 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://radar.verifycar.com.br",
+        "EXPO_PUBLIC_RC_IOS_KEY": "appl_QBSkeuPskAxnmHlMCsMyaqiMgyk"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "6813936072",
+        "appleTeamId": "4PVU8R7DX2",
+        "ascApiKeyId": "U376HGSLHN",
+        "ascApiKeyIssuerId": "d8ba6ebc-be60-4027-a8d2-0939b3109353",
+        "ascApiKeyPath": "./credentials/AuthKey_U376HGSLHN.p8"
+      }
+    }
+  }
+}
