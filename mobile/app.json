@@ -18,7 +18,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "br.com.verifycar.radar",
       "appleTeamId": "4PVU8R7DX2",
-      "buildNumber": "13",
+      "buildNumber": "14",
       "infoPlist": {
         "CFBundleDisplayName": "VerifyRadar",
         "ITSAppUsesNonExemptEncryption": false,
