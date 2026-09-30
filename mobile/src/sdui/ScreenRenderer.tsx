@@ -6,6 +6,7 @@ import {
   FlatList,
   Image,
   Linking,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -17,7 +18,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchMe, fetchScreen, postAction } from '../api';
 import { setToken } from '../auth';
 import { configurePurchases, purchase, restore } from '../purchases';
@@ -49,8 +50,11 @@ const BACK_LABELS: Record<string, string> = {
   account: 'Conta',
 };
 
+type BusyKind = 'purchase' | 'restore';
+
 export function ScreenRenderer({ initial = 'catalog' }: { initial?: string }) {
   const { colors } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => createScreenStyles(colors), [colors]);
   const screenWidth = Dimensions.get('window').width;
   const [screenName, setScreenName] = useState(initial);
@@ -70,6 +74,7 @@ export function ScreenRenderer({ initial = 'catalog' }: { initial?: string }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState<BusyKind | null>(null);
   const [stack, setStack] = useState<Frame[]>([{ name: initial, params: {} }]);
   const stackRef = useRef<Frame[]>([{ name: initial, params: {} }]);
   const translateX = useSharedValue(0);
@@ -317,6 +322,7 @@ export function ScreenRenderer({ initial = 'catalog' }: { initial?: string }) {
       if (!id) {
         return;
       }
+      setBusy('purchase');
       try {
         const result = await purchase(id);
         if (result === 'cancelled') {
@@ -336,17 +342,22 @@ export function ScreenRenderer({ initial = 'catalog' }: { initial?: string }) {
           'Não foi possível assinar',
           'A compra acontece na App Store. Tente de novo em alguns instantes ou toque em Restaurar compras.',
         );
+      } finally {
+        setBusy(null);
       }
       return;
     }
 
     if (action.type === 'restore') {
+      setBusy('restore');
       try {
         await restore();
         rememberFrame('account', {});
         await load('account');
       } catch {
         Alert.alert('Restaurar compras', 'Nenhuma compra foi encontrada neste Apple ID.');
+      } finally {
+        setBusy(null);
       }
       return;
     }
@@ -526,7 +537,7 @@ export function ScreenRenderer({ initial = 'catalog' }: { initial?: string }) {
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.stackHost}>
         {underlayDocument ? (
           <View style={styles.underlay} pointerEvents="none">
@@ -546,7 +557,7 @@ export function ScreenRenderer({ initial = 'catalog' }: { initial?: string }) {
           </Animated.View>
       </View>
       {tabs.length > 0 ? (
-        <View style={styles.tabs}>
+        <View style={[styles.tabs, { paddingBottom: Math.max(insets.bottom, 8) }]}>
           {tabs.map((tab) => {
             const icons = TAB_ICONS[tab.id];
             const iconName = tab.active ? icons?.filled : icons?.outline;
@@ -565,6 +576,21 @@ export function ScreenRenderer({ initial = 'catalog' }: { initial?: string }) {
           })}
         </View>
       ) : null}
+      <Modal visible={busy !== null} transparent animationType="fade" statusBarTranslucent>
+        <View style={styles.busyBackdrop}>
+          <View style={styles.busyCard}>
+            <ActivityIndicator color={colors.accent} size="large" />
+            <Text style={styles.busyTitle}>
+              {busy === 'restore' ? 'Restaurando compras…' : 'Abrindo a App Store…'}
+            </Text>
+            <Text style={styles.busySubtitle}>
+              {busy === 'restore'
+                ? 'Sincronizando sua assinatura com a Apple.'
+                : 'Aguarde o sheet de pagamento da Apple.'}
+            </Text>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -620,7 +646,7 @@ function createScreenStyles(colors: ThemeColors) {
       gap: 12,
       paddingHorizontal: 20,
       paddingTop: 8,
-      paddingBottom: 10,
+      paddingBottom: 12,
     },
     navBarCompact: {
       minHeight: 44,
@@ -643,8 +669,8 @@ function createScreenStyles(colors: ThemeColors) {
     },
     content: { paddingHorizontal: 20, paddingTop: 8, gap: 12, paddingBottom: 8 },
     footer: { paddingHorizontal: 20, paddingBottom: 32, gap: 12 },
-    listContent: { paddingBottom: 24 },
-    formContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 40, gap: 12, flexGrow: 1 },
+    listContent: { paddingTop: 8, paddingBottom: 24, gap: 12 },
+    formContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 40, gap: 16, flexGrow: 1 },
     row: { paddingHorizontal: 20 },
     center: { flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center', padding: 24 },
     error: { color: colors.danger, textAlign: 'center', marginBottom: 12 },
@@ -656,11 +682,29 @@ function createScreenStyles(colors: ThemeColors) {
       borderTopColor: colors.border,
       backgroundColor: colors.card,
       paddingTop: 6,
-      paddingBottom: 4,
     },
     tab: { flex: 1, paddingVertical: 6, alignItems: 'center', gap: 3, borderRadius: 12 },
     tabSelected: { backgroundColor: colors.accentSoft },
     tabLabel: { color: colors.dim, fontSize: 12, fontWeight: '700' },
     tabActive: { color: colors.accent },
+    busyBackdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.35)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 32,
+    },
+    busyCard: {
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: 24,
+      alignItems: 'center',
+      gap: 12,
+      maxWidth: 300,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    busyTitle: { color: colors.text, fontSize: 17, fontWeight: '700', textAlign: 'center' },
+    busySubtitle: { color: colors.muted, fontSize: 14, textAlign: 'center', lineHeight: 20 },
   });
 }

@@ -723,7 +723,7 @@ function createRegistryStyles(colors: ThemeColors) {
     borderWidth: 1,
     borderRadius: 18,
     overflow: 'hidden',
-    marginBottom: 16,
+    marginBottom: 10,
   },
   feedPhoto: { width: '100%', aspectRatio: 16 / 10, backgroundColor: colors.photoBg },
   feedBody: { paddingHorizontal: 14, paddingVertical: 12, gap: 8 },
