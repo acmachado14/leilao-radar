@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LotEvaluationController;
 use App\Http\Controllers\LotInterestController;
 use App\Http\Controllers\SessionController;
@@ -21,6 +22,8 @@ use App\Livewire\WaitingApproval;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', Home::class)->name('home');
+Route::get('/termos', [LegalController::class, 'terms'])->name('legal.terms');
+Route::get('/privacidade', [LegalController::class, 'privacy'])->name('legal.privacy');
 Route::get('/ofertas', Catalog::class)->name('catalog');
 Route::get('/register', Register::class)->name('register');
 Route::get('/login', Login::class)->name('login');

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Concerns;
 
+use App\Constants\EntitlementSource;
 use App\Constants\Plan;
 use App\Constants\SubscriptionStatus;
 use App\Models\User;
@@ -16,6 +17,9 @@ trait ManagesSubscribers
         $user->update([
             'subscription_status' => SubscriptionStatus::ACTIVE,
             'plan' => $user->plan === Plan::RADAR_PRO ? Plan::RADAR_PRO : Plan::RADAR,
+            'entitlement_source' => $user->entitlement_source === EntitlementSource::IAP
+                ? EntitlementSource::IAP
+                : EntitlementSource::WEB,
             'subscription_until' => now()->addDays($days),
             'approved_at' => now(),
             'rejected_at' => null,

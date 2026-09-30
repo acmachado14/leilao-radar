@@ -23,7 +23,7 @@
     <article class="plan-card plan-card-featured max-w-xl">
         <p class="plan-badge">Recomendado</p>
         <h2 class="plan-name">{{ $pro['name'] ?? 'Radar Pro' }}</h2>
-        <p class="plan-price">{{ $pro['price'] ?? 'R$ 97/mês' }}</p>
+        <p class="plan-price">{{ $pro['price'] ?? 'R$ 49,90/mês' }}</p>
         <p class="plan-tagline">{{ $pro['tagline'] ?? '' }}</p>
         <ul class="plan-features">
             @foreach ($pro['features'] ?? [] as $feature)

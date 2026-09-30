@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Mail;
+use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable([
     'name',
@@ -26,6 +27,8 @@ use Illuminate\Support\Facades\Mail;
     'active',
     'subscription_status',
     'plan',
+    'entitlement_source',
+    'revenuecat_app_user_id',
     'subscription_until',
     'approved_at',
     'rejected_at',
@@ -35,7 +38,7 @@ use Illuminate\Support\Facades\Mail;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasUuid, Notifiable;
+    use HasApiTokens, HasFactory, HasUuid, Notifiable;
 
     protected function casts(): array
     {

@@ -23,6 +23,25 @@ return [
     'sales' => [
         'whatsapp' => env('RADAR_SALES_WHATSAPP', '5531986268630'),
     ],
+    'ios' => [
+        'min_ipa_version' => env('RADAR_IOS_MIN_IPA_VERSION', '1.0.0'),
+        'bundle_id' => env('RADAR_IOS_BUNDLE_ID', 'br.com.verifycar.radar'),
+    ],
+    'bff' => [
+        'schema_version' => 1,
+        'catalog_limit' => (int) env('RADAR_BFF_CATALOG_LIMIT', 100),
+    ],
+    'revenuecat' => [
+        'webhook_auth' => env('REVENUECAT_WEBHOOK_AUTH'),
+        'products' => [
+            env('REVENUECAT_PRODUCT_RADAR', 'radar_monthly') => 'radar',
+            env('REVENUECAT_PRODUCT_RADAR_PRO', 'radar_pro_monthly') => 'radar_pro',
+        ],
+        'packages' => [
+            'radar' => env('REVENUECAT_PACKAGE_RADAR', 'radar_monthly'),
+            'radar_pro' => env('REVENUECAT_PACKAGE_RADAR_PRO', 'radar_pro_monthly'),
+        ],
+    ],
     'plans' => [
         'trial' => [
             'name' => 'Trial',
@@ -43,7 +62,7 @@ return [
         'radar' => [
             'name' => 'Radar',
             'tagline' => 'Alertas no ponto + IA para não pagar caro no pátio.',
-            'price' => 'R$ 49/mês',
+            'price' => 'R$ 34,90/mês',
             'price_note' => 'Ativação manual após o WhatsApp.',
             'analyses_per_month' => 20,
             'alerts' => 6,
@@ -59,7 +78,7 @@ return [
         'radar_pro' => [
             'name' => 'Radar Pro',
             'tagline' => 'Quem vive de leilão usa IA em todo lote sério.',
-            'price' => 'R$ 97/mês',
+            'price' => 'R$ 49,90/mês',
             'price_note' => 'Prioridade na fila de aprovação.',
             'analyses_per_month' => 80,
             'alerts' => 12,

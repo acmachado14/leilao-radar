@@ -35,5 +35,6 @@
         <env name="APP_LOCALE" value="pt_BR"/>
         <env name="RADAR_WHATSAPP_ENABLED" value="false"/>
         <env name="RADAR_LOTS_PATH" value="tests/fixtures/lotes.json"/>
+        <env name="REVENUECAT_WEBHOOK_AUTH" value="rc-test-secret"/>
     </php>
 </phpunit>

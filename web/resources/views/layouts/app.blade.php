@@ -118,6 +118,10 @@
             <div class="flex flex-col gap-2">
                 <img src="{{ asset('images/brand/horizontal_branco0.png') }}" alt="VerifyCar" class="h-5 w-auto self-start">
                 <p>VerifyRadar — ofertas de leilão vs tabela FIPE.</p>
+            <p class="flex gap-4">
+                <a href="{{ route('legal.terms') }}" class="text-slate-400 hover:text-emerald-400">Termos</a>
+                <a href="{{ route('legal.privacy') }}" class="text-slate-400 hover:text-emerald-400">Privacidade</a>
+            </p>
             </div>
             <p>radar.verifycar.com.br</p>
         </div>

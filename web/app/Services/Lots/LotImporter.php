@@ -16,12 +16,15 @@ class LotImporter
         $payload = $this->loadPayload($source);
         $items = $payload['items'] ?? [];
         $count = 0;
+        $ids = [];
 
         foreach ($items as $item) {
             $loteId = (string) ($item['lote_id'] ?? '');
             if ($loteId === '') {
                 continue;
             }
+
+            $ids[] = $loteId;
 
             Lot::query()->updateOrCreate(
                 ['lote_id' => $loteId],
@@ -50,6 +53,10 @@ class LotImporter
                 ],
             );
             $count++;
+        }
+
+        if ($ids !== []) {
+            Lot::query()->whereNotIn('lote_id', $ids)->delete();
         }
 
         $this->mirrorPublicJson($payload);
