@@ -7,6 +7,23 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="{{ $metaDescription ?? 'Ofertas de leilão vs tabela FIPE. Alertas por e-mail com base nas suas preferências.' }}">
     <title>{{ $title ?? config('app.name', 'VerifyRadar') }}</title>
+    @php
+        $socialTitle = $ogTitle ?? $title ?? config('app.name', 'VerifyRadar');
+        $socialDescription = $ogDescription ?? $metaDescription ?? 'Ofertas de leilão vs tabela FIPE. Alertas por e-mail com base nas suas preferências.';
+        $socialUrl = $ogUrl ?? url()->current();
+        $socialImage = $ogImage ?? url('/images/logo.png');
+    @endphp
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="VerifyRadar">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:title" content="{{ $socialTitle }}">
+    <meta property="og:description" content="{{ $socialDescription }}">
+    <meta property="og:url" content="{{ $socialUrl }}">
+    <meta property="og:image" content="{{ $socialImage }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $socialTitle }}">
+    <meta name="twitter:description" content="{{ $socialDescription }}">
+    <meta name="twitter:image" content="{{ $socialImage }}">
     <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
     <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
     @vite(['resources/css/app.css', 'resources/css/catalog.css', 'resources/js/app.js'])

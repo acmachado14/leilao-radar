@@ -212,7 +212,7 @@ class BffScreenTest extends TestCase
             fn ($node) => ($node['props']['label'] ?? '') === 'Compartilhar'
         );
         $this->assertSame('share', $share['onPress']['type'] ?? null);
-        $this->assertStringContainsString('/ofertas#lote=', $share['onPress']['url'] ?? '');
+        $this->assertStringContainsString('/ofertas?lote=', $share['onPress']['url'] ?? '');
         $this->assertStringContainsString('link-1', $share['onPress']['url'] ?? '');
 
         $openUrl = collect($response->json('components'))->first(

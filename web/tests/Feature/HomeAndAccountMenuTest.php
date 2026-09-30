@@ -91,7 +91,7 @@ class HomeAndAccountMenuTest extends TestCase
     {
         $lot = Lot::factory()->create(['lote_id' => 'share-1']);
 
-        $this->assertStringContainsString('/ofertas#lote=share-1', $lot->shareUrl());
+        $this->assertStringContainsString('/ofertas?lote=share-1', $lot->shareUrl());
     }
 
     public function test_dashboard_redirects_to_my_lots(): void
