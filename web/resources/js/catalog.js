@@ -811,8 +811,9 @@ function lotShareId(row) {
 
 function lotShareUrl(loteId) {
   const url = new URL(window.location.href);
+  url.hash = "";
   url.search = "";
-  url.hash = loteId ? `lote=${encodeURIComponent(loteId)}` : "";
+  if (loteId) url.searchParams.set("lote", loteId);
   return url.toString();
 }
 
@@ -824,13 +825,34 @@ function readLoteFromHash() {
   return lote ? String(lote).trim() : null;
 }
 
-function setLoteHash(loteId) {
-  const next = loteId ? `#lote=${encodeURIComponent(loteId)}` : "";
-  if (window.location.hash === next) return;
-  if (next) {
-    history.pushState({ loteId }, "", next);
+function readLoteFromShare() {
+  const fromQuery = new URLSearchParams(window.location.search).get("lote");
+  if (fromQuery && String(fromQuery).trim()) {
+    return String(fromQuery).trim();
+  }
+  return readLoteFromHash();
+}
+
+function lotSharePath(loteId) {
+  const url = new URL(window.location.href);
+  url.hash = "";
+  if (loteId) {
+    url.searchParams.set("lote", loteId);
   } else {
-    history.pushState({}, "", `${window.location.pathname}${window.location.search}`);
+    url.searchParams.delete("lote");
+  }
+  return `${url.pathname}${url.search}`;
+}
+
+function setLoteHash(loteId, { replace = false } = {}) {
+  const next = lotSharePath(loteId);
+  const current = `${window.location.pathname}${window.location.search}`;
+  if (current === next && !window.location.hash) return;
+  const state = loteId ? { loteId } : {};
+  if (replace) {
+    history.replaceState(state, "", next);
+  } else {
+    history.pushState(state, "", next);
   }
 }
 
@@ -966,15 +988,21 @@ function copyShareLink(event) {
 }
 
 function openLotFromHash() {
-  const loteId = readLoteFromHash();
+  const loteId = readLoteFromShare();
   if (!loteId) {
     if (state.lightbox.row) closeLightbox({ syncHash: false });
     return;
   }
-  if (state.lightbox.row && lotShareId(state.lightbox.row) === loteId) return;
-  const row = findLotById(loteId);
-  if (row) {
-    openLightbox(row, { syncHash: false });
+  const alreadyOpen = state.lightbox.row && lotShareId(state.lightbox.row) === loteId;
+  if (!alreadyOpen) {
+    const row = findLotById(loteId);
+    if (row) {
+      openLightbox(row, { syncHash: false });
+    }
+  }
+  const hasQuery = Boolean(new URLSearchParams(window.location.search).get("lote"));
+  if (window.location.hash || !hasQuery) {
+    setLoteHash(loteId, { replace: true });
   }
 }
 

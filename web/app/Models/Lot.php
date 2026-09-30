@@ -147,7 +147,29 @@ class Lot extends Model
 
     public function shareUrl(): string
     {
-        return route('catalog').'#lote='.rawurlencode((string) $this->lote_id);
+        return route('catalog', ['lote' => (string) $this->lote_id]);
+    }
+
+    public function shareDescription(): string
+    {
+        $vehicle = trim(implode(' ', array_filter([
+            is_string($this->marca) ? $this->marca : null,
+            is_string($this->modelo) ? $this->modelo : null,
+            $this->ano_mod ? (string) $this->ano_mod : null,
+        ])));
+
+        $bits = array_values(array_filter([
+            $vehicle !== '' ? $vehicle : null,
+            is_string($this->desconto_label) && $this->desconto_label !== ''
+                ? 'Desconto '.$this->desconto_label
+                : null,
+        ]));
+
+        if ($bits === []) {
+            return 'Oferta de leilão vs tabela FIPE no VerifyRadar.';
+        }
+
+        return implode(' · ', $bits).'. Peça a IA para ver até quanto pagar.';
     }
 
     public function coverPhotoUrl(): ?string
