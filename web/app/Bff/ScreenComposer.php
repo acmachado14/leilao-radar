@@ -6,17 +6,20 @@ use App\Models\AlertPreference;
 use App\Models\Lot;
 use App\Models\LotEvaluation;
 use App\Models\User;
+use App\Services\Alerts\LotMatcher;
 use App\Services\Billing\EntitlementResolver;
 use App\Services\Billing\PlanQuota;
 use App\Support\LegalCopy;
 use App\Support\SearchYearExtractor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 class ScreenComposer
 {
     public function __construct(
         private EntitlementResolver $entitlements,
         private PlanQuota $quota,
+        private LotMatcher $lotMatcher,
     ) {}
 
     /**
@@ -486,35 +489,60 @@ class ScreenComposer
             ]);
         }
 
+        $upcomingLots = Lot::query()
+            ->orderByDesc('relevance_score')
+            ->get()
+            ->filter(fn (Lot $lot) => $lot->isUpcoming())
+            ->values();
+
         foreach ($preferences as $preference) {
             $detail = trim(($preference->search !== '' ? $preference->search : 'qualquer modelo')
                 .($preference->yearLabel() ? ' · '.$preference->yearLabel() : '')
                 .' · desconto ≥ '.(int) round(((float) $preference->min_desconto) * 100).'%');
 
-            $nodes[] = Node::make(ComponentType::GROUP, [
-                'header' => $preference->label(),
-            ], [
+            $groupChildren = [
                 Node::make(ComponentType::ROW, [
                     'label' => 'Filtros',
                     'value' => $detail,
                 ], id: 'pref-detail-'.$preference->id),
-                Node::make(ComponentType::ROW, [
-                    'label' => 'Editar',
-                    'disclosure' => true,
-                ], onPress: [
-                    'type' => ActionType::NAVIGATE,
-                    'screen' => 'alerts_edit',
-                    'params' => ['id' => $preference->id],
-                ], id: 'pref-edit-'.$preference->id),
-                Node::make(ComponentType::ROW, [
-                    'label' => 'Excluir recorte',
-                ], onPress: [
-                    'type' => ActionType::SUBMIT,
-                    'action' => 'delete_alerts',
-                    'params' => ['id' => $preference->id],
-                    'confirm' => 'Remover este recorte?',
-                ], id: 'pref-del-'.$preference->id),
-            ], id: 'pref-'.$preference->id);
+            ];
+
+            if (! $preference->isConfigured()) {
+                $groupChildren[] = Node::make(ComponentType::TEXT, [
+                    'value' => 'Defina um modelo ou marca para este recorte.',
+                    'tone' => 'muted',
+                ], id: 'pref-live-'.$preference->id);
+            } else {
+                $matched = $this->matchedLotsForPreference($upcomingLots, $preference);
+                $groupChildren[] = Node::make(ComponentType::TEXT, [
+                    'value' => $this->preferenceMatchLabel($matched->count()),
+                    'tone' => 'muted',
+                ], id: 'pref-live-'.$preference->id);
+                foreach ($matched->take(3) as $lot) {
+                    $groupChildren[] = $this->lotCard($lot);
+                }
+            }
+
+            $groupChildren[] = Node::make(ComponentType::ROW, [
+                'label' => 'Editar',
+                'disclosure' => true,
+            ], onPress: [
+                'type' => ActionType::NAVIGATE,
+                'screen' => 'alerts_edit',
+                'params' => ['id' => $preference->id],
+            ], id: 'pref-edit-'.$preference->id);
+            $groupChildren[] = Node::make(ComponentType::ROW, [
+                'label' => 'Excluir recorte',
+            ], onPress: [
+                'type' => ActionType::SUBMIT,
+                'action' => 'delete_alerts',
+                'params' => ['id' => $preference->id],
+                'confirm' => 'Remover este recorte?',
+            ], id: 'pref-del-'.$preference->id);
+
+            $nodes[] = Node::make(ComponentType::GROUP, [
+                'header' => $preference->label(),
+            ], $groupChildren, id: 'pref-'.$preference->id);
         }
 
         $nodes[] = Node::make(ComponentType::BUTTON, [
@@ -1106,5 +1134,29 @@ class ScreenComposer
                 'style' => 'primary',
             ], onPress: ['type' => ActionType::NAVIGATE, 'screen' => 'catalog']),
         ], tabs: $this->tabs('catalog'));
+    }
+
+    /**
+     * @param  Collection<int, Lot>  $upcomingLots
+     * @return Collection<int, Lot>
+     */
+    private function matchedLotsForPreference(Collection $upcomingLots, AlertPreference $preference): Collection
+    {
+        return $upcomingLots
+            ->filter(fn (Lot $lot) => $this->lotMatcher->matches($lot, $preference))
+            ->values();
+    }
+
+    private function preferenceMatchLabel(int $count): string
+    {
+        if ($count === 0) {
+            return 'Nenhuma oferta agora. O e-mail avisa quando entrar.';
+        }
+
+        if ($count === 1) {
+            return '1 oferta agora';
+        }
+
+        return $count.' ofertas agora';
     }
 }

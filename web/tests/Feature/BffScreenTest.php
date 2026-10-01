@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Constants\EntitlementSource;
 use App\Constants\Plan;
 use App\Constants\SubscriptionStatus;
+use App\Models\AlertPreference;
 use App\Models\Lot;
 use App\Models\LotEvaluation;
 use App\Models\User;
@@ -294,7 +295,7 @@ class BffScreenTest extends TestCase
         $user->alertPreferences()->create([
             'name' => 'Civic',
             'search' => 'Civic',
-            ...\App\Models\AlertPreference::defaults(),
+            ...AlertPreference::defaults(),
         ]);
         $token = $user->createToken('ios')->plainTextToken;
 
@@ -306,6 +307,65 @@ class BffScreenTest extends TestCase
         $edit = $this->withToken($token)->getJson('/bff/v1/screens/alerts_edit');
         $edit->assertOk()->assertJsonPath('screen', 'alerts_edit');
         $this->assertStringContainsString('Adicionar recorte', $edit->getContent());
+    }
+
+    public function test_alerts_screen_lists_live_lot_matches_per_recorte(): void
+    {
+        $user = User::factory()->create();
+        $user->alertPreferences()->create(array_merge(AlertPreference::defaults(), [
+            'name' => 'Civic',
+            'search' => 'Civic',
+        ]));
+        $civic = Lot::factory()->create([
+            'titulo' => 'Honda Civic EXL',
+            'marca' => 'Honda',
+            'modelo' => 'Civic EXL',
+        ]);
+        Lot::factory()->create([
+            'titulo' => 'Toyota Corolla Xei',
+            'marca' => 'Toyota',
+            'modelo' => 'Corolla Xei',
+        ]);
+        $token = $user->createToken('ios')->plainTextToken;
+
+        $response = $this->withToken($token)->getJson('/bff/v1/screens/alerts');
+        $response->assertOk();
+
+        $this->assertStringContainsString('1 oferta agora', $response->getContent());
+        $lotCardIds = $this->nestedComponentIds($response->json('components'), 'LotCard');
+        $this->assertContains($civic->lote_id, $lotCardIds);
+        $this->assertCount(1, $lotCardIds);
+
+        $user->alertPreferences()->delete();
+        $user->alertPreferences()->create(array_merge(AlertPreference::defaults(), [
+            'name' => 'Só Civic',
+            'search' => 'Civic',
+        ]));
+        Lot::query()->delete();
+
+        $empty = $this->withToken($token)->getJson('/bff/v1/screens/alerts');
+        $empty->assertOk();
+        $this->assertStringContainsString('Nenhuma oferta agora. O e-mail avisa quando entrar.', $empty->getContent());
+        $this->assertSame([], $this->nestedComponentIds($empty->json('components'), 'LotCard'));
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $nodes
+     * @return list<string>
+     */
+    private function nestedComponentIds(array $nodes, string $type): array
+    {
+        $ids = [];
+        foreach ($nodes as $node) {
+            if (($node['type'] ?? '') === $type && isset($node['id'])) {
+                $ids[] = (string) $node['id'];
+            }
+            if (isset($node['children']) && is_array($node['children'])) {
+                $ids = [...$ids, ...$this->nestedComponentIds($node['children'], $type)];
+            }
+        }
+
+        return $ids;
     }
 
     public function test_pending_evaluation_screen_has_ai_loading_and_polls(): void
