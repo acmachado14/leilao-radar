@@ -19,7 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { fetchMe, fetchScreen, postAction } from '../api';
+import { fetchMe, fetchScreen, postAction, resolveLaunchScreen } from '../api';
 import { setToken } from '../auth';
 import { configurePurchases, purchase, restore } from '../purchases';
 import { useAppTheme, type ThemeColors } from '../theme';
@@ -110,34 +110,36 @@ export function ScreenRenderer({ initial = 'catalog' }: { initial?: string }) {
   }, []);
 
   useEffect(() => {
-    fetchMe()
-      .then((me) => {
-        if (me?.id) {
-          return configurePurchases(String(me.id));
-        }
-      })
-      .catch(() => undefined);
-  }, []);
-
-  useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    fetchScreen(initial)
-      .then((next) => {
-        if (!cancelled) {
-          setDocument(next);
-          setScreenName(next.screen);
-          screenRef.current = next.screen;
-          setForm(collectDefaults(next.components ?? []));
-          applyDocumentToStack(next, {});
+    (async () => {
+      try {
+        const launchScreen = await resolveLaunchScreen(initial);
+        const next = await fetchScreen(launchScreen);
+        if (cancelled) {
+          return;
         }
-      })
-      .catch((err: Error) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+        setDocument(next);
+        setScreenName(next.screen);
+        screenRef.current = next.screen;
+        setParams({});
+        setForm(collectDefaults(next.components ?? []));
+        writeStack([{ name: next.screen, params: {}, document: next }]);
+
+        const me = await fetchMe().catch(() => null);
+        if (me?.id) {
+          await configurePurchases(String(me.id)).catch(() => undefined);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Falha ao abrir o app');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    })();
     return () => {
       cancelled = true;
     };

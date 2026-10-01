@@ -48,9 +48,32 @@ export async function postAction(name: string, payload: Record<string, unknown> 
 
 export async function fetchMe(): Promise<{ id: string } | null> {
   const response = await fetch(`${BASE}/api/v1/me`, { headers: await headers() });
-  if (!response.ok) {
+  if (response.status === 401 || response.status === 403) {
     return null;
+  }
+  if (!response.ok) {
+    throw new Error(`Perfil indisponível (${response.status})`);
   }
   const body = (await response.json()) as { user?: { id?: string } };
   return body.user?.id ? { id: String(body.user.id) } : null;
+}
+
+export async function resolveLaunchScreen(guestFallback = 'login'): Promise<string> {
+  const token = await getToken();
+  if (!token) {
+    return guestFallback;
+  }
+
+  try {
+    const me = await fetchMe();
+    if (!me) {
+      await setToken(null);
+      return guestFallback;
+    }
+  } catch {
+    // Keep the saved session when offline or the API is briefly unavailable.
+    return 'catalog';
+  }
+
+  return 'catalog';
 }
