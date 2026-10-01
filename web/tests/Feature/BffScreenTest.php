@@ -345,7 +345,9 @@ class BffScreenTest extends TestCase
 
         $empty = $this->withToken($token)->getJson('/bff/v1/screens/alerts');
         $empty->assertOk();
-        $this->assertStringContainsString('Nenhuma oferta agora. O e-mail avisa quando entrar.', $empty->getContent());
+        $empty->assertJsonFragment([
+            'value' => 'Nenhuma oferta até agora. O e-mail avisa quando entrar.',
+        ]);
         $this->assertSame([], $this->nestedComponentIds($empty->json('components'), 'LotCard'));
     }
 

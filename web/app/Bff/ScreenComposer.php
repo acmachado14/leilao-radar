@@ -508,17 +508,12 @@ class ScreenComposer
             ];
 
             $matched = null;
+            $liveStatus = null;
             if (! $preference->isConfigured()) {
-                $groupChildren[] = Node::make(ComponentType::TEXT, [
-                    'value' => 'Defina um modelo ou marca para este recorte.',
-                    'tone' => 'muted',
-                ], id: 'pref-live-'.$preference->id);
+                $liveStatus = 'Defina um modelo ou marca para este recorte.';
             } else {
                 $matched = $this->matchedLotsForPreference($upcomingLots, $preference);
-                $groupChildren[] = Node::make(ComponentType::TEXT, [
-                    'value' => $this->preferenceMatchLabel($matched->count()),
-                    'tone' => 'muted',
-                ], id: 'pref-live-'.$preference->id);
+                $liveStatus = $this->preferenceMatchLabel($matched->count());
             }
 
             $groupChildren[] = Node::make(ComponentType::ROW, [
@@ -541,6 +536,13 @@ class ScreenComposer
             $nodes[] = Node::make(ComponentType::GROUP, [
                 'header' => $preference->label(),
             ], $groupChildren, id: 'pref-'.$preference->id);
+
+            if ($liveStatus !== null) {
+                $nodes[] = Node::make(ComponentType::TEXT, [
+                    'value' => $liveStatus,
+                    'tone' => 'muted',
+                ], id: 'pref-live-'.$preference->id);
+            }
 
             if ($matched !== null) {
                 foreach ($matched->take(3) as $lot) {
@@ -1154,7 +1156,7 @@ class ScreenComposer
     private function preferenceMatchLabel(int $count): string
     {
         if ($count === 0) {
-            return 'Nenhuma oferta agora. O e-mail avisa quando entrar.';
+            return 'Nenhuma oferta até agora. O e-mail avisa quando entrar.';
         }
 
         if ($count === 1) {
