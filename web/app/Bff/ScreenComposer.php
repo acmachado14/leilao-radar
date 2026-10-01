@@ -507,6 +507,7 @@ class ScreenComposer
                 ], id: 'pref-detail-'.$preference->id),
             ];
 
+            $matched = null;
             if (! $preference->isConfigured()) {
                 $groupChildren[] = Node::make(ComponentType::TEXT, [
                     'value' => 'Defina um modelo ou marca para este recorte.',
@@ -518,9 +519,6 @@ class ScreenComposer
                     'value' => $this->preferenceMatchLabel($matched->count()),
                     'tone' => 'muted',
                 ], id: 'pref-live-'.$preference->id);
-                foreach ($matched->take(3) as $lot) {
-                    $groupChildren[] = $this->lotCard($lot);
-                }
             }
 
             $groupChildren[] = Node::make(ComponentType::ROW, [
@@ -543,6 +541,12 @@ class ScreenComposer
             $nodes[] = Node::make(ComponentType::GROUP, [
                 'header' => $preference->label(),
             ], $groupChildren, id: 'pref-'.$preference->id);
+
+            if ($matched !== null) {
+                foreach ($matched->take(3) as $lot) {
+                    $nodes[] = $this->lotCard($lot);
+                }
+            }
         }
 
         $nodes[] = Node::make(ComponentType::BUTTON, [

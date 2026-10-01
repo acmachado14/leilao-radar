@@ -73,12 +73,21 @@ export function RenderNode(props: Props): ReactNode {
         <View key={node.id} style={styles.group}>
           {p.header ? <Text style={styles.groupHeader}>{String(p.header)}</Text> : null}
           <View style={styles.groupCard}>
-            {(node.children ?? []).map((child, index) => (
-              <View key={child.id ?? `${child.type}-${index}`}>
-                {index > 0 ? <View style={styles.groupHairline} /> : null}
-                <RenderNode {...props} node={child} />
-              </View>
-            ))}
+            {(node.children ?? []).map((child, index) => {
+              const insetStyle = child.type === 'Row' ? undefined : styles.groupInset;
+              return (
+                <View key={child.id ?? `${child.type}-${index}`}>
+                  {index > 0 ? <View style={styles.groupHairline} /> : null}
+                  {insetStyle ? (
+                    <View style={insetStyle}>
+                      <RenderNode {...props} node={child} />
+                    </View>
+                  ) : (
+                    <RenderNode {...props} node={child} />
+                  )}
+                </View>
+              );
+            })}
           </View>
           {p.footer ? <Text style={styles.groupFooter}>{String(p.footer)}</Text> : null}
         </View>
@@ -785,6 +794,7 @@ function createRegistryStyles(colors: ThemeColors) {
     overflow: 'hidden',
   },
   groupHairline: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 16 },
+  groupInset: { paddingHorizontal: 16, paddingVertical: 10 },
   groupFooter: { color: colors.muted, fontSize: 13, lineHeight: 18, marginTop: 8, marginHorizontal: 4 },
   settingsRow: {
     minHeight: 48,
