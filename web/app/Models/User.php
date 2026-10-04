@@ -185,6 +185,11 @@ class User extends Authenticatable
         return $this->hasMany(LotAlertSend::class);
     }
 
+    public function devicePushTokens(): HasMany
+    {
+        return $this->hasMany(DevicePushToken::class);
+    }
+
     public function lotInterests(): HasMany
     {
         return $this->hasMany(LotInterest::class);

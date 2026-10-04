@@ -8,12 +8,17 @@ use App\Mail\AuctionReminderMail;
 use App\Models\Lot;
 use App\Models\LotAlertSend;
 use App\Models\User;
+use App\Services\Push\UserPushNotifier;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Mail;
 
 class AuctionReminderDispatcher
 {
+    public function __construct(
+        private UserPushNotifier $push,
+    ) {}
+
     /**
      * @return array{users: int, emails: int, skipped: int}
      */
@@ -77,7 +82,15 @@ class AuctionReminderDispatcher
 
                 $digest = $fresh->take((int) config('radar.digest_limit', 8));
                 Mail::to($user->email)->queue(new AuctionReminderMail($user, $digest));
-                $this->markSent($user, $digest);
+                $this->markSent($user, $digest, NotificationChannelName::EMAIL);
+
+                $pushFresh = $this->unsents($user, $matched, NotificationChannelName::PUSH);
+                if ($pushFresh->isNotEmpty()) {
+                    $pushDigest = $pushFresh->take((int) config('radar.digest_limit', 8));
+                    $this->push->send($user, $pushDigest, AlertSendKind::AUCTION_REMINDER);
+                    $this->markSent($user, $pushDigest, NotificationChannelName::PUSH);
+                }
+
                 $emails++;
                 $users++;
             });
@@ -89,11 +102,11 @@ class AuctionReminderDispatcher
      * @param  Collection<int, Lot>  $lots
      * @return Collection<int, Lot>
      */
-    private function unsents(User $user, Collection $lots): Collection
+    private function unsents(User $user, Collection $lots, string $channel = NotificationChannelName::EMAIL): Collection
     {
         $already = LotAlertSend::query()
             ->where('user_id', $user->id)
-            ->where('channel', NotificationChannelName::EMAIL)
+            ->where('channel', $channel)
             ->where('kind', AlertSendKind::AUCTION_REMINDER)
             ->whereIn('lote_id', $lots->pluck('lote_id'))
             ->pluck('lote_id')
@@ -105,14 +118,14 @@ class AuctionReminderDispatcher
     /**
      * @param  Collection<int, Lot>  $lots
      */
-    private function markSent(User $user, Collection $lots): void
+    private function markSent(User $user, Collection $lots, string $channel): void
     {
         foreach ($lots as $lot) {
             LotAlertSend::query()->firstOrCreate(
                 [
                     'user_id' => $user->id,
                     'lote_id' => $lot->lote_id,
-                    'channel' => NotificationChannelName::EMAIL,
+                    'channel' => $channel,
                     'kind' => AlertSendKind::AUCTION_REMINDER,
                 ],
                 ['sent_at' => now()],

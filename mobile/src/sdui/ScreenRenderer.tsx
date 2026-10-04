@@ -1,3 +1,4 @@
+import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from 'react';
 import {
   ActivityIndicator,
@@ -21,6 +22,7 @@ import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchMe, fetchScreen, postAction, resolveLaunchScreen } from '../api';
 import { setToken } from '../auth';
+import { parsePushNavigation, registerIosPushTokenIfPossible, unregisterIosPushToken } from '../push';
 import { configurePurchases, purchase, restore } from '../purchases';
 import { useAppTheme, type ThemeColors } from '../theme';
 import { RenderNode } from './registry';
@@ -129,6 +131,7 @@ export function ScreenRenderer({ initial = 'catalog' }: { initial?: string }) {
         const me = await fetchMe().catch(() => null);
         if (me?.id) {
           await configurePurchases(String(me.id)).catch(() => undefined);
+          await registerIosPushTokenIfPossible().catch(() => undefined);
         }
       } catch (err) {
         if (!cancelled) {
@@ -223,6 +226,7 @@ export function ScreenRenderer({ initial = 'catalog' }: { initial?: string }) {
       const me = await fetchMe();
       if (me?.id) {
         await configurePurchases(me.id);
+        await registerIosPushTokenIfPossible().catch(() => undefined);
       }
     }
   }
@@ -313,6 +317,7 @@ export function ScreenRenderer({ initial = 'catalog' }: { initial?: string }) {
     }
 
     if (action.type === 'logout') {
+      await unregisterIosPushToken().catch(() => undefined);
       const next = await postAction('logout');
       await setToken(null);
       await applyDocument(next);
@@ -380,6 +385,31 @@ export function ScreenRenderer({ initial = 'catalog' }: { initial?: string }) {
       }
     }
   }
+
+  const handleActionRef = useRef(handleAction);
+  handleActionRef.current = handleAction;
+
+  useEffect(() => {
+    const openFromResponse = (response: Notifications.NotificationResponse | null) => {
+      if (!response) {
+        return;
+      }
+      const navigation = parsePushNavigation(response.notification.request.content.data);
+      if (!navigation) {
+        return;
+      }
+      void handleActionRef.current({
+        type: 'navigate',
+        screen: navigation.screen,
+        params: navigation.params,
+      });
+    };
+
+    const subscription = Notifications.addNotificationResponseReceivedListener(openFromResponse);
+    void Notifications.getLastNotificationResponseAsync().then(openFromResponse);
+
+    return () => subscription.remove();
+  }, []);
 
   const canGoBack = stack.length > 1;
   const previous = canGoBack ? stack[stack.length - 2] : null;

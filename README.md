@@ -191,6 +191,7 @@ make web-test
 - Trial de 7 dias no cadastro. Depois disso, ative em `/admin/assinantes` (e-mails em `APP_ADMIN_EMAILS`).
 - Cron: `radar:sync-lots` every 15 min, `radar:dispatch-alerts --skip-sync` hourly e `radar:dispatch-auction-reminders` a cada 10 min (`web/routes/console.php`).
 - Dois e-mails distintos: digest da **faixa** (preferências) e lembrete de **1 hora** só para lotes com “Tenho interesse”.
+- **Push iOS (app):** mesmo matcher do digest/lembrete via Expo Push (`device_push_tokens`). Configure a chave APNs no EAS (`eas credentials`) e publique um IPA novo; o app pede permissão após o login.
 - WhatsApp: campo + opt-in no cadastro; envio só com `RADAR_WHATSAPP_ENABLED=true` e credenciais Meta Cloud API.
 
 ### Production (Oracle, mesmo host da VerifyCar)

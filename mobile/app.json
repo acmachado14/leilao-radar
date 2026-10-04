@@ -18,11 +18,12 @@
       "supportsTablet": false,
       "bundleIdentifier": "br.com.verifycar.radar",
       "appleTeamId": "4PVU8R7DX2",
-      "buildNumber": "14",
+      "buildNumber": "15",
       "infoPlist": {
         "CFBundleDisplayName": "VerifyRadar",
         "ITSAppUsesNonExemptEncryption": false,
-        "UIUserInterfaceStyle": "Light"
+        "UIUserInterfaceStyle": "Light",
+        "UIBackgroundModes": ["remote-notification"]
       },
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [
@@ -46,6 +47,7 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
+      "expo-notifications",
       "expo-web-browser",
       [
         "expo-splash-screen",

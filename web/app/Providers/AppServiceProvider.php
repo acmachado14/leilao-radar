@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Notifications\Channels\EmailChannel;
+use App\Notifications\Channels\PushChannel;
 use App\Notifications\Channels\WhatsAppChannel;
 use App\Services\Alerts\AlertDispatcher;
 use App\Services\Alerts\LotMatcher;
@@ -18,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(LotMatcher::class),
                 [
                     $app->make(EmailChannel::class),
+                    $app->make(PushChannel::class),
                     $app->make(WhatsAppChannel::class),
                 ],
             );

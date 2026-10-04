@@ -9,6 +9,7 @@ use App\Models\LotEvaluation;
 use App\Models\User;
 use App\Services\Billing\PlanQuota;
 use App\Services\Mobile\UserAuthenticator;
+use App\Services\Push\DevicePushRegistrar;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -18,6 +19,7 @@ class ActionDispatcher
         private ScreenComposer $screens,
         private UserAuthenticator $auth,
         private PlanQuota $quota,
+        private DevicePushRegistrar $pushRegistrar,
     ) {}
 
     /**
@@ -36,6 +38,8 @@ class ActionDispatcher
             'delete_alerts' => $this->deleteAlerts($user, $payload),
             'filter_catalog' => $this->filterCatalog($request, $user, $payload),
             'delete_account' => $this->deleteAccount($user),
+            'register_push' => $this->registerPush($request, $user, $payload),
+            'unregister_push' => $this->unregisterPush($user, $payload),
             default => $this->screens->compose('catalog', $request, $user),
         };
     }
@@ -296,5 +300,36 @@ class ActionDispatcher
         ];
 
         return $screen;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function registerPush(Request $request, ?User $user, array $payload): ScreenDocument
+    {
+        if ($user === null) {
+            return $this->screens->login('Entre para ativar notificações.');
+        }
+
+        $platform = strtolower((string) ($payload['platform'] ?? $request->header('X-App-Platform', 'ios')));
+        $token = (string) ($payload['expo_push_token'] ?? $payload['token'] ?? '');
+        $this->pushRegistrar->register($user, $token, $platform);
+
+        return $this->screens->account($user);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function unregisterPush(?User $user, array $payload): ScreenDocument
+    {
+        if ($user === null) {
+            return $this->screens->login();
+        }
+
+        $token = (string) ($payload['expo_push_token'] ?? $payload['token'] ?? '');
+        $this->pushRegistrar->unregister($user, $token);
+
+        return $this->screens->account($user);
     }
 }
