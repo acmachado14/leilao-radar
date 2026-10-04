@@ -44,6 +44,17 @@
     </div>
 </section>
 
+<section id="app" class="mx-auto max-w-6xl px-4 py-8">
+    <p class="text-sm font-semibold uppercase tracking-[0.18em] text-violet-300">Instalar o app</p>
+    <h2 class="mt-2 text-2xl font-bold">VerifyRadar no iPhone e no Android</h2>
+    <p class="mt-3 max-w-2xl text-slate-400">Catálogo Sodré e Palácio, parecer de IA com teto de lance e recortes de alerta no celular. No iPhone, instale pela App Store. No Android, baixe o APK oficial abaixo (fora da Play Store).</p>
+    <div class="mt-6 flex flex-wrap gap-3">
+        <a href="{{ $iosStoreUrl }}" target="_blank" rel="noopener" class="btn-emerald px-5 py-3">Baixar na App Store</a>
+        <a href="{{ $androidApkUrl }}" class="rounded-lg border border-slate-500 px-5 py-3 font-semibold text-white hover:border-emerald-500">Baixar APK Android</a>
+    </div>
+    <p class="mt-4 max-w-2xl text-sm text-slate-500">Android: após o download, abra o arquivo e permita instalar apps de fontes desconhecidas se o sistema pedir. Use só este link em <span class="text-slate-400">radar.verifycar.com.br</span>.</p>
+</section>
+
 <section class="mx-auto max-w-6xl px-4 py-8">
     <p class="text-sm font-semibold uppercase tracking-[0.18em] text-violet-300">Como funciona</p>
     <h2 class="mt-2 text-2xl font-bold">Três passos até o teto de lance.</h2>

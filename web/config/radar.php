@@ -27,6 +27,13 @@ return [
         'min_ipa_version' => env('RADAR_IOS_MIN_IPA_VERSION', '1.0.0'),
         'bundle_id' => env('RADAR_IOS_BUNDLE_ID', 'br.com.verifycar.radar'),
     ],
+    'app' => [
+        'ios_store_url' => env(
+            'RADAR_IOS_STORE_URL',
+            'https://apps.apple.com/br/app/verifyradar/id6813936072',
+        ),
+        'apk_path' => 'downloads/verifyradar.apk',
+    ],
     'bff' => [
         'schema_version' => 1,
         'catalog_limit' => (int) env('RADAR_BFF_CATALOG_LIMIT', 100),

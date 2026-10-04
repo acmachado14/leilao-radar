@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { getToken, setToken } from './auth';
 import type { ScreenDocument } from './sdui/types';
 
@@ -9,6 +10,7 @@ async function headers(): Promise<Record<string, string>> {
     Accept: 'application/json',
     'Content-Type': 'application/json',
     'X-App-Version': '1.1.0',
+    'X-App-Platform': Platform.OS === 'ios' ? 'ios' : 'android',
   };
   if (token) {
     headers.Authorization = `Bearer ${token}`;

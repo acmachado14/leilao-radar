@@ -14,6 +14,8 @@ class Home extends Component
         return view('livewire.home', [
             'plans' => $quota->publicPlans(),
             'checkoutUrl' => SalesWhatsApp::checkoutUrl(Plan::RADAR_PRO),
+            'iosStoreUrl' => (string) config('radar.app.ios_store_url'),
+            'androidApkUrl' => route('app.android'),
         ])->layout('layouts.app', [
             'title' => 'VerifyRadar — IA para lance de leilão',
             'fullBleed' => true,

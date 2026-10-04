@@ -289,6 +289,26 @@ class BffScreenTest extends TestCase
         $this->assertStringNotContainsString('wa.me', $response->getContent());
     }
 
+    public function test_android_paywall_uses_whatsapp_not_app_store_billing(): void
+    {
+        $user = User::factory()->create([
+            'plan' => Plan::TRIAL,
+            'subscription_status' => SubscriptionStatus::TRIAL,
+            'subscription_until' => now()->addDays(5),
+        ]);
+        $token = $user->createToken('ios')->plainTextToken;
+
+        $response = $this->withToken($token)
+            ->withHeader('X-App-Platform', 'android')
+            ->getJson('/bff/v1/screens/paywall');
+
+        $response->assertOk()->assertJsonPath('screen', 'paywall');
+        $this->assertStringContainsString('wa.me', $response->getContent());
+        $this->assertStringNotContainsString('sheet da Apple', $response->getContent());
+        $this->assertStringNotContainsString('stdeula', $response->getContent());
+        $this->assertJsonTextContains($response, 'WhatsApp');
+    }
+
     public function test_alerts_list_supports_creating_a_new_recorte(): void
     {
         $user = User::factory()->create();

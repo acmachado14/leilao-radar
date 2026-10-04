@@ -27,7 +27,31 @@ class HomeAndAccountMenuTest extends TestCase
             ->assertSee('wa.me/5531986268630', false)
             ->assertSee('Começar grátis')
             ->assertSee('Grátis por 7 dias')
-            ->assertDontSee('Meus lotes');
+            ->assertDontSee('Meus lotes')
+            ->assertSee('Instalar o app')
+            ->assertSee('Baixar na App Store')
+            ->assertSee('Baixar APK Android')
+            ->assertSee('id6813936072', false)
+            ->assertSee(route('app.android'), false);
+    }
+
+    public function test_android_apk_download_returns_404_until_file_is_published(): void
+    {
+        $path = public_path('downloads/verifyradar.apk');
+        $backup = null;
+        if (is_file($path)) {
+            $backup = file_get_contents($path);
+            unlink($path);
+        }
+
+        $this->get(route('app.android'))->assertNotFound();
+
+        if ($backup !== null) {
+            if (! is_dir(dirname($path))) {
+                mkdir(dirname($path), 0755, true);
+            }
+            file_put_contents($path, $backup);
+        }
     }
 
     public function test_catalog_lives_at_ofertas(): void

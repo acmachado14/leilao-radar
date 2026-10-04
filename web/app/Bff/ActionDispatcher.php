@@ -85,7 +85,7 @@ class ActionDispatcher
         $issued = $this->auth->register($validator->validated());
 
         return $this->screens->withToken(
-            $this->screens->paywall($issued['user']),
+            $this->screens->paywall($request, $issued['user']),
             $issued['token'],
         );
     }

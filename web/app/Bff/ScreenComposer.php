@@ -10,6 +10,7 @@ use App\Services\Alerts\LotMatcher;
 use App\Services\Billing\EntitlementResolver;
 use App\Services\Billing\PlanQuota;
 use App\Support\LegalCopy;
+use App\Support\SalesWhatsApp;
 use App\Support\SearchYearExtractor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -27,10 +28,13 @@ class ScreenComposer
      */
     public function compose(string $name, Request $request, ?User $user, array $params = []): ScreenDocument
     {
-        $ipa = (string) $request->header('X-App-Version', '1.0.0');
-        $min = (string) config('radar.ios.min_ipa_version', '1.0.0');
-        if (version_compare($ipa, $min, '<')) {
-            return $this->forceUpdate($min);
+        $platform = strtolower((string) $request->header('X-App-Platform', 'ios'));
+        if ($platform === 'ios') {
+            $ipa = (string) $request->header('X-App-Version', '1.0.0');
+            $min = (string) config('radar.ios.min_ipa_version', '1.0.0');
+            if (version_compare($ipa, $min, '<')) {
+                return $this->forceUpdate($min);
+            }
         }
 
         return match ($name) {
@@ -42,7 +46,7 @@ class ScreenComposer
             'alerts' => $this->alerts($user),
             'alerts_edit' => $this->alertsEdit($user, (string) ($params['id'] ?? $request->query('id', ''))),
             'account' => $this->account($user),
-            'paywall' => $this->paywall($user),
+            'paywall' => $this->paywall($request, $user),
             'my_lots' => $this->myLots($user),
             'terms' => $this->terms(),
             'privacy' => $this->privacy(),
@@ -755,8 +759,13 @@ class ScreenComposer
         ]);
     }
 
-    public function paywall(?User $user): ScreenDocument
+    public function paywall(Request $request, ?User $user): ScreenDocument
     {
+        $platform = strtolower((string) $request->header('X-App-Platform', 'ios'));
+        if ($platform === 'android') {
+            return $this->paywallAndroid($user);
+        }
+
         $radar = config('radar.plans.radar');
         $pro = config('radar.plans.radar_pro');
         $packages = config('radar.revenuecat.packages');
@@ -840,6 +849,74 @@ class ScreenComposer
         ], onPress: [
             'type' => ActionType::OPEN_URL,
             'url' => 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
+        ]);
+
+        return new ScreenDocument('paywall', 'Planos', $nodes, tabs: $this->tabs('paywall'));
+    }
+
+    public function paywallAndroid(?User $user): ScreenDocument
+    {
+        $radar = config('radar.plans.radar');
+        $pro = config('radar.plans.radar_pro');
+        $whatsappUrl = SalesWhatsApp::checkoutUrl('radar_pro', $user);
+
+        $packagePayload = [
+            [
+                'id' => 'radar_web',
+                'title' => $radar['name'],
+                'period' => 'Mensal',
+                'price_hint' => $radar['price'],
+                'intro' => $radar['price_note'] ?? $radar['price'],
+                'features' => $radar['features'],
+                'purchasable' => false,
+            ],
+            [
+                'id' => 'radar_pro_web',
+                'title' => $pro['name'],
+                'period' => 'Mensal',
+                'price_hint' => $pro['price'],
+                'intro' => $pro['price_note'] ?? $pro['price'],
+                'features' => $pro['features'],
+                'highlight' => true,
+                'purchasable' => false,
+            ],
+        ];
+
+        $subtitle = $user === null
+            ? 'Entre para ver seu plano. A assinatura paga é ativada pelo atendente no WhatsApp.'
+            : 'No Android, a assinatura é ativada pelo atendente no WhatsApp — sem cobrança na Play Store neste app.';
+
+        $nodes = [
+            Node::make(ComponentType::HERO, [
+                'kicker' => 'Planos VerifyRadar',
+                'title' => 'Mais IA e mais recortes',
+                'subtitle' => $subtitle,
+            ]),
+            Node::make(ComponentType::PAYWALL, ['packages' => $packagePayload]),
+            Node::make(ComponentType::BUTTON, [
+                'label' => 'Falar com atendente no WhatsApp',
+                'style' => 'primary',
+            ], onPress: [
+                'type' => ActionType::OPEN_URL,
+                'url' => $whatsappUrl,
+            ]),
+        ];
+
+        if ($user === null) {
+            $nodes[] = Node::make(ComponentType::BUTTON, [
+                'label' => 'Entrar',
+                'style' => 'secondary',
+            ], onPress: ['type' => ActionType::NAVIGATE, 'screen' => 'login']);
+        } else {
+            $nodes[] = Node::make(ComponentType::BUTTON, [
+                'label' => 'Continuar no catálogo',
+                'style' => 'secondary',
+            ], onPress: ['type' => ActionType::NAVIGATE, 'screen' => 'catalog']);
+        }
+
+        $nodes[] = Node::make(ComponentType::TEXT, [
+            'value' => 'Conta grátis inclui 3 análises de IA por mês. Planos pagos são confirmados manualmente após o WhatsApp.',
+            'tone' => 'muted',
         ]);
 
         return new ScreenDocument('paywall', 'Planos', $nodes, tabs: $this->tabs('paywall'));

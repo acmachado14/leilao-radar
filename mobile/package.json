@@ -9,6 +9,7 @@
     "android": "expo start --android",
     "typecheck": "tsc --noEmit",
     "build:ios": "eas build -p ios --profile production",
+    "build:apk": "eas build -p android --profile apk",
     "submit:ios": "eas submit -p ios --latest"
   },
   "dependencies": {

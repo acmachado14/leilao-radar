@@ -17,6 +17,15 @@
         "EXPO_PUBLIC_API_URL": "https://radar.verifycar.com.br",
         "EXPO_PUBLIC_RC_IOS_KEY": "appl_QBSkeuPskAxnmHlMCsMyaqiMgyk"
       }
+    },
+    "apk": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://radar.verifycar.com.br"
+      }
     }
   },
   "submit": {
