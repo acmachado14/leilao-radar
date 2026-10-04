@@ -22,6 +22,7 @@
 /storage/pail
 /vendor
 /public/data/lotes.json
+/public/downloads/*.apk
 _ide_helper.php
 Homestead.json
 Homestead.yaml

@@ -1,0 +1,39 @@
+name: Publish Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      apk_url:
+        description: EAS artifact URL for the .apk
+        required: true
+        type: string
+
+concurrency:
+  group: radar-production
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Upload APK to Oracle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Download APK
+        run: |
+          curl -fsSL "${{ inputs.apk_url }}" -o verifyradar.apk
+          ls -lh verifyradar.apk
+
+      - name: Upload to server
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes \
+            ubuntu@${{ secrets.SERVER_HOST }} \
+            'mkdir -p /home/ubuntu/leilao-radar/public/downloads'
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes \
+            verifyradar.apk \
+            ubuntu@${{ secrets.SERVER_HOST }}:/home/ubuntu/leilao-radar/public/downloads/verifyradar.apk
