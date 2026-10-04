@@ -10,7 +10,7 @@ class AppDownloadController extends Controller
 {
     public function android(Request $request): BinaryFileResponse
     {
-        $path = public_path('downloads/verifyradar.apk');
+        $path = storage_path('app/downloads/verifyradar.apk');
 
         if (! File::isFile($path)) {
             abort(404, 'O APK do VerifyRadar ainda não está disponível. Tente de novo em alguns minutos.');

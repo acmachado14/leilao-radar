@@ -32,7 +32,7 @@ return [
             'RADAR_IOS_STORE_URL',
             'https://apps.apple.com/br/app/verifyradar/id6813936072',
         ),
-        'apk_path' => 'downloads/verifyradar.apk',
+        'apk_storage_path' => 'downloads/verifyradar.apk',
     ],
     'bff' => [
         'schema_version' => 1,

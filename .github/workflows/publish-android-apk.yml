@@ -31,9 +31,9 @@ jobs:
 
       - name: Upload to server
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes \
-            ubuntu@${{ secrets.SERVER_HOST }} \
-            'mkdir -p /home/ubuntu/leilao-radar/public/downloads'
           scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes \
             verifyradar.apk \
-            ubuntu@${{ secrets.SERVER_HOST }}:/home/ubuntu/leilao-radar/public/downloads/verifyradar.apk
+            ubuntu@${{ secrets.SERVER_HOST }}:/tmp/verifyradar.apk
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes \
+            ubuntu@${{ secrets.SERVER_HOST }} \
+            'docker exec radar-app mkdir -p /var/www/storage/app/downloads && docker cp /tmp/verifyradar.apk radar-app:/var/www/storage/app/downloads/verifyradar.apk && docker exec radar-app chown www-data:www-data /var/www/storage/app/downloads/verifyradar.apk && rm -f /tmp/verifyradar.apk'

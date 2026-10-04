@@ -37,7 +37,7 @@ class HomeAndAccountMenuTest extends TestCase
 
     public function test_android_apk_download_returns_404_until_file_is_published(): void
     {
-        $path = public_path('downloads/verifyradar.apk');
+        $path = storage_path('app/downloads/verifyradar.apk');
         $backup = null;
         if (is_file($path)) {
             $backup = file_get_contents($path);
