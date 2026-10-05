@@ -5,8 +5,8 @@ Frequent collector for **Sodré Santoro** and **Palácio** vehicle auction lots.
 ## Architecture
 
 ```
-EventBridge (every 3h BRT) → Lambda Sodré collector
-EventBridge (every 3h + 30min) → Lambda Palácio collector
+EventBridge (every 6h BRT) → Lambda Sodré collector
+EventBridge (every 6h + 30min) → Lambda Palácio collector
                               ↓
                     DynamoDB (TTL = auction end + 1 day)
                               ↓
@@ -144,8 +144,8 @@ make aws-logs-palacio
 Stack creates:
 
 - DynamoDB table `leilao-radar-lotes` (on-demand, TTL, GSI `gsi_relevancia` + `gsi_desconto`)
-- Lambda `leilao-radar-collector` (Sodré, every 3 hours BRT)
-- Lambda `leilao-radar-collector-palacio` (Palácio, every 3 hours BRT, 30 min later)
+- Lambda `leilao-radar-collector` (Sodré, every 6 hours BRT)
+- Lambda `leilao-radar-collector-palacio` (Palácio, every 6 hours BRT, 30 min later)
 - CloudWatch Logs with 14-day retention
 
 Each lot stores `fonte` (`sodre` | `palacio`). Palácio IDs are namespaced as `palacio:{id}` to avoid PK collisions.
@@ -160,7 +160,7 @@ Public dashboard at GitHub Pages — no Streamlit server. Data is exported from 
 3. In **Settings → Secrets and variables → Actions**, add:
    - `AWS_ACCESS_KEY_ID`
    - `AWS_SECRET_ACCESS_KEY`
-4. Run the workflow **Export and GitHub Pages** manually (Actions tab) or wait for the hourly schedule. Collectors run on **AWS Lambda** every 3h; the Pages workflow only exports DynamoDB → JSON (keeps runs under ~5 minutes). Use **Collect lots (manual)** in Actions if you need an on-demand full collect in CI.
+4. Run the workflow **Export and GitHub Pages** manually (Actions tab) or wait for the hourly schedule. Collectors run on **AWS Lambda** every 6h; the Pages workflow only exports DynamoDB → JSON (keeps runs under ~5 minutes). Use **Collect lots (manual)** in Actions if you need an on-demand full collect in CI.
 
 ### GitHub Pages snapshot
 

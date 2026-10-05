@@ -77,9 +77,9 @@ Resources:
         FrequentSchedule:
           Type: Schedule
           Properties:
-            # Every 3 hours BRT (UTC-3): 01:00, 04:00, 07:00, 10:00, 13:00, 16:00, 19:00, 22:00
-            Schedule: cron(0 1,4,7,10,13,16,19,22 * * ? *)
-            Description: Run Sodre collector every 3 hours so late-added lots are captured before auction day
+            # Every 6 hours BRT (UTC-3): 01:00, 07:00, 13:00, 19:00
+            Schedule: cron(0 4,10,16,22 * * ? *)
+            Description: Run Sodre collector every 6 hours (lower DynamoDB write cost)
             Enabled: true
 
   CollectorLogGroup:
@@ -110,9 +110,9 @@ Resources:
         FrequentSchedule:
           Type: Schedule
           Properties:
-            # Every 3 hours BRT, 30 minutes after the Sodré collector
-            Schedule: cron(30 1,4,7,10,13,16,19,22 * * ? *)
-            Description: Run Palacio collector every 3 hours so late-added lots are captured before auction day
+            # Every 6 hours BRT, 30 minutes after the Sodré collector
+            Schedule: cron(30 4,10,16,22 * * ? *)
+            Description: Run Palacio collector every 6 hours (lower DynamoDB write cost)
             Enabled: true
 
   PalacioCollectorLogGroup:
