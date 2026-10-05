@@ -3,6 +3,7 @@
 namespace App\Services\Lots;
 
 use App\Models\Lot;
+use App\Support\AuctionDate;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -21,6 +22,10 @@ class LotImporter
         foreach ($items as $item) {
             $loteId = (string) ($item['lote_id'] ?? '');
             if ($loteId === '') {
+                continue;
+            }
+
+            if (! $this->isUpcomingItem($item)) {
                 continue;
             }
 
@@ -55,9 +60,7 @@ class LotImporter
             $count++;
         }
 
-        if ($ids !== []) {
-            Lot::query()->whereNotIn('lote_id', $ids)->delete();
-        }
+        $this->purgeLotsNotInSnapshot($ids);
 
         $this->mirrorPublicJson($payload);
 
@@ -121,5 +124,35 @@ class LotImporter
         }
 
         file_put_contents($target, json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    }
+
+    /**
+     * @param  list<string>  $keptIds
+     */
+    private function purgeLotsNotInSnapshot(array $keptIds): void
+    {
+        if ($keptIds === []) {
+            Lot::query()->delete();
+
+            return;
+        }
+
+        Lot::query()->whereNotIn('lote_id', $keptIds)->delete();
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     */
+    private function isUpcomingItem(array $item): bool
+    {
+        $end = AuctionDate::parseEnd(isset($item['leilao_fim']) ? (string) $item['leilao_fim'] : null)
+            ?? AuctionDate::parseEnd(isset($item['leilao_em']) ? (string) $item['leilao_em'] : null);
+        if ($end === null) {
+            return true;
+        }
+
+        $reference = now('America/Sao_Paulo');
+
+        return ($end->getTimestamp() - $reference->getTimestamp()) / 86400 >= 0;
     }
 }

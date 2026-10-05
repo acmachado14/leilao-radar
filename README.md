@@ -160,7 +160,7 @@ Public dashboard at GitHub Pages — no Streamlit server. Data is exported from 
 3. In **Settings → Secrets and variables → Actions**, add:
    - `AWS_ACCESS_KEY_ID`
    - `AWS_SECRET_ACCESS_KEY`
-4. Run the workflow **Export and GitHub Pages** manually (Actions tab) or wait for the hourly schedule.
+4. Run the workflow **Export and GitHub Pages** manually (Actions tab) or wait for the hourly schedule. Collectors run on **AWS Lambda** every 3h; the Pages workflow only exports DynamoDB → JSON (keeps runs under ~5 minutes). Use **Collect lots (manual)** in Actions if you need an on-demand full collect in CI.
 
 ### GitHub Pages snapshot
 

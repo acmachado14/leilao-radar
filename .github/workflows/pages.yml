@@ -2,8 +2,7 @@ name: Export and GitHub Pages
 
 on:
   schedule:
-    # Hourly — GitHub may delay cron jobs by a few hours, so a single
-    # 05:00 BRT run often lands after the catalog has already synced.
+    # Export only (collectors run on AWS Lambda every 3h). Keep this job short so hourly runs finish.
     - cron: "20 * * * *"
   workflow_dispatch:
   push:
@@ -19,12 +18,13 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: pages-export
+  cancel-in-progress: true
 
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -37,32 +37,8 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install collector and export dependencies
+      - name: Install export dependencies
         run: pip install boto3 pydantic httpx
-
-      - name: Collect Sodré lots into DynamoDB
-        continue-on-error: true
-        timeout-minutes: 40
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: sa-east-1
-          AWS_REGION: sa-east-1
-          TABLE_NAME: leilao-radar-lotes
-          PYTHONPATH: .
-        run: python -m collector.handler
-
-      - name: Collect Palácio lots into DynamoDB
-        continue-on-error: true
-        timeout-minutes: 40
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: sa-east-1
-          AWS_REGION: sa-east-1
-          TABLE_NAME: leilao-radar-lotes
-          PYTHONPATH: .
-        run: python -m collector.palacio_handler
 
       - name: Export lots from DynamoDB
         env:
