@@ -318,7 +318,7 @@ class ScreenComposer
                 $this->factRow('Sinistro', $lot->sinistro_label ?: ($lot->sinistro ?: '—')),
             ]),
             Node::make(ComponentType::BUTTON, [
-                'label' => 'Pedir parecer da IA',
+                'label' => '✨ Pedir parecer da IA',
                 'style' => 'primary',
                 'icon' => 'sparkles',
             ], onPress: [
@@ -327,7 +327,7 @@ class ScreenComposer
                 'params' => ['id' => $lot->lote_id],
             ]),
             Node::make(ComponentType::BUTTON, [
-                'label' => $interested ? 'Remover interesse' : 'Tenho interesse',
+                'label' => $interested ? '♥ Remover interesse' : '♡ Tenho interesse',
                 'style' => 'secondary',
                 'icon' => $interested ? 'heart' : 'heart-outline',
             ], onPress: [
@@ -336,7 +336,7 @@ class ScreenComposer
                 'params' => ['id' => $lot->lote_id],
             ]),
             Node::make(ComponentType::BUTTON, [
-                'label' => 'Compartilhar',
+                'label' => '🔗 Compartilhar',
                 'style' => 'secondary',
                 'icon' => 'share-social-outline',
             ], onPress: [
@@ -347,7 +347,7 @@ class ScreenComposer
 
         if (is_string($lot->url) && $lot->url !== '') {
             $children[] = Node::make(ComponentType::BUTTON, [
-                'label' => 'Ver no '.$fonteLabel,
+                'label' => '🌐 Ver no '.$fonteLabel,
                 'style' => 'secondary',
                 'icon' => 'globe-outline',
             ], onPress: [

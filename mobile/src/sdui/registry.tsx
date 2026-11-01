@@ -309,12 +309,19 @@ function ButtonBlock({ node, onAction }: { node: SduiNode; onAction: (action: Sd
               styleName === 'plain' && { fontWeight: '500' },
             ]}
           >
-            {String(p.label ?? 'OK')}
+            {buttonCaption(String(p.label ?? 'OK'), icon !== null)}
           </Text>
         </View>
       </Pressable>
     </Animated.View>
   );
+}
+
+function buttonCaption(label: string, hasIcon: boolean): string {
+  if (!hasIcon) {
+    return label;
+  }
+  return label.replace(/^[^\p{L}\p{N}]+/u, '').trim();
 }
 
 function buttonLabelColor(styleName: string, soft: boolean, colors: ThemeColors): string {

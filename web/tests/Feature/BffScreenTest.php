@@ -210,23 +210,23 @@ class BffScreenTest extends TestCase
         $this->assertStringContainsString('Tabela FIPE', $response->getContent());
         $this->assertStringContainsString('Guarulhos', $response->getContent());
         $share = collect($response->json('components'))->first(
-            fn ($node) => ($node['props']['label'] ?? '') === 'Compartilhar'
+            fn ($node) => ($node['props']['label'] ?? '') === '🔗 Compartilhar'
         );
         $this->assertSame('share-social-outline', $share['props']['icon'] ?? null);
         $this->assertSame('share', $share['onPress']['type'] ?? null);
         $interest = collect($response->json('components'))->first(
-            fn ($node) => ($node['props']['label'] ?? '') === 'Tenho interesse'
+            fn ($node) => ($node['props']['label'] ?? '') === '♡ Tenho interesse'
         );
         $this->assertSame('heart-outline', $interest['props']['icon'] ?? null);
         $opinion = collect($response->json('components'))->first(
-            fn ($node) => ($node['props']['label'] ?? '') === 'Pedir parecer da IA'
+            fn ($node) => ($node['props']['label'] ?? '') === '✨ Pedir parecer da IA'
         );
         $this->assertSame('sparkles', $opinion['props']['icon'] ?? null);
         $this->assertStringContainsString('/ofertas?lote=', $share['onPress']['url'] ?? '');
         $this->assertStringContainsString('link-1', $share['onPress']['url'] ?? '');
 
         $openUrl = collect($response->json('components'))->first(
-            fn ($node) => ($node['props']['label'] ?? '') === 'Ver no Palácio'
+            fn ($node) => ($node['props']['label'] ?? '') === '🌐 Ver no Palácio'
         );
         $this->assertSame('globe-outline', $openUrl['props']['icon'] ?? null);
         $this->assertSame('open_url', $openUrl['onPress']['type'] ?? null);
