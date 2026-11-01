@@ -14,6 +14,7 @@ import {
   View,
   type TextInputProps,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme, type ThemeColors } from '../theme';
 import { loadStoreProductMap } from '../purchases';
 import type { SduiAction, SduiNode } from './types';
@@ -112,28 +113,7 @@ export function RenderNode(props: Props): ReactNode {
       );
     }
     case 'Button':
-      return (
-        <Pressable
-          key={node.id}
-          onPress={() => node.onPress && onAction(node.onPress)}
-          style={[
-            styles.button,
-            p.style === 'secondary' && styles.buttonSecondary,
-            p.style === 'plain' && styles.buttonPlain,
-            p.style === 'danger' && styles.buttonDanger,
-          ]}
-        >
-          <Text
-            style={[
-              styles.buttonLabel,
-              (p.style === 'secondary' || p.style === 'plain') && { color: colors.accent },
-              p.style === 'plain' && { color: colors.dim, fontWeight: '500' },
-            ]}
-          >
-            {String(p.label ?? 'OK')}
-          </Text>
-        </Pressable>
-      );
+      return <ButtonBlock key={node.id} node={node} onAction={onAction} />;
     case 'TextField':
       return <TextFieldBlock key={node.id ?? String(p.name ?? 'field')} node={node} form={form} setForm={setForm} />;
     case 'SearchBar': {
@@ -274,6 +254,91 @@ export function RenderNode(props: Props): ReactNode {
         </Text>
       );
   }
+}
+
+function ButtonBlock({ node, onAction }: { node: SduiNode; onAction: (action: SduiAction) => void }) {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles();
+  const p = node.props ?? {};
+  const scale = useRef(new Animated.Value(1)).current;
+  const icon = ioniconName(p.icon);
+  const styleName = typeof p.style === 'string' ? p.style : 'primary';
+  const soft = icon !== null && styleName === 'secondary';
+
+  function pressIn() {
+    Animated.spring(scale, {
+      toValue: 0.97,
+      useNativeDriver: true,
+      speed: 40,
+      bounciness: 6,
+    }).start();
+  }
+
+  function pressOut() {
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 18,
+      bounciness: 8,
+    }).start();
+  }
+
+  const labelColor = buttonLabelColor(styleName, soft, colors);
+  const iconColor = soft ? colors.accent : labelColor;
+
+  return (
+    <Animated.View style={{ transform: [{ scale }] }}>
+      <Pressable
+        onPress={() => node.onPress && onAction(node.onPress)}
+        onPressIn={pressIn}
+        onPressOut={pressOut}
+        style={[
+          styles.button,
+          styleName === 'secondary' && styles.buttonSecondary,
+          soft && styles.buttonSoft,
+          styleName === 'plain' && styles.buttonPlain,
+          styleName === 'danger' && styles.buttonDanger,
+        ]}
+      >
+        <View style={styles.buttonInner}>
+          {icon ? <Ionicons name={icon} size={20} color={iconColor} /> : null}
+          <Text
+            style={[
+              styles.buttonLabel,
+              { color: labelColor },
+              styleName === 'plain' && { fontWeight: '500' },
+            ]}
+          >
+            {String(p.label ?? 'OK')}
+          </Text>
+        </View>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+function buttonLabelColor(styleName: string, soft: boolean, colors: ThemeColors): string {
+  if (styleName === 'plain') {
+    return colors.dim;
+  }
+  if (soft) {
+    return colors.text;
+  }
+  if (styleName === 'secondary') {
+    return colors.accent;
+  }
+  return colors.onAccent;
+}
+
+function ioniconName(value: unknown): keyof typeof Ionicons.glyphMap | null {
+  if (typeof value !== 'string' || value === '') {
+    return null;
+  }
+  const glyphs = Ionicons.glyphMap as Record<string, number>;
+  if (!(value in glyphs)) {
+    return null;
+  }
+  return value as keyof typeof Ionicons.glyphMap;
 }
 
 function LotCardBlock({ node, onAction }: { node: SduiNode; onAction: (action: SduiAction) => void }) {
@@ -720,6 +785,8 @@ function createRegistryStyles(colors: ThemeColors) {
   buttonSecondary: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.border },
   buttonPlain: { backgroundColor: 'transparent' },
   buttonDanger: { backgroundColor: colors.danger },
+  buttonInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  buttonSoft: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border },
   buttonLabel: { color: colors.onAccent, fontWeight: '700', fontSize: 16 },
   banner: { backgroundColor: colors.card, borderRadius: 12, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: colors.border },
   bannerDanger: { borderColor: colors.danger },

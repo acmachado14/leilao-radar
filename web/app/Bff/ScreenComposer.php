@@ -10,6 +10,7 @@ use App\Services\Alerts\LotMatcher;
 use App\Services\Billing\EntitlementResolver;
 use App\Services\Billing\PlanQuota;
 use App\Support\LegalCopy;
+use App\Support\PatioRegion;
 use App\Support\SalesWhatsApp;
 use App\Support\SearchYearExtractor;
 use Illuminate\Http\Request;
@@ -177,6 +178,7 @@ class ScreenComposer
         $cards = $lots->map(fn (Lot $lot) => $this->lotCard($lot))->all();
         $params = $filter->params();
         $extra = $filter->extraCount();
+        $regions = $this->regionOptions($filter);
         $shown = $lots->count();
         $filteredTotal = $filter->filteredCount();
         $snapshotTotal = CatalogFilter::snapshotCount();
@@ -204,13 +206,14 @@ class ScreenComposer
                 'title' => 'Filtros',
                 'count' => $extra,
                 'params' => $params,
-            ], $this->catalogFilterSheet($filter)),
+            ], $this->catalogFilterSheet($filter, $regions)),
         ]);
+        $regionNodes = $this->regionFilterNodes($filter, $regions);
 
         $components = [];
 
         if ($cards === []) {
-            $listChildren = [$searchBar, $chipRow];
+            $listChildren = [$searchBar, $chipRow, ...$regionNodes];
             if ($user && $this->entitlements->canShowPaywall($user)) {
                 $listChildren[] = Node::make(ComponentType::BANNER, [
                     'tone' => 'info',
@@ -230,6 +233,7 @@ class ScreenComposer
             $listChildren = [
                 $searchBar,
                 $chipRow,
+                ...$regionNodes,
             ];
             if ($user && $this->entitlements->canShowPaywall($user)) {
                 $listChildren[] = Node::make(ComponentType::BANNER, [
@@ -316,6 +320,7 @@ class ScreenComposer
             Node::make(ComponentType::BUTTON, [
                 'label' => 'Pedir parecer da IA',
                 'style' => 'primary',
+                'icon' => 'sparkles',
             ], onPress: [
                 'type' => ActionType::SUBMIT,
                 'action' => 'evaluate',
@@ -324,6 +329,7 @@ class ScreenComposer
             Node::make(ComponentType::BUTTON, [
                 'label' => $interested ? 'Remover interesse' : 'Tenho interesse',
                 'style' => 'secondary',
+                'icon' => $interested ? 'heart' : 'heart-outline',
             ], onPress: [
                 'type' => ActionType::SUBMIT,
                 'action' => 'toggle_interest',
@@ -332,6 +338,7 @@ class ScreenComposer
             Node::make(ComponentType::BUTTON, [
                 'label' => 'Compartilhar',
                 'style' => 'secondary',
+                'icon' => 'share-social-outline',
             ], onPress: [
                 'type' => ActionType::SHARE,
                 'url' => $lot->shareUrl(),
@@ -342,6 +349,7 @@ class ScreenComposer
             $children[] = Node::make(ComponentType::BUTTON, [
                 'label' => 'Ver no '.$fonteLabel,
                 'style' => 'secondary',
+                'icon' => 'globe-outline',
             ], onPress: [
                 'type' => ActionType::OPEN_URL,
                 'url' => $lot->url,
@@ -1002,13 +1010,82 @@ class ScreenComposer
     }
 
     /**
+     * Cities currently listed on upcoming lots, plus any region still selected.
+     *
+     * @return list<array{key: string, label: string, count: int}>
+     */
+    private function regionOptions(CatalogFilter $filter): array
+    {
+        $regions = PatioRegion::summarize($filter->withRegioes([])->matchingUpcoming());
+        $known = array_column($regions, 'key');
+        foreach ($filter->regioes as $key) {
+            if (! in_array($key, $known, true)) {
+                $regions[] = [
+                    'key' => $key,
+                    'label' => PatioRegion::labelFromKey($key),
+                    'count' => 0,
+                ];
+            }
+        }
+
+        return $regions;
+    }
+
+    /**
+     * @param  list<array{key: string, label: string, count: int}>  $regions
      * @return list<Node>
      */
-    private function catalogFilterSheet(CatalogFilter $filter): array
+    private function regionFilterNodes(CatalogFilter $filter, array $regions): array
     {
-        $percent = (int) round($filter->minDesconto * 100);
+        if ($regions === []) {
+            return [];
+        }
 
         return [
+            Node::make(ComponentType::TEXT, [
+                'value' => 'Região do pátio',
+                'tone' => 'muted',
+            ], id: 'catalog-region-label'),
+            Node::make(ComponentType::CHIP_ROW, [], $this->regionChips($filter, $regions), id: 'catalog-regions'),
+        ];
+    }
+
+    /**
+     * @param  list<array{key: string, label: string, count: int}>  $regions
+     * @return list<Node>
+     */
+    private function regionChips(CatalogFilter $filter, array $regions): array
+    {
+        $chips = [
+            $this->filterChip('Todas', $filter->regioes === [], $filter->withRegioes([])->params()),
+        ];
+        foreach ($regions as $region) {
+            $chips[] = $this->filterChip(
+                $region['label'],
+                in_array($region['key'], $filter->regioes, true),
+                $filter->toggleRegiao($region['key'])->params(),
+            );
+        }
+
+        return $chips;
+    }
+
+    /**
+     * @param  list<array{key: string, label: string, count: int}>  $regions
+     * @return list<Node>
+     */
+    private function catalogFilterSheet(CatalogFilter $filter, array $regions): array
+    {
+        $percent = (int) round($filter->minDesconto * 100);
+        $nodes = [];
+
+        if ($regions !== []) {
+            $nodes[] = Node::make(ComponentType::TEXT, ['value' => 'Região do pátio', 'tone' => 'title']);
+            $nodes[] = Node::make(ComponentType::CHIP_ROW, [], $this->regionChips($filter, $regions));
+        }
+
+        return [
+            ...$nodes,
             Node::make(ComponentType::TEXT, ['value' => 'Match FIPE', 'tone' => 'title']),
             Node::make(ComponentType::CHIP_ROW, [], [
                 $this->filterChip('Exato', in_array('exact', $filter->fipe, true), $filter->toggle('fipe', 'exact')->params()),

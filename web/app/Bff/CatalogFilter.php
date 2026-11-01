@@ -3,7 +3,9 @@
 namespace App\Bff;
 
 use App\Models\Lot;
+use App\Support\PatioRegion;
 use App\Support\TextNormalizer;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 class CatalogFilter
@@ -13,6 +15,7 @@ class CatalogFilter
      * @param  list<string>  $fipe
      * @param  list<string>  $monta
      * @param  list<string>  $marcas
+     * @param  list<string>  $regioes
      */
     public function __construct(
         public readonly string $q = '',
@@ -22,6 +25,7 @@ class CatalogFilter
         public readonly bool $excludeGrande = true,
         public readonly float $minDesconto = 0.0,
         public readonly array $marcas = [],
+        public readonly array $regioes = [],
     ) {}
 
     /**
@@ -53,6 +57,7 @@ class CatalogFilter
                 : true,
             minDesconto: self::minDesconto($input),
             marcas: PreferenceInput::marcas($input, []),
+            regioes: self::regioes($input),
         );
     }
 
@@ -71,6 +76,7 @@ class CatalogFilter
         return $this->filteredQuery()
             ->get()
             ->filter(fn (Lot $lot) => $lot->isUpcoming())
+            ->filter(fn (Lot $lot) => $this->matchesRegiao($lot))
             ->values();
     }
 
@@ -88,9 +94,9 @@ class CatalogFilter
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Builder<Lot>
+     * @return Builder<Lot>
      */
-    private function filteredQuery(): \Illuminate\Database\Eloquent\Builder
+    private function filteredQuery(): Builder
     {
         $query = Lot::query()->orderByDesc('relevance_score');
 
@@ -168,29 +174,45 @@ class CatalogFilter
         }
 
         return match ($group) {
-            'fontes' => new self($this->q, $next, $this->fipe, $this->monta, $this->excludeGrande, $this->minDesconto, $this->marcas),
-            'fipe' => new self($this->q, $this->fontes, $next, $this->monta, $this->excludeGrande, $this->minDesconto, $this->marcas),
-            'monta' => new self($this->q, $this->fontes, $this->fipe, $next, $this->excludeGrande, $this->minDesconto, $this->marcas),
+            'fontes' => $this->copy(fontes: $next),
+            'fipe' => $this->copy(fipe: $next),
+            'monta' => $this->copy(monta: $next),
             default => $this,
         };
     }
 
     public function withMinDescontoPercent(int $percent): self
     {
-        return new self(
-            $this->q,
-            $this->fontes,
-            $this->fipe,
-            $this->monta,
-            $this->excludeGrande,
-            $percent / 100,
-            $this->marcas,
-        );
+        return $this->copy(minDesconto: $percent / 100);
     }
 
     public function withExcludeGrande(bool $exclude): self
     {
-        return new self($this->q, $this->fontes, $this->fipe, $this->monta, $exclude, $this->minDesconto, $this->marcas);
+        return $this->copy(excludeGrande: $exclude);
+    }
+
+    /**
+     * @param  list<string>  $regioes
+     */
+    public function withRegioes(array $regioes): self
+    {
+        return $this->copy(regioes: array_values($regioes));
+    }
+
+    public function toggleRegiao(string $key): self
+    {
+        $key = PatioRegion::key($key);
+        if ($key === '') {
+            return $this;
+        }
+
+        if (in_array($key, $this->regioes, true)) {
+            $next = array_values(array_filter($this->regioes, fn (string $item) => $item !== $key));
+        } else {
+            $next = [...$this->regioes, $key];
+        }
+
+        return $this->copy(regioes: $next);
     }
 
     /**
@@ -210,6 +232,9 @@ class CatalogFilter
         }
         if ($this->marcas !== []) {
             $params['marca'] = implode(',', $this->marcas);
+        }
+        if ($this->regioes !== []) {
+            $params['regiao'] = implode(',', $this->regioes);
         }
 
         return $params;
@@ -231,6 +256,9 @@ class CatalogFilter
             $count++;
         }
         if ($this->marcas !== []) {
+            $count++;
+        }
+        if ($this->regioes !== []) {
             $count++;
         }
 
@@ -272,6 +300,76 @@ class CatalogFilter
         $raw = (float) $input['min_desconto'];
 
         return abs($raw) > 1 ? $raw / 100 : $raw;
+    }
+
+    private function matchesRegiao(Lot $lot): bool
+    {
+        if ($this->regioes === []) {
+            return true;
+        }
+
+        $region = PatioRegion::parse($lot->patio);
+        if ($region === null) {
+            return false;
+        }
+
+        return in_array($region['key'], $this->regioes, true);
+    }
+
+    /**
+     * @param  list<string>|null  $fontes
+     * @param  list<string>|null  $fipe
+     * @param  list<string>|null  $monta
+     * @param  list<string>|null  $marcas
+     * @param  list<string>|null  $regioes
+     */
+    private function copy(
+        ?string $q = null,
+        ?array $fontes = null,
+        ?array $fipe = null,
+        ?array $monta = null,
+        ?bool $excludeGrande = null,
+        ?float $minDesconto = null,
+        ?array $marcas = null,
+        ?array $regioes = null,
+    ): self {
+        return new self(
+            $q ?? $this->q,
+            $fontes ?? $this->fontes,
+            $fipe ?? $this->fipe,
+            $monta ?? $this->monta,
+            $excludeGrande ?? $this->excludeGrande,
+            $minDesconto ?? $this->minDesconto,
+            $marcas ?? $this->marcas,
+            $regioes ?? $this->regioes,
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     * @return list<string>
+     */
+    private static function regioes(array $input): array
+    {
+        if (! array_key_exists('regiao', $input) && ! array_key_exists('regioes', $input)) {
+            return [];
+        }
+
+        $raw = array_key_exists('regiao', $input) ? $input['regiao'] : $input['regioes'];
+        if ($raw === null || $raw === '') {
+            return [];
+        }
+
+        $parts = is_array($raw) ? $raw : explode(',', (string) $raw);
+        $keys = [];
+        foreach ($parts as $part) {
+            $key = PatioRegion::key((string) $part);
+            if ($key !== '' && ! in_array($key, $keys, true)) {
+                $keys[] = $key;
+            }
+        }
+
+        return $keys;
     }
 
     /**

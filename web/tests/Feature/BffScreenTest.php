@@ -212,15 +212,104 @@ class BffScreenTest extends TestCase
         $share = collect($response->json('components'))->first(
             fn ($node) => ($node['props']['label'] ?? '') === 'Compartilhar'
         );
+        $this->assertSame('share-social-outline', $share['props']['icon'] ?? null);
         $this->assertSame('share', $share['onPress']['type'] ?? null);
+        $interest = collect($response->json('components'))->first(
+            fn ($node) => ($node['props']['label'] ?? '') === 'Tenho interesse'
+        );
+        $this->assertSame('heart-outline', $interest['props']['icon'] ?? null);
+        $opinion = collect($response->json('components'))->first(
+            fn ($node) => ($node['props']['label'] ?? '') === 'Pedir parecer da IA'
+        );
+        $this->assertSame('sparkles', $opinion['props']['icon'] ?? null);
         $this->assertStringContainsString('/ofertas?lote=', $share['onPress']['url'] ?? '');
         $this->assertStringContainsString('link-1', $share['onPress']['url'] ?? '');
 
         $openUrl = collect($response->json('components'))->first(
             fn ($node) => ($node['props']['label'] ?? '') === 'Ver no Palácio'
         );
+        $this->assertSame('globe-outline', $openUrl['props']['icon'] ?? null);
         $this->assertSame('open_url', $openUrl['onPress']['type'] ?? null);
         $this->assertSame('https://www.leilaopalacio.com.br/lote/link-1', $openUrl['onPress']['url'] ?? null);
+    }
+
+    public function test_catalog_filters_by_the_cities_listed_on_each_yard(): void
+    {
+        Lot::factory()->create([
+            'lote_id' => 'juatuba-1',
+            'titulo' => 'Fiat no patio de Juatuba',
+            'patio' => 'Br 262 Km375 S/N Zona Rural Juatuba-MG',
+        ]);
+        Lot::factory()->create([
+            'lote_id' => 'juatuba-bare',
+            'titulo' => 'Outro em Juatuba',
+            'patio' => 'Juatuba',
+        ]);
+        Lot::factory()->create([
+            'lote_id' => 'guarulhos-1',
+            'titulo' => 'Honda em Guarulhos I',
+            'patio' => 'guarulhos i/sp',
+        ]);
+        Lot::factory()->create([
+            'lote_id' => 'guarulhos-3',
+            'titulo' => 'Honda em Guarulhos III',
+            'patio' => 'guarulhos iii/sp',
+        ]);
+        Lot::factory()->create([
+            'lote_id' => 'outros-1',
+            'titulo' => 'Carro em outros locais',
+            'patio' => 'outros locais',
+        ]);
+        Lot::factory()->create([
+            'lote_id' => 'recife-expired',
+            'titulo' => 'Encerrado em Recife',
+            'patio' => 'Rua Coronel Fernando Machado 683 Jardim São Paulo Recife-PE',
+            'leilao_fim' => now('America/Sao_Paulo')->subDay()->format('Y-m-d H:i:s'),
+            'leilao_em' => now('America/Sao_Paulo')->subDay()->format('Y-m-d H:i:s'),
+        ]);
+
+        $catalog = $this->getJson('/bff/v1/screens/catalog');
+        $catalog->assertOk();
+        $catalog->assertJsonFragment(['value' => 'Região do pátio']);
+        $row = collect(collect($catalog->json('components'))->firstWhere('type', 'List')['children'] ?? [])
+            ->firstWhere('id', 'catalog-regions');
+        $this->assertNotNull($row);
+        $labels = collect($row['children'] ?? [])->map(fn ($chip) => $chip['props']['label'] ?? '')->all();
+        $this->assertSame(['Todas', 'Guarulhos · SP', 'Juatuba · MG', 'Outros locais'], $labels);
+        $this->assertStringNotContainsString('Recife', $catalog->getContent());
+        $filterSheet = collect(collect($catalog->json('components'))->firstWhere('type', 'List')['children'] ?? [])
+            ->first(fn ($node) => ($node['type'] ?? '') === 'ChipRow');
+        $sheetNode = collect($filterSheet['children'] ?? [])->firstWhere('type', 'FilterSheet');
+        $this->assertNotNull($sheetNode);
+        $this->assertTrue(collect($sheetNode['children'] ?? [])->contains(
+            fn ($node) => ($node['props']['value'] ?? '') === 'Região do pátio'
+        ));
+
+        $filtered = $this->getJson('/bff/v1/screens/catalog?regiao=juatuba');
+        $filtered->assertOk();
+        $filtered->assertJsonPath('meta.filter.regiao', 'juatuba');
+        $this->assertStringContainsString('Fiat no patio de Juatuba', $filtered->getContent());
+        $this->assertStringContainsString('Outro em Juatuba', $filtered->getContent());
+        $this->assertStringNotContainsString('Honda em Guarulhos I', $filtered->getContent());
+        $this->assertStringNotContainsString('Carro em outros locais', $filtered->getContent());
+
+        $filteredRow = collect(collect($filtered->json('components'))->firstWhere('type', 'List')['children'] ?? [])
+            ->firstWhere('id', 'catalog-regions');
+        $juatuba = collect($filteredRow['children'] ?? [])->first(
+            fn ($chip) => ($chip['props']['label'] ?? '') === 'Juatuba · MG'
+        );
+        $guarulhos = collect($filteredRow['children'] ?? [])->first(
+            fn ($chip) => ($chip['props']['label'] ?? '') === 'Guarulhos · SP'
+        );
+        $this->assertTrue($juatuba['props']['selected'] ?? false);
+        $this->assertArrayNotHasKey('regiao', $juatuba['onPress']['params'] ?? []);
+        $this->assertSame('juatuba,guarulhos', $guarulhos['onPress']['params']['regiao'] ?? null);
+
+        $both = $this->getJson('/bff/v1/screens/catalog?regiao=guarulhos,juatuba');
+        $both->assertOk();
+        $this->assertStringContainsString('Fiat no patio de Juatuba', $both->getContent());
+        $this->assertStringContainsString('Honda em Guarulhos III', $both->getContent());
+        $this->assertStringNotContainsString('Carro em outros locais', $both->getContent());
     }
 
     public function test_paid_plan_is_not_labelled_trial(): void
